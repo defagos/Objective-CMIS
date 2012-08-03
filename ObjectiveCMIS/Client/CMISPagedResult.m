@@ -72,34 +72,33 @@
     return self;
 }
 
-+ (CMISPagedResult *)pagedResultUsingFetchBlock:(CMISFetchNextPageBlock)fetchNextPageBlock
-                      andLimitToMaxItems:(NSInteger)maxItems andStartFromSkipCount:(NSInteger)skipCount error:(NSError **)error
++ (void)pagedResultUsingFetchBlock:(CMISFetchNextPageBlock)fetchNextPageBlock
+                andLimitToMaxItems:(NSInteger)maxItems andStartFromSkipCount:(NSInteger)skipCount
+                   completionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock
 {
     // Fetch the first requested page
-    NSError *internalError = nil;
-    CMISFetchNextPageBlockResult *blockResult = fetchNextPageBlock(skipCount, maxItems, &internalError);
-
-    if (internalError != nil)
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];
-        return nil;
-    }
-
-    // Populate a CMISPagedResult with the results of that fetch
-    return [[CMISPagedResult alloc] initWithResultArray:blockResult.resultArray
-                      retrievedUsingFetchBlock:fetchNextPageBlock
-                      andNumItems:blockResult.numItems
-                      andHasMoreItems:blockResult.hasMoreItems
-                      andMaxItems:maxItems
-                      andSkipCount:skipCount];
+    fetchNextPageBlock(skipCount, maxItems, ^(CMISFetchNextPageBlockResult *result, NSError *error) {
+        if (error) {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+        } else {
+            completionBlock([[CMISPagedResult alloc] initWithResultArray:result.resultArray
+                                                retrievedUsingFetchBlock:fetchNextPageBlock
+                                                             andNumItems:result.numItems
+                                                         andHasMoreItems:result.hasMoreItems
+                                                             andMaxItems:maxItems
+                                                            andSkipCount:skipCount],
+                            nil);
+        }
+    });
 }
 
-- (CMISPagedResult *)fetchNextPageAndReturnError:(NSError **)error
+- (void)fetchNextPageWithCompletionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock
 {
     return [CMISPagedResult pagedResultUsingFetchBlock:self.fetchNextPageBlock
                                     andLimitToMaxItems:self.maxItems
-                                    andStartFromSkipCount:(self.skipCount + self.resultArray.count)
-                                    error:error];
+                                 andStartFromSkipCount:(self.skipCount + self.resultArray.count)
+                                       completionBlock:completionBlock];
 }
+
 
 @end

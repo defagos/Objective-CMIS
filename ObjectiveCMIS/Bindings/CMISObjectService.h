@@ -25,27 +25,27 @@
  *Retrieves the object with the given object identifier.
  *
  */
-- (CMISObjectData *)retrieveObject:(NSString *)objectId
-           withFilter:(NSString *)filter
-           andIncludeRelationShips:(CMISIncludeRelationship)includeRelationship
-           andIncludePolicyIds:(BOOL)includePolicyIds
-           andRenditionFilder:(NSString *)renditionFilter
-           andIncludeACL:(BOOL)includeACL
-           andIncludeAllowableActions:(BOOL)includeAllowableActions
-           error:(NSError * *)error;
+- (void)retrieveObject:(NSString *)objectId
+            withFilter:(NSString *)filter
+andIncludeRelationShips:(CMISIncludeRelationship)includeRelationship
+   andIncludePolicyIds:(BOOL)includePolicyIds
+    andRenditionFilder:(NSString *)renditionFilter
+         andIncludeACL:(BOOL)includeACL
+andIncludeAllowableActions:(BOOL)includeAllowableActions
+       completionBlock:(void (^)(CMISObjectData *objectData, NSError *error))completionBlock;
 
 /**
  *Retrieves an object using its path.
  *
  */
--(CMISObjectData *)retrieveObjectByPath:(NSString *)path
-                             withFilter:(NSString *)filter
-                andIncludeRelationShips:(CMISIncludeRelationship)includeRelationship
-                    andIncludePolicyIds:(BOOL)includePolicyIds
-                     andRenditionFilder:(NSString *)renditionFilter
-                          andIncludeACL:(BOOL)includeACL
-             andIncludeAllowableActions:(BOOL)includeAllowableActions
-                                  error:(NSError **)error;
+- (void)retrieveObjectByPath:(NSString *)path
+                  withFilter:(NSString *)filter
+     andIncludeRelationShips:(CMISIncludeRelationship)includeRelationship
+         andIncludePolicyIds:(BOOL)includePolicyIds
+          andRenditionFilder:(NSString *)renditionFilter
+               andIncludeACL:(BOOL)includeACL
+  andIncludeAllowableActions:(BOOL)includeAllowableActions
+             completionBlock:(void (^)(CMISObjectData *objectData, NSError *error))completionBlock;
 
 /**
 * Gets the content stream for the specified Document object, or gets a rendition stream for a specified
@@ -70,9 +70,9 @@
   * NOTE for atom pub binding: deleteContentStream: This does not return the new object id and change token as specified by the domain model.
   * This is not possible without introducing a new HTTP header.
  */
-- (void)deleteContentOfObject:(CMISStringInOutParameter *)objectId
-              withChangeToken:(CMISStringInOutParameter *)changeToken
-                        error:(NSError * *)error;
+- (void)deleteContentOfObject:(CMISStringInOutParameter *)objectIdParam
+              withChangeToken:(CMISStringInOutParameter *)changeTokenParam
+              completionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
  * Changes the content of the given document to the content of the given file.
@@ -110,16 +110,14 @@
 *
 * The allVersions parameter is currently ignored.
 */
-- (BOOL)deleteObject:(NSString *)objectId
-         allVersions:(BOOL)allVersions
-               error:(NSError * *)error;
+- (void)deleteObject:(NSString *)objectId allVersions:(BOOL)allVersions completionBlock:(void (^)(BOOL objectDeleted, NSError *error))completionBlock;
 
 /**
 * Creates a new folder with given properties under the provided parent folder.
 */
-- (NSString *)createFolderInParentFolder:(NSString *)folderObjectId
-                          withProperties:(CMISProperties *)properties
-                                   error:(NSError * *)error;
+- (void)createFolderInParentFolder:(NSString *)folderObjectId
+                    withProperties:(CMISProperties *)properties
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock;
 
 /**
  * Deletes the given folder and all of its subfolder and files
@@ -127,19 +125,19 @@
  * Returns a list of objects which failed to be deleted.
  *
  */
-- (NSArray *)deleteTree:(NSString *)folderObjectId
-             allVersion:(BOOL)allVersions
-          unfileObjects:(CMISUnfileObject)unfileObjects // default 'delete'
-      continueOnFailure:(BOOL)continueOnFailure // default 'NO'
-                  error:(NSError * *)error;
+- (void)deleteTree:(NSString *)folderObjectId
+        allVersion:(BOOL)allVersions
+     unfileObjects:(CMISUnfileObject)unfileObjects
+ continueOnFailure:(BOOL)continueOnFailure
+   completionBlock:(void (^)(NSArray *failedObjects, NSError *error))completionBlock;
 
 /**
  * Updates the properties of the given object.
  */
-- (void)updatePropertiesForObject:(CMISStringInOutParameter *)objectId
+- (void)updatePropertiesForObject:(CMISStringInOutParameter *)objectIdParam
                    withProperties:(CMISProperties *)properties
-                  withChangeToken:(CMISStringInOutParameter *)changeToken
-                            error:(NSError **)error;
+                  withChangeToken:(CMISStringInOutParameter *)changeTokenParam
+                  completionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
  * Gets the list of associated Renditions for the specified object.
@@ -148,10 +146,10 @@
  * Note: the paging parameters (maxItems and skipCount) are not used in the atom pub binding.
  *       Ie. the whole set is <b>always</b> returned.
  */
-- (NSArray *)retrieveRenditions:(NSString *)objectId
+- (void)retrieveRenditions:(NSString *)objectId
             withRenditionFilter:(NSString *)renditionFilter
                    withMaxItems:(NSNumber *)maxItems
                   withSkipCount:(NSNumber *)skipCount
-                          error:(NSError * *)error;
+           completionBlock:(void (^)(NSArray *renditions, NSError *error))completionBlock;
 
 @end

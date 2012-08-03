@@ -62,7 +62,7 @@
 
     // Pass progress to progressBlock
     self.bytesDownloaded += data.length;
-    if (self.fileRetrievalProgressBlock != nil)
+    if (self.fileRetrievalProgressBlock)
     {
         self.fileRetrievalProgressBlock(self.bytesDownloaded, self.bytesTotal);
     }
@@ -72,9 +72,15 @@
 {
     if (self.fileRetrievalFailureBlock)
     {
-        NSError *cmisError = [CMISErrors cmisError:&error withCMISErrorCode:kCMISErrorCodeConnection];
+        NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection];
         self.fileRetrievalFailureBlock(cmisError);
     }
+
+    // Cleanup
+    self.filePathForContentRetrieval = nil;
+    self.fileRetrievalCompletionBlock = nil;
+    self.fileRetrievalFailureBlock = nil;
+    self.fileRetrievalProgressBlock = nil;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection

@@ -18,29 +18,32 @@
 
 @implementation CMISFileableObject
 
-- (NSArray *)retrieveParentsAndReturnError:(NSError **)error
+
+- (void)retrieveParentsWithCompletionBlock:(void (^)(NSArray *parentFolders, NSError *error))completionBlock
 {
-    return [self retrieveParentsWithOperationContext:[CMISOperationContext defaultOperationContext] andReturnError:error];
+    return [self retrieveParentsWithOperationContext:[CMISOperationContext defaultOperationContext] completionBlock:completionBlock];
 }
 
-- (NSArray *)retrieveParentsWithOperationContext:(CMISOperationContext *)operationContext andReturnError:(NSError **)error
+- (void)retrieveParentsWithOperationContext:(CMISOperationContext *)operationContext
+                            completionBlock:(void (^)(NSArray *parentFolders, NSError *error))completionBlock
 {
-    NSArray *parentObjectDataArray = [self.binding.navigationService retrieveParentsForObject:self.identifier
-                         withFilter:operationContext.filterString
-           withIncludeRelationships:operationContext.includeRelationShips
-                withRenditionFilter:operationContext.renditionFilterString
-        withIncludeAllowableActions:operationContext.isIncludeAllowableActions
-     withIncludeRelativePathSegment:operationContext.isIncludePathSegments
-                              error:error];
-
-    NSMutableArray *parentFolders = [NSMutableArray array];
-    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-    for (CMISObjectData *parentObjectData in parentObjectDataArray)
-    {
-        [parentFolders addObject:[converter convertObject:parentObjectData]];
-    }
-
-    return parentFolders;
+    [self.binding.navigationService retrieveParentsForObject:self.identifier
+                                                  withFilter:operationContext.filterString
+                                    withIncludeRelationships:operationContext.includeRelationShips
+                                         withRenditionFilter:operationContext.renditionFilterString
+                                 withIncludeAllowableActions:operationContext.isIncludeAllowableActions
+                              withIncludeRelativePathSegment:operationContext.isIncludePathSegments
+                                             completionBlock:^(NSArray *parentObjectDataArray, NSError *error) {
+                                                 NSMutableArray *parentFolders = [NSMutableArray array];
+                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+                                                 for (CMISObjectData *parentObjectData in parentObjectDataArray)
+                                                 {
+                                                     [parentFolders addObject:[converter convertObject:parentObjectData]];
+                                                 }
+                                                 
+                                                 completionBlock(parentFolders, error);
+                                                 
+                                             }];
 }
 
 @end

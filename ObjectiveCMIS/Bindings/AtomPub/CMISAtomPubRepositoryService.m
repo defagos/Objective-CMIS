@@ -25,7 +25,7 @@
 @end
 
 @interface CMISAtomPubRepositoryService (PrivateMethods)
-- (void)internalRetrieveRepositoriesAndReturnError:(NSError **)error;
+- (void)internalRetrieveRepositoriesWithCompletionBlock:(void (^)(NSError *error))completionBlock;
 @end
 
 
@@ -33,64 +33,72 @@
 
 @synthesize repositories = _repositories;
 
-- (NSArray *)retrieveRepositoriesAndReturnError:(NSError **)outError
+- (void)retrieveRepositoriesWithCompletionBlock:(void (^)(NSArray *repositories, NSError *error))completionBlock
 {
-    NSError *internalError = nil;
-    [self internalRetrieveRepositoriesAndReturnError:&internalError];
-    if (internalError) {
-        *outError = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeObjectNotFound];
-    }
-    return [self.repositories allValues];
+    [self internalRetrieveRepositoriesWithCompletionBlock:^(NSError *error) {
+        if (error) {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeObjectNotFound]);
+        } else {
+            completionBlock([self.repositories allValues], nil);
+        }
+    }];
 }
 
-- (CMISRepositoryInfo *)retrieveRepositoryInfoForId:(NSString *)repositoryId error:(NSError **)outError
+- (void)retrieveRepositoryInfoForId:(NSString *)repositoryId completionBlock:(void (^)(CMISRepositoryInfo *repositoryInfo, NSError *error))completionBlock
 {
-    NSError *internalError = nil;
-    [self internalRetrieveRepositoriesAndReturnError:&internalError];
-    if (internalError) {
-        *outError = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
-    }
-    return [self.repositories objectForKey:repositoryId];
+    [self internalRetrieveRepositoriesWithCompletionBlock:^(NSError *error) {
+        if (error) {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeInvalidArgument]);
+        } else {
+            completionBlock([self.repositories objectForKey:repositoryId], nil);
+        }
+    }];
 }
 
-- (void)internalRetrieveRepositoriesAndReturnError:(NSError **)error
+- (void)internalRetrieveRepositoriesWithCompletionBlock:(void (^)(NSError *error))completionBlock
 {
     self.repositories = [NSMutableDictionary dictionary];
-    NSArray *cmisWorkSpaces = [self retrieveCMISWorkspacesAndReturnError:error];
-    if (cmisWorkSpaces != nil)
-    {
-        for (CMISWorkspace *workspace in cmisWorkSpaces)
+    [self retrieveCMISWorkspacesWithCompletionBlock:^(NSArray *cmisWorkSpaces, NSError *error) {
+        if (cmisWorkSpaces != nil)
         {
-            [self.repositories setObject:workspace.repositoryInfo forKey:workspace.repositoryInfo.identifier];
+            for (CMISWorkspace *workspace in cmisWorkSpaces)
+            {
+                [self.repositories setObject:workspace.repositoryInfo forKey:workspace.repositoryInfo.identifier];
+            }
         }
-    }
+        completionBlock(error);
+    }];
 }
 
-- (CMISTypeDefinition *)retrieveTypeDefinition:(NSString *)typeId error:(NSError **)outError
+- (void)retrieveTypeDefinition:(NSString *)typeId completionBlock:(void (^)(CMISTypeDefinition *typeDefinition, NSError *error))completionBlock
 {
     if (typeId == nil)
     {
         log(@"Parameter typeId is required");
-        *outError = [[NSError alloc] init]; // TODO: proper error init
-        return nil;
+        NSError *error = [[NSError alloc] init]; // TODO: proper error init
+        completionBlock(nil, error);
+        return;
     }
-
+    
     CMISTypeByIdUriBuilder *typeByIdUriBuilder = [self.bindingSession objectForKey:kCMISBindingSessionKeyTypeByIdUriBuilder];
     typeByIdUriBuilder.id = typeId;
-
-    HTTPResponse *response = [HttpUtil invokeGETSynchronous:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession error:outError];
-
-    if (response.data != nil)
-    {
-        CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:response.data];
-        if ([parser parseAndReturnError:outError])
-        {
-            return  parser.typeDefinition;
+    
+    [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(HTTPResponse *httpResponse) {
+        if (httpResponse.data != nil) {
+            CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];
+            NSError *error;
+            if ([parser parseAndReturnError:&error]) {
+                completionBlock(parser.typeDefinition, nil);
+            } else {
+                completionBlock(nil, error);
+            }
+        } else {
+            NSError *error = [[NSError alloc] init]; // TODO: proper error init
+            completionBlock(nil, error);
         }
-    }
-
-    return nil;
-
+    } failureBlock:^(NSError *error) {
+        completionBlock(nil, error);
+    }];
 }
 
 @end

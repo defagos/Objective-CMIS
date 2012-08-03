@@ -34,56 +34,68 @@ typedef enum {
 
 @interface HttpUtil : NSObject
 
-// Synchronous calls
+// Block calls
 
-+ (HTTPResponse *)invokeSynchronous:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                        withSession:(CMISBindingSession *)session
-                               body:(NSData *)body
-                            headers:(NSDictionary *)additionalHeaders
-                              error:(NSError **)outError;
++ (void)invoke:(NSURL *)url 
+withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod 
+   withSession:(CMISBindingSession *)session 
+          body:(NSData *)body 
+       headers:(NSDictionary *)additionalHeaders
+completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+  failureBlock:(CMISErrorFailureBlock)failureBlock; 
 
-+ (HTTPResponse *)invokeSynchronous:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                        withSession:(CMISBindingSession *)session
-                         bodyStream:(NSInputStream *)bodyStream
-                            headers:(NSDictionary *)additionalHeaders
-                              error:(NSError **)outError;
++ (void)invoke:(NSURL *)url 
+withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod 
+   withSession:(CMISBindingSession *)session 
+    bodyStream:(NSInputStream *)bodyStream 
+       headers:(NSDictionary *)additionalHeaders 
+completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+  failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokeGETSynchronous:(NSURL *)url
-                           withSession:(CMISBindingSession *)session
-                                 error:(NSError **)outError;
++ (void)invokeGET:(NSURL *)url 
+      withSession:(CMISBindingSession *)session 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+     failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url
-                            withSession:(CMISBindingSession *)session
-                                   body:(NSData *)body
-                                  error:(NSError **)outError;
++ (void)invokePOST:(NSURL *)url 
+       withSession:(CMISBindingSession *)session 
+              body:(NSData *)body 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+      failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url
-                            withSession:(CMISBindingSession *)session
-                                   body:(NSData *)body
-                                headers:(NSDictionary *)additionalHeaders
-                                  error:(NSError **)outError;
++ (void)invokePOST:(NSURL *)url 
+       withSession:(CMISBindingSession *)session 
+              body:(NSData *)body 
+           headers:(NSDictionary *)additionalHeaders 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+      failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url
-                            withSession:(CMISBindingSession *)session
-                             bodyStream:(NSInputStream *)bodyStream
-                                headers:(NSDictionary *)additionalHeaders
-                                  error:(NSError **)outError;
++ (void)invokePOST:(NSURL *)url 
+       withSession:(CMISBindingSession *)session 
+        bodyStream:(NSInputStream *)bodyStream 
+           headers:(NSDictionary *)additionalHeaders 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+      failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokeDELETESynchronous:(NSURL *)url
-                              withSession:(CMISBindingSession *)session
-                                    error:(NSError **)outError;
++ (void)invokeDELETE:(NSURL *)url 
+         withSession:(CMISBindingSession *)session 
+     completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+        failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokePUTSynchronous:(NSURL *)url
-                           withSession:(CMISBindingSession *)session
-                            bodyStream:(NSInputStream *)bodyStream
-                               headers:(NSDictionary *)additionalHeaders
-                                 error:(NSError **)outError;
++ (void)invokePUT:(NSURL *)url 
+      withSession:(CMISBindingSession *)session 
+       bodyStream:(NSInputStream *)bodyStream 
+          headers:(NSDictionary *)additionalHeaders 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+     failureBlock:(CMISErrorFailureBlock)failureBlock;
 
-+ (HTTPResponse *)invokePUTSynchronous:(NSURL *)url
-                           withSession:(CMISBindingSession *)session
-                                  body:(NSData *)body
-                               headers:(NSDictionary *)additionalHeaders
-                                 error:(NSError **)outError;
++ (void)invokePUT:(NSURL *)url 
+      withSession:(CMISBindingSession *)session 
+             body:(NSData *)body 
+          headers:(NSDictionary *)additionalHeaders 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+     failureBlock:(CMISErrorFailureBlock)failureBlock; 
+
 
 // Async calls
 

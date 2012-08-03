@@ -40,27 +40,30 @@
     return self;
 }
 
-- (CMISDocument *)retrieveRenditionDocumentAndReturnError:(NSError **)error
+- (void)retrieveRenditionDocumentWithCompletionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock
 {
-    return [self retrieveRenditionDocumentWithOperationContext:[CMISOperationContext defaultOperationContext] withError:error];
+    [self retrieveRenditionDocumentWithOperationContext:[CMISOperationContext defaultOperationContext] completionBlock:completionBlock];
 }
 
-- (CMISDocument *)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext withError:(NSError **)error
+- (void)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext
+                                      completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock
 {
     if (self.renditionDocumentId == nil)
     {
         log(@"Cannot retrieve rendition document: no renditionDocumentId was returned by the server.");
-        return nil;
+        completionBlock(nil, nil);
+        return;
     }
 
-    CMISObject *renditionDocument = [self.session retrieveObject:self.renditionDocumentId withOperationContext:operationContext error:error];
-    if (renditionDocument != nil && !([[renditionDocument class] isKindOfClass:[CMISDocument class]]))
-    {
-        log(@"Returned object was not of document type");
-        return nil;
-    }
-
-    return (CMISDocument *) renditionDocument;
+    [self.session retrieveObject:self.renditionDocumentId withOperationContext:operationContext completionBlock:^(CMISObject *renditionDocument, NSError *error) {
+        if (renditionDocument != nil && !([[renditionDocument class] isKindOfClass:[CMISDocument class]]))
+        {
+            completionBlock(nil, nil);
+            return;
+        }
+        
+        completionBlock((CMISDocument *) renditionDocument, nil);
+    }];
 }
 
 - (void)downloadRenditionContentToFile:(NSString *)filePath completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock

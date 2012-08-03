@@ -70,9 +70,19 @@
 {
     if (self.fileUploadFailureBlock)
     {
-        NSError *cmisError = [CMISErrors cmisError:&error withCMISErrorCode:kCMISErrorCodeConnection];
+        NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection];
         self.fileUploadFailureBlock(cmisError);
     }
+
+    if (self.fileUploadCleanupBlock)
+    {
+        self.fileUploadCleanupBlock();
+    }
+    
+    self.fileUploadCompletionBlock = nil;
+    self.fileUploadFailureBlock = nil;
+    self.fileUploadProgressBlock = nil;
+    self.fileUploadCleanupBlock = nil;
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
@@ -89,6 +99,11 @@
     {
         self.fileUploadCleanupBlock();
     }
+
+    self.fileUploadCompletionBlock = nil;
+    self.fileUploadFailureBlock = nil;
+    self.fileUploadProgressBlock = nil;
+    self.fileUploadCleanupBlock = nil;
 }
 
 @end

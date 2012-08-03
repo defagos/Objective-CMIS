@@ -16,52 +16,30 @@
 #import "CMISAuthenticationProvider.h"
 #import "CMISErrors.h"
 
+#pragma mark HTTPRequest declaration
+
+@interface HTTPRequest : NSObject <NSURLConnectionDataDelegate>
+
+@property (nonatomic, assign) CMISHttpRequestMethod requestMethod;
+@property (nonatomic, strong) NSURLConnection *connection;
+@property (nonatomic, strong) NSMutableData *data;
+@property (nonatomic, strong) NSHTTPURLResponse *response;
+@property (nonatomic, copy) CMISHttpResponseCompletionBlock completionBlock;
+@property (nonatomic, copy) CMISErrorFailureBlock failureBlock;
+
++ (void)startRequest:(NSURLRequest*)urlRequest 
+      withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod 
+     completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+        failureBlock:(CMISErrorFailureBlock)failureBlock;
+
+@end
+
+
 @implementation HttpUtil
 
 #pragma mark synchronous methods
 
-+ (HTTPResponse *)invokeSynchronous:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                        withSession:(CMISBindingSession *)session body:(NSData *)body
-                        headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
-{
-    NSMutableURLRequest *request = [self createRequestForUrl:url withHttpMethod:[self stringForHttpRequestMethod:httpRequestMethod] usingSession:session];
-
-    if (body)
-    {
-        [request setHTTPBody:body];
-    }
-
-    if (additionalHeaders)
-    {
-        [self addHeaders:additionalHeaders toURLRequest:request];
-    }
-
-    HTTPResponse *response = [self executeRequestSynchronous:request error:outError];
-    [self checkStatusCodeForResponse:response withHttpRequestMethod:httpRequestMethod error:outError];
-    return response;
-}
-
-
-+ (HTTPResponse *)invokeSynchronous:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod withSession:(CMISBindingSession *)session bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
-{
-    NSMutableURLRequest *request = [self createRequestForUrl:url withHttpMethod:[self stringForHttpRequestMethod:httpRequestMethod] usingSession:session];
-
-    if (bodyStream)
-    {
-        [request setHTTPBodyStream:bodyStream];
-    }
-
-    if (additionalHeaders)
-    {
-        [self addHeaders:additionalHeaders toURLRequest:request];
-    }
-
-    HTTPResponse *response = [self executeRequestSynchronous:request error:outError];
-    [self checkStatusCodeForResponse:response withHttpRequestMethod:httpRequestMethod error:outError];
-    return response;
-}
-
-+ (void)checkStatusCodeForResponse:(HTTPResponse *)response withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod error:(NSError **)error
++ (BOOL)checkStatusCodeForResponse:(HTTPResponse *)response withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod error:(NSError **)error
 {
     if ( (httpRequestMethod == HTTP_GET && response.statusCode != 200)
       || (httpRequestMethod == HTTP_POST && response.statusCode != 201)
@@ -71,78 +49,122 @@
         NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
         log(@"Error content: %@", errorContent);
 
-        switch (response.statusCode)
-        {
-            case 400:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 401:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 403:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodePermissionDenied withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 404:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 405:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNotSupported withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 407:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeProxyAuthentication withDetailedDescription:response.statusCodeMessage];
-                break;
-            case 409:
-                // TODO: need more if-else here, see opencmis impl
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConstraint withDetailedDescription:response.statusCodeMessage];
-                break;
-            default:
-                *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime withDetailedDescription:response.statusCodeMessage];
+        if (error) {
+            switch (response.statusCode)
+            {
+                case 400:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 401:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 403:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodePermissionDenied withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 404:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 405:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNotSupported withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 407:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeProxyAuthentication withDetailedDescription:response.statusCodeMessage];
+                    break;
+                case 409:
+                    // TODO: need more if-else here, see opencmis impl
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConstraint withDetailedDescription:response.statusCodeMessage];
+                    break;
+                default:
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime withDetailedDescription:response.statusCodeMessage];
+            }
         }
-
+        return NO;
+    } else {
+        return YES;
     }
 }
 
-+ (HTTPResponse *)invokeGETSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session error:(NSError **)outError
+#pragma mark block based methods
+
++ (void)invoke:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod withSession:(CMISBindingSession *)session body:(NSData *)body headers:(NSDictionary *)additionalHeaders 
+completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
+
 {
-    return [self invokeSynchronous:url withHttpMethod:HTTP_GET withSession:session body:nil headers:nil error:outError];
+    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url withHttpMethod:[self stringForHttpRequestMethod:httpRequestMethod] usingSession:session];
+    
+    if (body)
+    {
+        [urlRequest setHTTPBody:body];
+    }
+    
+    if (additionalHeaders)
+    {
+        [self addHeaders:additionalHeaders toURLRequest:urlRequest];
+    }
+    
+    [HTTPRequest startRequest:urlRequest withHttpMethod:httpRequestMethod completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body error:(NSError **)outError
++ (void)invoke:(NSURL *)url withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod withSession:(CMISBindingSession *)session bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders 
+completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-    return [self invokePOSTSynchronous:url withSession:session body:body headers:nil error:outError];
+    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url withHttpMethod:[self stringForHttpRequestMethod:httpRequestMethod] usingSession:session];
+    
+    if (bodyStream)
+    {
+        [urlRequest setHTTPBodyStream:bodyStream];
+    }
+    
+    if (additionalHeaders)
+    {
+        [self addHeaders:additionalHeaders toURLRequest:urlRequest];
+    }
+    
+    [HTTPRequest startRequest:urlRequest withHttpMethod:httpRequestMethod completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
++ (void)invokeGET:(NSURL *)url withSession:(CMISBindingSession *)session 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-    return [self invokeSynchronous:url withHttpMethod:HTTP_POST
-                       withSession:session body:body headers:additionalHeaders error:outError];
+    return [self invoke:url withHttpMethod:HTTP_GET withSession:session body:nil headers:nil completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokePOSTSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
++ (void)invokePOST:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-   return [self invokeSynchronous:url withHttpMethod:HTTP_POST withSession:session
-                       bodyStream:bodyStream headers:additionalHeaders error:outError];
+    return [self invokePOST:url withSession:session body:body headers:nil completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokeDELETESynchronous:(NSURL *)url withSession:(CMISBindingSession *)session error:(NSError **)outError
++ (void)invokePOST:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body headers:(NSDictionary *)additionalHeaders 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-    return [self invokeSynchronous:url withHttpMethod:HTTP_DELETE
-                       withSession:session bodyStream:nil headers:nil error:outError];
+    return [self invoke:url withHttpMethod:HTTP_POST withSession:session body:body headers:additionalHeaders completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokePUTSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session
-                    bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
++ (void)invokePOST:(NSURL *)url withSession:(CMISBindingSession *)session bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders 
+   completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-    return [self invokeSynchronous:url withHttpMethod:HTTP_PUT
-                       withSession:session bodyStream:bodyStream headers:additionalHeaders error:outError];
+    return [self invoke:url withHttpMethod:HTTP_POST withSession:session bodyStream:bodyStream headers:additionalHeaders completionBlock:completionBlock failureBlock:failureBlock];
 }
 
-+ (HTTPResponse *)invokePUTSynchronous:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body
-                                                    headers:(NSDictionary *)additionalHeaders error:(NSError **)outError
++ (void)invokeDELETE:(NSURL *)url withSession:(CMISBindingSession *)session 
+     completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
 {
-    return [self invokeSynchronous:url withHttpMethod:HTTP_PUT
-                       withSession:session body:body headers:additionalHeaders error:outError];
+    return [self invoke:url withHttpMethod:HTTP_DELETE withSession:session bodyStream:nil headers:nil completionBlock:completionBlock failureBlock:failureBlock];
 }
+
++ (void)invokePUT:(NSURL *)url withSession:(CMISBindingSession *)session bodyStream:(NSInputStream *)bodyStream headers:(NSDictionary *)additionalHeaders 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
+{
+    return [self invoke:url withHttpMethod:HTTP_PUT withSession:session bodyStream:bodyStream headers:additionalHeaders completionBlock:completionBlock failureBlock:failureBlock];
+}
+
++ (void)invokePUT:(NSURL *)url withSession:(CMISBindingSession *)session body:(NSData *)body headers:(NSDictionary *)additionalHeaders 
+  completionBlock:(CMISHttpResponseCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock
+{
+    return [self invoke:url withHttpMethod:HTTP_PUT withSession:session body:body headers:additionalHeaders completionBlock:completionBlock failureBlock:failureBlock];
+}
+
 
 #pragma mark asynchronous methods
 
@@ -249,25 +271,6 @@
     }
 }
 
-+ (HTTPResponse *)executeRequestSynchronous:(NSMutableURLRequest *)request error:(NSError * *)outError
-{
-    NSHTTPURLResponse *response = nil;
-    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:outError];
-
-    if (data == nil || (outError && outError != NULL && *outError != nil) ) {
-        log(@"Error while doing HTTP %@ %@ : %@", request.HTTPMethod, [request.URL absoluteString], [*outError description]);
-    }
-    else {
-        log(@"HTTP response with code = %d, code String = %@",[response statusCode], [NSHTTPURLResponse localizedStringForStatusCode:[response statusCode]]);
-    }
-
-    // Uncomment to see the actual response from the server
-//    NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-//    log(@"Response for %@ : %@", [request.URL absoluteString], dataString);
-
-    return [HTTPResponse responseUsingURLHTTPResponse:response andData:data];
-}
-
 + (NSString *)stringForHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod
 {
     switch (httpRequestMethod)
@@ -282,8 +285,85 @@
             return @"PUT";
     }
 
-    log(@"Could not find matching http request for %@", httpRequestMethod);
+    log(@"Could not find matching http request for %u", httpRequestMethod);
     return nil;
+}
+
+@end
+
+
+#pragma mark HTTPRequest implementation
+
+@implementation HTTPRequest
+
+@synthesize requestMethod = _requestMethod;
+@synthesize data = _data;
+@synthesize response = _response;
+@synthesize completionBlock = _completionBlock;
+@synthesize failureBlock = _failureBlock;
+@synthesize connection = _connection;
+
++ (void)startRequest:(NSURLRequest *)urlRequest 
+      withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod 
+     completionBlock:(CMISHttpResponseCompletionBlock)completionBlock 
+        failureBlock:(CMISErrorFailureBlock)failureBlock
+{
+    HTTPRequest *httpRequest = [[HTTPRequest alloc] init];
+    httpRequest.requestMethod = httpRequestMethod;
+    httpRequest.completionBlock = completionBlock;
+    httpRequest.failureBlock = failureBlock;
+    httpRequest.connection = [NSURLConnection connectionWithRequest:urlRequest delegate:httpRequest];
+    if (httpRequest.connection == nil) {
+        if (httpRequest.failureBlock) {
+            NSString *detailedDescription = [NSString stringWithFormat:@"Could not create connection to %@", urlRequest.URL];
+            NSError *cmisError = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConnection withDetailedDescription:detailedDescription];
+            httpRequest.failureBlock(cmisError);
+        }
+    }
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+{
+    self.data = [[NSMutableData alloc] init];
+    if ([response isKindOfClass:NSHTTPURLResponse.class]) {
+        self.response = (NSHTTPURLResponse*)response;
+    }
+}
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+{
+    [self.data appendData:data];
+}
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
+{
+    if (self.failureBlock)
+    {
+        NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection];
+        self.failureBlock(cmisError);
+    }
+
+    self.completionBlock = nil;
+    self.failureBlock = nil;
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+{
+    HTTPResponse *httpResponse = [HTTPResponse responseUsingURLHTTPResponse:self.response andData:self.data];
+
+    NSError *cmisError = nil;
+    if (![HttpUtil checkStatusCodeForResponse:httpResponse withHttpRequestMethod:self.requestMethod error:&cmisError]) {
+        if (self.failureBlock) {
+            self.failureBlock(cmisError);
+        }
+    } else {
+        if (self.completionBlock) {
+            self.completionBlock(httpResponse);
+        }
+    }
+    
+    self.completionBlock = nil;
+    self.failureBlock = nil;
 }
 
 @end

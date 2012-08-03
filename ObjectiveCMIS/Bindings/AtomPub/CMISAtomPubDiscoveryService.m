@@ -22,31 +22,32 @@
 
 @implementation CMISAtomPubDiscoveryService
 
-- (CMISObjectList *)query:(NSString *)statement searchAllVersions:(BOOL)searchAllVersions
-                                                includeRelationShips:(CMISIncludeRelationship)includeRelationships
-                                                renditionFilter:(NSString *)renditionFilter
-                                                includeAllowableActions:(BOOL)includeAllowableActions
-                                                maxItems:(NSNumber *)maxItems
-                                                skipCount:(NSNumber *)skipCount
-                                                error:(NSError * *)error
+
+- (void)query:(NSString *)statement searchAllVersions:(BOOL)searchAllVersions
+                                 includeRelationShips:(CMISIncludeRelationship)includeRelationships
+                                      renditionFilter:(NSString *)renditionFilter
+                            includeAllowableActions:(BOOL)includeAllowableActions
+                                           maxItems:(NSNumber *)maxItems
+                                          skipCount:(NSNumber *)skipCount
+                                    completionBlock:(void (^)(CMISObjectList *objectList, NSError *error))completionBlock;
 {
     // Validate params
     if (statement == nil)
     {
         log(@"Must provide 'statement' parameter when executing a cmis query");
-        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil];
-        return nil;
+        completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
+        return;
     }
-
+    
     // Validate query uri
     NSString *queryUrlString = [self.bindingSession objectForKey:kCMISBindingSessionKeyQueryCollection];
     if (queryUrlString == nil)
     {
         log(@"Unknown repository or query not supported!");
-        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:nil];
-        return nil;
+        completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:nil]);
+        return;
     }
-
+    
     NSURL *queryURL = [NSURL URLWithString:queryUrlString];
     // Build XML for query
     CMISQueryAtomEntryWriter *atomEntryWriter = [[CMISQueryAtomEntryWriter alloc] init];
@@ -57,36 +58,28 @@
     atomEntryWriter.renditionFilter = renditionFilter;
     atomEntryWriter.maxItems = maxItems;
     atomEntryWriter.skipCount = skipCount;
-
+    
     // Execute HTTP call
-    NSError *internalError = nil;
-    NSData *responseData = [HttpUtil invokePOSTSynchronous:queryURL
-                                 withSession:self.bindingSession
-                                 body:[[atomEntryWriter generateAtomEntryXML] dataUsingEncoding:NSUTF8StringEncoding]
-                                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeQuery forKey:@"Content-type"]
-                                 error:&internalError].data;
-
-    if (internalError == nil)
-    {
-        CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:responseData];
-        if ([feedParser parseAndReturnError:error])
-        {
-            NSString *nextLink = [feedParser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
-
-            CMISObjectList *objectList = [[CMISObjectList alloc] init];
-            objectList.hasMoreItems = (nextLink != nil);
-            objectList.numItems = feedParser.numItems;
-            objectList.objects = feedParser.entries;
-            return objectList;
-        }
-    }
-    else 
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeConnection];
-    }
-
-    return nil;
-
+    [HttpUtil invokePOST:queryURL
+             withSession:self.bindingSession
+                    body:[[atomEntryWriter generateAtomEntryXML] dataUsingEncoding:NSUTF8StringEncoding]
+                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeQuery forKey:@"Content-type"]completionBlock:^(HTTPResponse *httpResponse) {
+                     CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                     NSError *error = nil;
+                     if ([feedParser parseAndReturnError:&error]) {
+                         NSString *nextLink = [feedParser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
+                         
+                         CMISObjectList *objectList = [[CMISObjectList alloc] init];
+                         objectList.hasMoreItems = (nextLink != nil);
+                         objectList.numItems = feedParser.numItems;
+                         objectList.objects = feedParser.entries;
+                         completionBlock(objectList, nil);
+                     } else {
+                         completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+                     }
+                 } failureBlock:^(NSError *error) {
+                     completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+                 }];
 }
 
 @end

@@ -55,17 +55,17 @@ NSString * const kCMISErrorDescriptionVersioning = @"Versioning Error";
 
 @implementation CMISErrors
 
-+ (NSError *)cmisError:(NSError * *)error withCMISErrorCode:(CMISErrorCodes)code
++ (NSError *)cmisError:(NSError *)error withCMISErrorCode:(CMISErrorCodes)code
 {
-    if (!error && error == NULL && *error == nil) {//shouldn't really get there
+    if (error == nil) {//shouldn't really get there
         return nil;
     }
-    if ([[*error domain] isEqualToString:kCMISErrorDomainName]) {
-        return *error;
+    if ([error.domain isEqualToString:kCMISErrorDomainName]) {
+        return error;
     }
     NSMutableDictionary *errorInfo = [NSMutableDictionary dictionary];
     [errorInfo setValue:[CMISErrors localizedDescriptionForCode:code] forKey:NSLocalizedDescriptionKey];
-    [errorInfo setObject:*error forKey:NSUnderlyingErrorKey];
+    [errorInfo setObject:error forKey:NSUnderlyingErrorKey];
     return [NSError errorWithDomain:kCMISErrorDomainName code:code userInfo:errorInfo];
 }
 

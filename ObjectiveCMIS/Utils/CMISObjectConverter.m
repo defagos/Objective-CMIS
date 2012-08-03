@@ -73,31 +73,39 @@
     return collection;
 }
 
-- (CMISProperties *)convertProperties:(NSDictionary *)properties forObjectTypeId:(NSString *)objectTypeId error:(NSError **)error
-{
 
+- (void)convertProperties:(NSDictionary *)properties 
+          forObjectTypeId:(NSString *)objectTypeId 
+          completionBlock:(void (^)(CMISProperties *convertedProperties, NSError *error))completionBlock
+{
     // TODO: Temporary. Must be extracted into separate project.
     // I decided to keep all logic in one method: so keep in mind when ripping it out that you will need to do
     // some SERIOUS refactoring, by splitting into several methods and util classes (eg to create the extension elements)
 
-    NSString *mode = [self.session.sessionParameters objectForKey:kCMISSessionParameterMode];
-    if (mode != nil && [mode isEqualToString:@"alfresco"])
-    {
-        return [self internalAlfrescoConvertProperties:properties objectTypeId:objectTypeId error:error];
-    }
-    else {
-        return [self internalNormalConvertProperties:properties objectTypeId:objectTypeId error:error];
-    }
+// TODO: reactivate this code if needed
+//    NSString *mode = [self.session.sessionParameters objectForKey:kCMISSessionParameterMode];
+//    if (mode != nil && [mode isEqualToString:@"alfresco"])
+//    {
+//        [self internalAlfrescoConvertProperties:properties objectTypeId:objectTypeId completionBlock:completionBlock];
+//    }
+//    else {
+        [self internalNormalConvertProperties:properties objectTypeId:objectTypeId completionBlock:completionBlock];
+//    }
 }
 
-- (CMISProperties *)internalAlfrescoConvertProperties:(NSDictionary *)properties objectTypeId:(NSString *)objectTypeId error:(NSError **)error
+/* TODO: reactivate and finish implementation if needed
+- (void)internalAlfrescoConvertProperties:(NSDictionary *)properties 
+                             objectTypeId:(NSString *)objectTypeId           
+                          completionBlock:(void (^)(CMISProperties *properties, NSError *error))completionBlock
+
 {
     // A direct port of the Alfresco extensions code ... definitely not going to win a beauty contest ...
 
     // Check input
     if (properties == nil)
     {
-        return nil;
+        completionBlock(nil, nil);
+        return;
     }
 
     // Get object and aspect types
@@ -115,58 +123,56 @@
 
     if (objectTypeIdString == nil)
     {
-        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Type property must be set"];
-        return nil;
+        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Type property must be set"];
+        completionBlock(nil, error);
+        return;
+    }
+
+    NSArray *typeIds = nil;
+    NSString *typeDefinitionString = nil;
+    // Check if there are actually aspects/
+    // If so, split them and fetch the type definition for each of them
+    if ([objectTypeIdString rangeOfString:@","].location == NSNotFound)
+    {
+        typeDefinitionString = objectTypeId;
+    }
+    else
+    {
+        typeIds = [objectTypeIdString componentsSeparatedByString:@","];
+        typeDefinitionString = [[typeIds objectAtIndex:0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        
     }
 
     // Get type definitions
     CMISTypeDefinition *typeDefinition = nil;
     NSMutableArray *aspectTypes = [[NSMutableArray alloc] init];
 
-    // Check if there are actually aspects/
-    // If so, split them and fetch the type definition for each of them
-    if ([objectTypeIdString rangeOfString:@","].location == NSNotFound)
+    // Main type
+    [self.session.binding.repositoryService retrieveTypeDefinition:typeDefinitionString  
+                                                   completionBlock:^(CMISTypeDefinition *typeDefinition, NSError *internalError) {
+                                                       if (internalError) {
+                                                           NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
+                                                           completionBlock(nil, error);
+                                                           return;
+                                                       }
+    }];
+    
+    // from here on the implementation has not been changed yet; it would need to be switched to recursive calls to get all aspect type definitions
+ 
+    // Aspects
+    for (int i=1; i < typeIds.count; i++)
     {
-        NSError *internalError = nil;
-        typeDefinition = [self.session.binding.repositoryService retrieveTypeDefinition:objectTypeId error:&internalError];
-
+        NSString *aspectTypeDefinitionString = [typeIds objectAtIndex:i];
+        CMISTypeDefinition *aspectTypeDefinition = [self.session.binding.repositoryService retrieveTypeDefinition:
+                                                    [aspectTypeDefinitionString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] error:&internalError];
+        
         if (internalError != nil)
         {
-            *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
+            *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
             return nil;
         }
-    }
-    else
-    {
-        NSArray *typeIds = [objectTypeIdString componentsSeparatedByString:@","];
-        NSString *typeDefinitionString = [typeIds objectAtIndex:0];
-
-        // Main type
-        NSError *internalError = nil;
-        typeDefinition = [self.session.binding.repositoryService retrieveTypeDefinition:
-                [typeDefinitionString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] error:&internalError];
-
-        if (internalError != nil)
-        {
-            *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
-            return nil;
-        }
-
-        // Aspects
-        for (int i=1; i < typeIds.count; i++)
-        {
-            NSString *aspectTypeDefinitionString = [typeIds objectAtIndex:i];
-            CMISTypeDefinition *aspectTypeDefinition = [self.session.binding.repositoryService retrieveTypeDefinition:
-                   [aspectTypeDefinitionString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] error:&internalError];
-
-            if (internalError != nil)
-            {
-                *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeInvalidArgument];
-                return nil;
-            }
-
-            [aspectTypes addObject:aspectTypeDefinition];
-        }
+        
+        [aspectTypes addObject:aspectTypeDefinition];
     }
 
     // Split type properties from aspect properties
@@ -323,26 +329,16 @@
 
     return result;
 }
-
-
-
-- (CMISProperties *)internalNormalConvertProperties:(NSDictionary *)properties objectTypeId:(NSString *)objectTypeId error:(NSError **)error
+*/
+ 
+- (void)internalNormalConvertProperties:(NSDictionary *)properties 
+                         typeDefinition:(CMISTypeDefinition *)typeDefinition 
+                        completionBlock:(void (^)(CMISProperties *convertedProperties, NSError *error))completionBlock
 {
-// Validate params
-    if (!properties)
-    {
-        return nil;
-    }
-
-    // TODO: add support for multi valued properties
-
-    // Convert properties
-    CMISTypeDefinition *typeDefinition = nil;
     CMISProperties *convertedProperties = [[CMISProperties alloc] init];
     for (NSString *propertyId in properties)
     {
         id propertyValue = [properties objectForKey:propertyId];
-
         // If the value is already a CMISPropertyData, we don't need to do anything
         if ([propertyValue isKindOfClass:[CMISPropertyData class]])
         {
@@ -350,38 +346,27 @@
         }
         else
         {
-            // Fetch type definition if not yet fetched
-            if (typeDefinition == nil)
-            {
-                NSError *internalError = nil;
-                typeDefinition = [self.session.binding.repositoryService retrieveTypeDefinition:objectTypeId error:&internalError];
-
-                if (internalError != nil)
-                {
-                    *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];
-                    return nil;
-                }
-            }
-
             // Convert to CMISPropertyData based on the string
             CMISPropertyDefinition *propertyDefinition = [typeDefinition propertyDefinitionForId:propertyId];
-
+            
             if (propertyDefinition == nil)
             {
-                 *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                          withDetailedDescription:[NSString stringWithFormat:@"Invalid property '%@' for this object type", propertyId]];
-                return nil;
+                NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                             withDetailedDescription:[NSString stringWithFormat:@"Invalid property '%@' for this object type", propertyId]];
+                completionBlock(nil, error);
+                return;
             }
-
+            
             switch (propertyDefinition.propertyType)
             {
                 case(CMISPropertyTypeString):
                 {
                     if (![propertyValue isKindOfClass:[NSString class]])
                     {
-                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                            withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSString'", propertyId]];
-                        return nil;
+                        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                     withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSString'", propertyId]];
+                        completionBlock(nil, error);
+                        return;
                     }
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withStringValue:propertyValue]];
                     break;
@@ -390,9 +375,10 @@
                 {
                     if (![propertyValue isKindOfClass:[NSNumber class]])
                     {
-                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                                    withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSNumber'", propertyId]];
-                        return nil;
+                        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                     withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSNumber'", propertyId]];
+                        completionBlock(nil, error);
+                        return;
                     }
                     BOOL boolValue = ((NSNumber *) propertyValue).boolValue;
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withBoolValue:boolValue]];
@@ -402,9 +388,10 @@
                 {
                     if (![propertyValue isKindOfClass:[NSNumber class]])
                     {
-                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                                    withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSNumber'", propertyId]];
-                        return nil;
+                        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                     withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSNumber'", propertyId]];
+                        completionBlock(nil, error);
+                        return;
                     }
                     NSInteger intValue = ((NSNumber *) propertyValue).integerValue;
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withIntegerValue:intValue]];
@@ -414,9 +401,10 @@
                 {
                     if (![propertyValue isKindOfClass:[NSString class]])
                     {
-                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                                    withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSString'", propertyId]];
-                        return nil;
+                        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                     withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSString'", propertyId]];
+                        completionBlock(nil, error);
+                        return;
                     }
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withIdValue:propertyValue]];
                     break;
@@ -427,11 +415,12 @@
                     BOOL isString = [propertyValue isKindOfClass:[NSString class]];
                     if (!isDate && !isString)
                     {
-                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                                    withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSDate' or 'NSString'", propertyId]];
-                        return nil;
+                        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                     withDetailedDescription:[NSString stringWithFormat:@"Property value for %@ should be of type 'NSDate' or 'NSString'", propertyId]];
+                        completionBlock(nil, error);
+                        return;
                     }
-
+                    
                     if (isString)
                     {
                         CMISISO8601DateFormatter *formatter = [[CMISISO8601DateFormatter alloc] init];
@@ -446,12 +435,55 @@
                     break;
                 }
             }
-
+            
         }
     }
-
-    return convertedProperties;
+    
+    completionBlock(convertedProperties, nil);
 }
 
+
+- (void)internalNormalConvertProperties:(NSDictionary *)properties 
+                           objectTypeId:(NSString *)objectTypeId                                    
+                        completionBlock:(void (^)(CMISProperties *convertedProperties, NSError *error))completionBlock
+
+{
+    // Validate params
+    if (!properties)
+    {
+        completionBlock(nil, nil);
+        return;
+    }
+
+    // TODO: add support for multi valued properties
+    
+    BOOL onlyPropertyData = YES;
+    for (id propertyValue in properties.objectEnumerator) {
+        if (![propertyValue isKindOfClass:[CMISPropertyData class]]) {
+            onlyPropertyData = NO;
+            break;
+        }
+    }
+    
+    // Convert properties
+    if (onlyPropertyData) {
+        [self internalNormalConvertProperties:properties
+                               typeDefinition:nil // not needed because all properties are of type CMISPropertyData
+                              completionBlock:completionBlock];
+        
+    } else {
+        [self.session.binding.repositoryService
+         retrieveTypeDefinition:objectTypeId
+         completionBlock:^(CMISTypeDefinition *typeDefinition, NSError *error) {
+             if (error) {
+                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+             } else {
+                 [self internalNormalConvertProperties:properties
+                                        typeDefinition:typeDefinition
+                                       completionBlock:completionBlock];
+             }
+         }];
+    }
+}
 
 @end
