@@ -389,14 +389,34 @@
                            }];
 }
 
-- (void)downloadContentOfCMISObject:(NSString *)objectId toFile:(NSString *)filePath
+- (void)downloadContentOfCMISObject:(NSString *)objectId
+                             toFile:(NSString *)filePath
                     completionBlock:(CMISVoidCompletionBlock)completionBlock
                     failureBlock:(CMISErrorFailureBlock)failureBlock
                     progressBlock:(CMISProgressBlock)progressBlock;
 {
-    [self.binding.objectService downloadContentOfObject:objectId withStreamId:nil toFile:filePath completionBlock:completionBlock
-                                           failureBlock:failureBlock progressBlock:progressBlock];
+    [self.binding.objectService downloadContentOfObject:objectId
+                                           withStreamId:nil
+                                                 toFile:filePath
+                                        completionBlock:completionBlock
+                                           failureBlock:failureBlock
+                                          progressBlock:progressBlock];
 }
+
+- (void)downloadContentOfCMISObject:(NSString *)objectId
+                     toOutputStream:(NSOutputStream *)outputStream
+                    completionBlock:(CMISVoidCompletionBlock)completionBlock
+                       failureBlock:(CMISErrorFailureBlock)failureBlock
+                      progressBlock:(CMISProgressBlock)progressBlock;
+{
+    [self.binding.objectService downloadContentOfObject:objectId
+                                           withStreamId:nil
+                                         toOutputStream:outputStream
+                                        completionBlock:completionBlock
+                                           failureBlock:failureBlock
+                                          progressBlock:progressBlock];
+}
+
 
 - (void)createDocumentFromFilePath:(NSString *)filePath withMimeType:(NSString *)mimeType
                     withProperties:(NSDictionary *)properties inFolder:(NSString *)folderObjectId

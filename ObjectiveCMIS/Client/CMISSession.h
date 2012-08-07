@@ -140,6 +140,15 @@
                       progressBlock:(CMISProgressBlock)progressBlock;
 
 /**
+ * Downloads the content of object with the provided object id to the given stream.
+ */
+- (void)downloadContentOfCMISObject:(NSString *)objectId
+                     toOutputStream:(NSOutputStream*)outputStream
+                    completionBlock:(CMISVoidCompletionBlock)completionBlock
+                       failureBlock:(CMISErrorFailureBlock)failureBlock
+                      progressBlock:(CMISProgressBlock)progressBlock;
+
+/**
  * Creates a cmis document using the content from the file path.
  */
 - (void)createDocumentFromFilePath:(NSString *)filePath

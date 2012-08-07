@@ -26,7 +26,7 @@
 
 @implementation CMISFileDownloadDelegate
 
-@synthesize filePathForContentRetrieval = _filePathForContentRetrieval;
+@synthesize fileStreamForContentRetrieval = _fileStreamForContentRetrieval;
 @synthesize fileRetrievalCompletionBlock = _fileRetrievalCompletionBlock;
 @synthesize fileRetrievalFailureBlock = _fileRetrievalFailureBlock;
 @synthesize fileRetrievalProgressBlock = _fileRetrievalProgressBlock;
@@ -36,16 +36,23 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     // Create file for file that is downloaded
-    BOOL fileCreated = [[NSFileManager defaultManager] createFileAtPath:self.filePathForContentRetrieval contents:nil attributes:nil];
+    BOOL isStreamReady = self.fileStreamForContentRetrieval.streamStatus == NSStreamStatusOpen;
+    if (!isStreamReady) {
+        [self.fileStreamForContentRetrieval open];
+        isStreamReady = self.fileStreamForContentRetrieval.streamStatus == NSStreamStatusOpen;
+    } else { // stream is already open, reset it
+        isStreamReady = [self.fileStreamForContentRetrieval setProperty:[NSNumber numberWithInteger:0]
+                                                                 forKey:NSStreamFileCurrentOffsetKey];
+    }
 
-    if (!fileCreated)
+    if (!isStreamReady)
     {
         [connection cancel];
 
         if (self.fileRetrievalFailureBlock)
         {
             NSError *cmisError = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeStorage
-                    withDetailedDescription:[NSString stringWithFormat:@"Could not create file at path %@", self.filePathForContentRetrieval]];
+                                             withDetailedDescription:@"Could not open output stream"];
             self.fileRetrievalFailureBlock(cmisError);
         }
     }
@@ -58,7 +65,19 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
-    [FileUtil appendToFileAtPath:self.filePathForContentRetrieval data:data];
+    const uint8_t *bytes = data.bytes;
+    NSUInteger length = data.length;
+    NSUInteger offset = 0;
+    do {
+        NSUInteger written = [self.fileStreamForContentRetrieval write:&bytes[offset] maxLength:length - offset];
+        if (written <= 0) {
+            log(@"Error while writing downloaded data to file");
+            [connection cancel];
+            return;
+        } else {
+            offset += written;
+        }
+    } while (offset < length);
 
     // Pass progress to progressBlock
     self.bytesDownloaded += data.length;
@@ -70,6 +89,8 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+    [self.fileStreamForContentRetrieval close];
+    
     if (self.fileRetrievalFailureBlock)
     {
         NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection];
@@ -77,7 +98,6 @@
     }
 
     // Cleanup
-    self.filePathForContentRetrieval = nil;
     self.fileRetrievalCompletionBlock = nil;
     self.fileRetrievalFailureBlock = nil;
     self.fileRetrievalProgressBlock = nil;
@@ -85,6 +105,8 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+    [self.fileStreamForContentRetrieval close];
+
     // Fire completion to block
     if (self.fileRetrievalCompletionBlock)
     {
@@ -92,7 +114,6 @@
     }
 
     // Cleanup
-    self.filePathForContentRetrieval = nil;
     self.fileRetrievalCompletionBlock = nil;
     self.fileRetrievalFailureBlock = nil;
     self.fileRetrievalProgressBlock = nil;

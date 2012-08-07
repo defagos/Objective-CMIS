@@ -78,6 +78,18 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                    failureBlock:(CMISErrorFailureBlock)failureBlock
                   progressBlock:(CMISProgressBlock)progressBlock;
 {
+    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
+    [self downloadContentOfObject:objectId withStreamId:streamId toOutputStream:outputStream
+                  completionBlock:completionBlock failureBlock:failureBlock progressBlock:progressBlock];
+}
+
+- (void)downloadContentOfObject:(NSString *)objectId
+                   withStreamId:(NSString *)streamId
+                 toOutputStream:(NSOutputStream *)outputStream
+                completionBlock:(CMISVoidCompletionBlock)completionBlock
+                   failureBlock:(CMISErrorFailureBlock)failureBlock
+                  progressBlock:(CMISProgressBlock)progressBlock;
+{
     [self retrieveObjectInternal:objectId completionBlock:^(CMISObjectData *objectData, NSError *error) {
         if (error) {
             log(@"Error while retrieving CMIS object for object id '%@' : %@", objectId, error.description);
@@ -87,7 +99,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         } else {
             // We create a specific delegate object, as potentially multiple threads can be downloading a file.
             CMISFileDownloadDelegate *dataDelegate = [[CMISFileDownloadDelegate alloc] init];
-            dataDelegate.filePathForContentRetrieval = filePath;
+            dataDelegate.fileStreamForContentRetrieval = outputStream;
             dataDelegate.fileRetrievalCompletionBlock = completionBlock;
             dataDelegate.fileRetrievalFailureBlock = failureBlock;
             dataDelegate.fileRetrievalProgressBlock = progressBlock;

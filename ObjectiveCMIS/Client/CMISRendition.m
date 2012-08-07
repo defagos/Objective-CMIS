@@ -82,4 +82,20 @@
                                                   progressBlock:progressBlock];
 }
 
+- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+{
+    if (self.objectId == nil || self.streamId == nil)
+    {
+        log(@"Object id or stream id is nil. Both are needed when fetching the content of a rendition");
+        return;
+    }
+    
+    [self.session.binding.objectService downloadContentOfObject:self.objectId
+                                                   withStreamId:self.streamId
+                                                         toOutputStream:outputStream
+                                                completionBlock:completionBlock
+                                                   failureBlock:failureBlock
+                                                  progressBlock:progressBlock];
+}
+
 @end

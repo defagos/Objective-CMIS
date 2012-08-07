@@ -35,4 +35,9 @@
                                 failureBlock:(CMISErrorFailureBlock)failureBlock
                                 progressBlock:(CMISProgressBlock)progressBlock;
 
+- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream
+                               completionBlock:(CMISVoidCompletionBlock)completionBlock
+                                  failureBlock:(CMISErrorFailureBlock)failureBlock
+                                 progressBlock:(CMISProgressBlock)progressBlock;
+
 @end

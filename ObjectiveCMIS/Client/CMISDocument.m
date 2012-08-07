@@ -135,7 +135,8 @@
 - (void)downloadContentToFile:(NSString *)filePath completionBlock:(CMISVoidCompletionBlock)completionBlock
            failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
 {
-    [self.binding.objectService downloadContentOfObject:self.identifier withStreamId:nil toFile:filePath
+    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
+    [self.binding.objectService downloadContentOfObject:self.identifier withStreamId:nil toOutputStream:outputStream
                                  completionBlock:completionBlock failureBlock:failureBlock progressBlock:progressBlock];
 }
 

@@ -49,7 +49,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
 
 /**
 * Gets the content stream for the specified Document object, or gets a rendition stream for a specified
-* rendition of a document or folder object. Downloads the content to a local file and returns the filepath.
+* rendition of a document or folder object. Downloads the content to a local file.
 *
 * Do note that this is an ASYNCHRONOUS call, as a synchronous call would have
 * bad performance/memory implications.
@@ -57,6 +57,20 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
 - (void)downloadContentOfObject:(NSString *)objectId
                    withStreamId:(NSString *)streamId
                          toFile:(NSString *)filePath
+                completionBlock:(CMISVoidCompletionBlock)completionBlock
+                   failureBlock:(CMISErrorFailureBlock)failureBlock
+                  progressBlock:(CMISProgressBlock)progressBlock;
+
+/**
+ * Gets the content stream for the specified Document object, or gets a rendition stream for a specified
+ * rendition of a document or folder object. Downloads the content to an output stream.
+ *
+ * Do note that this is an ASYNCHRONOUS call, as a synchronous call would have
+ * bad performance/memory implications.
+ */
+- (void)downloadContentOfObject:(NSString *)objectId
+                   withStreamId:(NSString *)streamId
+                 toOutputStream:(NSOutputStream *)outputStream
                 completionBlock:(CMISVoidCompletionBlock)completionBlock
                    failureBlock:(CMISErrorFailureBlock)failureBlock
                   progressBlock:(CMISProgressBlock)progressBlock;
