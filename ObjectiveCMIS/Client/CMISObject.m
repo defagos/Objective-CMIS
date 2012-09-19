@@ -108,31 +108,38 @@
     return ((aArray == nil) ? [NSArray array] : aArray);
 }
 
-- (CMISObject *)updateProperties:(NSDictionary *)properties error:(NSError **)error
+- (void)updateProperties:(NSDictionary *)properties completionBlock:(void (^)(CMISObject *object, NSError *error))completionBlock
 {
     // Validate properties param
         if (!properties || properties.count == 0)
     {
-        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Properties cannot be nil or empty"];
-        return nil;
+        completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Properties cannot be nil or empty"]);
+        return;
     }
 
     // Convert properties to an understandable format for the service
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-    CMISProperties *convertedProperties = [converter convertProperties:properties forObjectTypeId:self.objectType error:error];
-
-    if (convertedProperties != nil)
-    {
-        CMISStringInOutParameter *objectIdInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier];
-        CMISStringInOutParameter *changeTokenInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken];
-        [self.binding.objectService updatePropertiesForObject:objectIdInOutParam withProperties:convertedProperties withChangeToken:changeTokenInOutParam error:error];
-
-        if (objectIdInOutParam.outParameter != nil)
-        {
-            return [self.session retrieveObject:objectIdInOutParam.outParameter error:error];
+    [converter convertProperties:properties forObjectTypeId:self.objectType completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+        if (convertedProperties) {
+            CMISStringInOutParameter *objectIdInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier];
+            CMISStringInOutParameter *changeTokenInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken];
+            [self.binding.objectService updatePropertiesForObject:objectIdInOutParam
+                                                   withProperties:convertedProperties
+                                                  withChangeToken:changeTokenInOutParam
+                                                            completionBlock:^(NSError *error) {
+                                                                if (objectIdInOutParam.outParameter) {
+                                                                    [self.session retrieveObject:objectIdInOutParam.outParameter
+                                                                                 completionBlock:^(CMISObject *object, NSError *error) {
+                                                                        completionBlock(object, error);
+                                                                    }];
+                                                                } else {
+                                                                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+                                                                }
+                                                            }];
+        } else {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
         }
-    }
-    return nil;
+    }];
 }
 
 - (NSArray *)extensionsForExtensionLevel:(CMISExtensionLevel)extensionLevel

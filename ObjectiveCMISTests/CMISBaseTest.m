@@ -22,7 +22,7 @@
 @synthesize parameters = _parameters;
 @synthesize session = _session;
 @synthesize rootFolder = _rootFolder;
-@synthesize callbackCompleted = _callbackCompleted;
+@synthesize testCompleted = _testCompleted;
 
 
 - (void) runTest:(CMISTestBlock)testBlock
@@ -51,18 +51,21 @@
         NSString *username = [envDict valueForKey:@"username"];
         NSString *password = [envDict valueForKey:@"password"];
 
-        self.callbackCompleted = NO;
-        [self setupCmisSession:url repositoryId:repositoryId username:username password:password extraSessionParameters:extraSessionParameters];
-        self.callbackCompleted = NO;
-
-        log(@">------------------- Running test against %@ -------------------<", url);
-
-        testBlock();
+        self.testCompleted = NO;
+        [self setupCmisSession:url repositoryId:repositoryId username:username password:password extraSessionParameters:extraSessionParameters completionBlock:^{
+            self.testCompleted = NO;
+            
+            log(@">------------------- Running test against %@ -------------------<", url);
+            
+            testBlock();
+        }];
+        [self waitForCompletion:60];
     }
 }
 
 - (void)setupCmisSession:(NSString *)url repositoryId:(NSString *)repositoryId username:(NSString *)username
                   password:(NSString *)password extraSessionParameters:(NSDictionary *)extraSessionParameters
+         completionBlock:(void (^)(void))completionBlock
 {
     self.parameters = [[CMISSessionParameters alloc] initWithBindingType:CMISBindingTypeAtomPub];
     self.parameters.username = username;
@@ -93,13 +96,17 @@
     STAssertNotNil(self.session, @"Session should not be nil");
     STAssertFalse(self.session.isAuthenticated, @"Session should not yet be authenticated");
 
-    NSError *error = nil;
-    [self.session authenticateAndReturnError:&error];
-    STAssertTrue(self.session.isAuthenticated, @"Session should be authenticated");
-
-    self.rootFolder = [self.session retrieveRootFolderAndReturnError:&error];
-    STAssertNil(error, @"Error while retrieving root folder: %@", [error description]);
-    STAssertNotNil(self.rootFolder, @"rootFolder object should not be nil");
+    [self.session authenticateWithCompletionBlock:^(BOOL authenticated, NSError *error) {
+        STAssertTrue(self.session.isAuthenticated, @"Session should be authenticated");
+        
+        [self.session retrieveRootFolderWithCompletionBlock:^(CMISFolder *rootFolder, NSError *error) {
+            self.rootFolder = rootFolder;
+            STAssertNil(error, @"Error while retrieving root folder: %@", [error description]);
+            STAssertNotNil(self.rootFolder, @"rootFolder object should not be nil");
+            
+            completionBlock();
+        }];
+    }];
 }
 
 - (NSDictionary *)customCmisParameters
@@ -110,19 +117,20 @@
 
 #pragma mark Helper Methods
 
-- (CMISDocument *)retrieveVersionedTestDocument
+- (void)retrieveVersionedTestDocumentWithCompletionBlock:(void (^)(CMISDocument *document))completionBlock
 {
-    NSError *error = nil;
-    CMISDocument *document = (CMISDocument *) [self.session retrieveObjectByPath:@"/ios-test/versioned-quote.txt" error:&error];
-    STAssertNotNil(document, @"Did not find test document for versioning test");
-    STAssertTrue(document.isLatestVersion, @"Should have 'true' for the property 'isLatestVersion");
-    STAssertFalse(document.isLatestMajorVersion, @"Should have 'false' for the property 'isLatestMajorVersion"); // the latest version is a minor one
-    STAssertFalse(document.isMajorVersion, @"Should have 'false' for the property 'isMajorVersion");
-
-    return document;
+    [self.session retrieveObjectByPath:@"/ios-test/versioned-quote.txt" completionBlock:^(CMISObject *object, NSError *error) {
+        CMISDocument *document = (CMISDocument *)object;
+        STAssertNotNil(document, @"Did not find test document for versioning test");
+        STAssertTrue(document.isLatestVersion, @"Should have 'true' for the property 'isLatestVersion");
+        STAssertFalse(document.isLatestMajorVersion, @"Should have 'false' for the property 'isLatestMajorVersion"); // the latest version is a minor one
+        STAssertFalse(document.isMajorVersion, @"Should have 'false' for the property 'isMajorVersion");
+        
+        completionBlock(document);
+    }];
 }
 
-- (CMISDocument *)uploadTestFile
+- (void)uploadTestFileWithCompletionBlock:(void (^)(CMISDocument *document))completionBlock
 {
     // Set properties on test file
     NSString *filePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"test_file.txt" ofType:nil];
@@ -141,7 +149,14 @@
             {
                 STAssertNotNil(newObjectId, @"Object id should not be nil");
                 objectId = newObjectId;
-                self.callbackCompleted = YES;
+
+                [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
+                    CMISDocument *document = (CMISDocument *)object;
+                    STAssertNil(error, @"Got error while creating document: %@", [error description]);
+                    STAssertNotNil(objectId, @"Object id received should be non-nil");
+                    STAssertNotNil(document, @"Retrieved document should not be nil");
+                    completionBlock(document);
+                }];
             }
             failureBlock: ^ (NSError *failureError)
             {
@@ -153,15 +168,6 @@
                 previousUploadedBytes = uploadedBytes;
             }];
 
-    [self waitForCompletion:60];
-
-    NSError *error = nil;
-    CMISDocument *document = (CMISDocument *) [self.session retrieveObject:objectId error:&error];
-    STAssertNil(error, @"Got error while creating document: %@", [error description]);
-    STAssertNotNil(objectId, @"Object id received should be non-nil");
-    STAssertNotNil(document, @"Retrieved document should not be nil");
-
-    return document;
 }
 
 - (void)waitForCompletion:(NSTimeInterval)timeoutSecs
@@ -170,19 +176,20 @@
     do
     {
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:timeoutDate];
-        if ([timeoutDate timeIntervalSinceNow] < 0.0)
-            break;
-    } while (!self.callbackCompleted);
+    } while (!self.testCompleted && [timeoutDate timeIntervalSinceNow] > 0);
 
-    self.callbackCompleted = NO;
+    STAssertTrue(self.testCompleted, @"Test did not complete within %d seconds", (int)timeoutSecs);
+
+    self.testCompleted = NO;
 }
 
-- (void)deleteDocumentAndVerify:(CMISDocument *)document
+- (void)deleteDocumentAndVerify:(CMISDocument *)document completionBlock:(void (^)(void))completionBlock
 {
-    NSError *error = nil;
-    BOOL documentDeleted = [document deleteAllVersionsAndReturnError:&error];
-    STAssertNil(error, @"Error while deleting created document: %@", [error description]);
-    STAssertTrue(documentDeleted, @"Document was not deleted");
+    [document deleteAllVersionsWithCompletionBlock:^(BOOL documentDeleted, NSError *error) {
+        STAssertNil(error, @"Error while deleting created document: %@", [error description]);
+        STAssertTrue(documentDeleted, @"Document was not deleted");
+        completionBlock();
+    }];
 }
 
 - (NSDateFormatter *)testDateFormatter

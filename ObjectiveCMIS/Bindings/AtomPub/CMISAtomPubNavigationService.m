@@ -22,104 +22,118 @@
 
 @implementation CMISAtomPubNavigationService
 
-- (CMISObjectList *)retrieveChildren:(NSString *)objectId orderBy:(NSString *)orderBy
-                       filter:(NSString *)filter includeRelationShips:(CMISIncludeRelationship)includeRelationship
-                       renditionFilter:(NSString *)renditionFilter includeAllowableActions:(BOOL)includeAllowableActions
-                       includePathSegment:(BOOL)includePathSegment skipCount:(NSNumber *)skipCount
-                       maxItems:(NSNumber *)maxItems error:(NSError **)error
+
+- (void)retrieveChildren:(NSString *)objectId orderBy:(NSString *)orderBy
+                  filter:(NSString *)filter includeRelationShips:(CMISIncludeRelationship)includeRelationship
+         renditionFilter:(NSString *)renditionFilter includeAllowableActions:(BOOL)includeAllowableActions
+      includePathSegment:(BOOL)includePathSegment skipCount:(NSNumber *)skipCount
+                maxItems:(NSNumber *)maxItems
+         completionBlock:(void (^)(CMISObjectList *objectList, NSError *error))completionBlock
 {
     // Get Down link
-    NSError *internalError = nil;
-    NSString *downLink = [self loadLinkForObjectId:objectId andRelation:kCMISLinkRelationDown
-                                             andType:kCMISMediaTypeChildren error:&internalError];
-    if (internalError != nil)
-    {
-        log(@"Could not retrieve down link: %@", [internalError description]);
-        return nil;
-    }
-
-    // Add optional params (CMISUrlUtil will not append if the param name or value is nil)
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterOrderBy withValue:orderBy toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeRelationships withValue:[CMISEnums stringForIncludeRelationShip:includeRelationship] toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRenditionFilter withValue:renditionFilter toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludePathSegment withValue:(includePathSegment ? @"true" : @"false") toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterMaxItems withValue:[maxItems stringValue] toUrlString:downLink];
-    downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterSkipCount withValue:[skipCount stringValue] toUrlString:downLink];
-
-    // execute the request
-    HTTPResponse *response = [HttpUtil invokeGETSynchronous:[NSURL URLWithString:downLink] withSession:self.bindingSession error:&internalError];
-    if (internalError || response.data == nil) {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeConnection];
-        return nil;        
-    }
-
-    // Parse the feed (containing entries for the children) you get back
-    CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:response.data];
-    if ([parser parseAndReturnError:error])
-    {
-        NSString *nextLink = [parser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
-
-        CMISObjectList *objectList = [[CMISObjectList alloc] init];
-        objectList.hasMoreItems = (nextLink != nil);
-        objectList.numItems = parser.numItems;
-        objectList.objects = parser.entries;
-        return objectList;
-    }
-    else 
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];  
-        return nil;
-    }
+    [self loadLinkForObjectId:objectId andRelation:kCMISLinkRelationDown
+                      andType:kCMISMediaTypeChildren completionBlock:^(NSString *downLink, NSError *error) {
+                          if (error)
+                          {
+                              log(@"Could not retrieve down link: %@", error.description);
+                              completionBlock(nil, error);
+                              return;
+                          }
+                          
+                          // Add optional params (CMISUrlUtil will not append if the param name or value is nil)
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterOrderBy withValue:orderBy toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeRelationships withValue:[CMISEnums stringForIncludeRelationShip:includeRelationship] toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRenditionFilter withValue:renditionFilter toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludePathSegment withValue:(includePathSegment ? @"true" : @"false") toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterMaxItems withValue:[maxItems stringValue] toUrlString:downLink];
+                          downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterSkipCount withValue:[skipCount stringValue] toUrlString:downLink];
+                          
+                          // execute the request
+                          [HttpUtil invokeGET:[NSURL URLWithString:downLink]
+                                  withSession:self.bindingSession
+                              completionBlock:^(HTTPResponse *httpResponse) {
+                                  if (httpResponse.data == nil) {
+                                      NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConnection withDetailedDescription:nil];
+                                      completionBlock(nil, error);
+                                      return;
+                                  }
+                                  
+                                  // Parse the feed (containing entries for the children) you get back
+                                  CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                                  NSError *internalError = nil;
+                                  if ([parser parseAndReturnError:&internalError])
+                                  {
+                                      NSString *nextLink = [parser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
+                                      
+                                      CMISObjectList *objectList = [[CMISObjectList alloc] init];
+                                      objectList.hasMoreItems = (nextLink != nil);
+                                      objectList.numItems = parser.numItems;
+                                      objectList.objects = parser.entries;
+                                      completionBlock(objectList, nil);
+                                  }
+                                  else
+                                  {
+                                      NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
+                                      completionBlock(nil, error);
+                                  }
+                                  
+                              } failureBlock:^(NSError *error) {
+                                  completionBlock(nil, error);
+                              }];
+                      }];
 }
 
-- (NSArray *)retrieveParentsForObject:(NSString *)objectId
+- (void)retrieveParentsForObject:(NSString *)objectId
                            withFilter:(NSString *)filter
              withIncludeRelationships:(CMISIncludeRelationship)includeRelationship
                   withRenditionFilter:(NSString *)renditionFilter
           withIncludeAllowableActions:(BOOL)includeAllowableActions
        withIncludeRelativePathSegment:(BOOL)includeRelativePathSegment
-                                   error:(NSError * *)error;
+                      completionBlock:(void (^)(NSArray *parents, NSError *error))completionBlock
 {
     // Get up link
-    NSError *internalError = nil;
-    NSString *upLink = [self loadLinkForObjectId:objectId andRelation:kCMISLinkRelationUp error:&internalError];
-
-    if (upLink == nil) {
-        log(@"Failing because the NString upLink is nil");
-        return [NSArray array];
-    }
-
-    // Add optional parameters
-    if (filter != nil)
-    {
-        upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:upLink];
-    }
-    upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:upLink];
-    upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeRelationships withValue:[CMISEnums stringForIncludeRelationShip:includeRelationship] toUrlString:upLink];
-
-    if (renditionFilter != nil)
-    {
-        upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRenditionFilter withValue:renditionFilter toUrlString:upLink];
-    }
-
-    upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRelativePathSegment withValue:(includeRelativePathSegment ? @"true" : @"false") toUrlString:upLink];
-    
-    NSData *response = [HttpUtil invokeGETSynchronous:[NSURL URLWithString:upLink] withSession:self.bindingSession error:&internalError].data;
-    if (internalError) {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeConnection];
-        log(@"Failing because the invokeGETSynchronous returns an error");
-        return [NSArray array];
-    }
-    CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:response];
-    if (![parser parseAndReturnError:error])
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];  
-        log(@"Failing because parsing the Atom Feed XML returns an error");
-        return [NSArray array];
-    }
-    return parser.entries;    
+    [self loadLinkForObjectId:objectId andRelation:kCMISLinkRelationUp completionBlock:^(NSString *upLink, NSError *error) {
+        if (upLink == nil) {
+            log(@"Failing because the NSString upLink is nil");
+            completionBlock([NSArray array], nil); // TODO: shouldn't this return an error if the log talks about 'failing'?
+            return;
+        }
+        
+        // Add optional parameters
+        if (filter != nil)
+        {
+            upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:upLink];
+        }
+        upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:upLink];
+        upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeRelationships withValue:[CMISEnums stringForIncludeRelationShip:includeRelationship] toUrlString:upLink];
+        
+        if (renditionFilter != nil)
+        {
+            upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRenditionFilter withValue:renditionFilter toUrlString:upLink];
+        }
+        
+        upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRelativePathSegment withValue:(includeRelativePathSegment ? @"true" : @"false") toUrlString:upLink];
+        
+        [HttpUtil invokeGET:[NSURL URLWithString:upLink]
+                withSession:self.bindingSession
+            completionBlock:^(HTTPResponse *httpResponse) {
+                CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                NSError *internalError;
+                if (![parser parseAndReturnError:&internalError])
+                {
+                    NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
+                    log(@"Failing because parsing the Atom Feed XML returns an error");
+                    completionBlock([NSArray array], error);
+                } else {
+                    completionBlock(parser.entries, nil);
+                }
+            } failureBlock:^(NSError *error) {
+                log(@"Failing because the invokeGET returns an error");
+                completionBlock([NSArray array], error);
+            }];
+    }];
 }
 
 @end

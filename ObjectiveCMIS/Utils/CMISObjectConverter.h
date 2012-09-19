@@ -30,6 +30,8 @@
  * Converts the given dictionary of properties, where the key is the property id and the value
  * can be a CMISPropertyData or a regular string.
  */
-- (CMISProperties *)convertProperties:(NSDictionary *)properties forObjectTypeId:(NSString *)objectTypeId error:(NSError **)error;
+- (void)convertProperties:(NSDictionary *)properties 
+          forObjectTypeId:(NSString *)objectTypeId 
+          completionBlock:(void (^)(CMISProperties *convertedProperties, NSError *error))completionBlock;
 
 @end

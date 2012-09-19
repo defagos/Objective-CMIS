@@ -40,27 +40,30 @@
     return self;
 }
 
-- (CMISDocument *)retrieveRenditionDocumentAndReturnError:(NSError **)error
+- (void)retrieveRenditionDocumentWithCompletionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock
 {
-    return [self retrieveRenditionDocumentWithOperationContext:[CMISOperationContext defaultOperationContext] withError:error];
+    [self retrieveRenditionDocumentWithOperationContext:[CMISOperationContext defaultOperationContext] completionBlock:completionBlock];
 }
 
-- (CMISDocument *)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext withError:(NSError **)error
+- (void)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext
+                                      completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock
 {
     if (self.renditionDocumentId == nil)
     {
         log(@"Cannot retrieve rendition document: no renditionDocumentId was returned by the server.");
-        return nil;
+        completionBlock(nil, nil);
+        return;
     }
 
-    CMISObject *renditionDocument = [self.session retrieveObject:self.renditionDocumentId withOperationContext:operationContext error:error];
-    if (renditionDocument != nil && !([[renditionDocument class] isKindOfClass:[CMISDocument class]]))
-    {
-        log(@"Returned object was not of document type");
-        return nil;
-    }
-
-    return (CMISDocument *) renditionDocument;
+    [self.session retrieveObject:self.renditionDocumentId withOperationContext:operationContext completionBlock:^(CMISObject *renditionDocument, NSError *error) {
+        if (renditionDocument != nil && !([[renditionDocument class] isKindOfClass:[CMISDocument class]]))
+        {
+            completionBlock(nil, nil);
+            return;
+        }
+        
+        completionBlock((CMISDocument *) renditionDocument, nil);
+    }];
 }
 
 - (void)downloadRenditionContentToFile:(NSString *)filePath completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
@@ -74,6 +77,22 @@
     [self.session.binding.objectService downloadContentOfObject:self.objectId
                                                    withStreamId:self.streamId
                                                          toFile:filePath
+                                                completionBlock:completionBlock
+                                                   failureBlock:failureBlock
+                                                  progressBlock:progressBlock];
+}
+
+- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+{
+    if (self.objectId == nil || self.streamId == nil)
+    {
+        log(@"Object id or stream id is nil. Both are needed when fetching the content of a rendition");
+        return;
+    }
+    
+    [self.session.binding.objectService downloadContentOfObject:self.objectId
+                                                   withStreamId:self.streamId
+                                                         toOutputStream:outputStream
                                                 completionBlock:completionBlock
                                                    failureBlock:failureBlock
                                                   progressBlock:progressBlock];

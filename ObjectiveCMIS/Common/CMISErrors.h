@@ -103,11 +103,11 @@ extern NSString * const kCMISErrorDescriptionVersioning;
  
  This is the indirect way of creating CMIS errors
  
- @param error The reference to the underlying NSError object
+ @param error The underlying NSError object
  @param code the CMIS error code
  @return the CMIS error as NSError object with error domain org.apache.chemistry.objectivecmis
  */
-+ (NSError *)cmisError:(NSError * *)error withCMISErrorCode:(CMISErrorCodes)code;
++ (NSError *)cmisError:(NSError *)error withCMISErrorCode:(CMISErrorCodes)code;
 /** Creates a new CMIS error
  
  This is the direct way of creating CMIS errors

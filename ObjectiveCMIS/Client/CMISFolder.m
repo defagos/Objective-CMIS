@@ -42,9 +42,9 @@
     return self;
 }
 
-- (CMISPagedResult *)retrieveChildrenAndReturnError:(NSError **)error
+- (void)retrieveChildrenWithCompletionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock
 {
-    return [self retrieveChildrenWithOperationContext:[CMISOperationContext defaultOperationContext] andReturnError:error];
+    [self retrieveChildrenWithOperationContext:[CMISOperationContext defaultOperationContext] completionBlock:completionBlock];
 }
 
 - (BOOL)isRootFolder
@@ -52,110 +52,111 @@
     return [self.identifier isEqualToString:self.session.repositoryInfo.rootFolderId];
 }
 
-- (CMISFolder *)retrieveFolderParentAndReturnError:(NSError **)error;
+- (void)retrieveFolderParentWithCompletionBlock:(void (^)(CMISFolder *folder, NSError *error))completionBlock
 {
-   if ([self isRootFolder])
-   {
-       return nil;
-   }
-
-   NSArray *parents = [self retrieveParentsAndReturnError:error];
-   if (parents == nil || parents.count == 0)
-   {
-       return nil;
-   }
-
-    return [parents objectAtIndex:0];
+    if ([self isRootFolder])
+    {
+        completionBlock(nil, nil);
+    } else {
+        [self retrieveParentsWithCompletionBlock:^(NSArray *parentFolders, NSError *error) {
+            if (parentFolders.count > 0) {
+                completionBlock([parentFolders objectAtIndex:0], error);
+            } else {
+                completionBlock(nil, error);
+            }
+        }];
+    }
 }
 
-- (CMISPagedResult *)retrieveChildrenWithOperationContext:(CMISOperationContext *)operationContext andReturnError:(NSError **)error
+- (void)retrieveChildrenWithOperationContext:(CMISOperationContext *)operationContext completionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock
 {
-    CMISFetchNextPageBlock fetchNextPageBlock = ^CMISFetchNextPageBlockResult *(int skipCount, int maxItems, NSError **fetchError)
+    CMISFetchNextPageBlock fetchNextPageBlock = ^(int skipCount, int maxItems, CMISFetchNextPageBlockCompletionBlock pageBlockCompletionBlock)
     {
         // Fetch results through navigationService
-        CMISObjectList *objectList = [self.binding.navigationService retrieveChildren:self.identifier
-                                                   orderBy:operationContext.orderBy
-                                                   filter:operationContext.filterString
-                                                   includeRelationShips:operationContext.includeRelationShips
-                                                   renditionFilter:operationContext.renditionFilterString
-                                                   includeAllowableActions:operationContext.isIncludeAllowableActions
-                                                   includePathSegment:operationContext.isIncludePathSegments
-                                                   skipCount:[NSNumber numberWithInt:skipCount]
-                                                   maxItems:[NSNumber numberWithInt:maxItems]
-                                                   error:fetchError];
-
-
-
-        // Fill up return result
-        CMISFetchNextPageBlockResult *result = [[CMISFetchNextPageBlockResult alloc] init];
-        result.hasMoreItems = objectList.hasMoreItems;
-        result.numItems = objectList.numItems;
-
-        CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-        result.resultArray = [converter convertObjects:objectList.objects].items;
-
-        return result;
+        [self.binding.navigationService retrieveChildren:self.identifier
+                                                 orderBy:operationContext.orderBy
+                                                  filter:operationContext.filterString
+                                    includeRelationShips:operationContext.includeRelationShips
+                                         renditionFilter:operationContext.renditionFilterString
+                                 includeAllowableActions:operationContext.isIncludeAllowableActions
+                                      includePathSegment:operationContext.isIncludePathSegments
+                                               skipCount:[NSNumber numberWithInt:skipCount]
+                                                maxItems:[NSNumber numberWithInt:maxItems]
+                                         completionBlock:^(CMISObjectList *objectList, NSError *error) {
+                                             if (error) {
+                                                 pageBlockCompletionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+                                             } else {
+                                                 CMISFetchNextPageBlockResult *result = [[CMISFetchNextPageBlockResult alloc] init];
+                                                 result.hasMoreItems = objectList.hasMoreItems;
+                                                 result.numItems = objectList.numItems;
+                                             
+                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+                                                 result.resultArray = [converter convertObjects:objectList.objects].items;
+                                                 pageBlockCompletionBlock(result, nil);
+                                             }
+                                         }];
     };
 
-    NSError *internalError = nil;
-    CMISPagedResult *result = [CMISPagedResult pagedResultUsingFetchBlock:fetchNextPageBlock
-                                                       andLimitToMaxItems:operationContext.maxItemsPerPage
-                                                    andStartFromSkipCount:operationContext.skipCount
-                                                                    error:&internalError];
-
-    // Return nil and populate error in case something went wrong
-    if (internalError != nil)
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];
-        return nil;
-    }
-
-    return result;
+    [CMISPagedResult pagedResultUsingFetchBlock:fetchNextPageBlock
+                             andLimitToMaxItems:operationContext.maxItemsPerPage
+                          andStartFromSkipCount:operationContext.skipCount
+                          completionBlock:^(CMISPagedResult *result, NSError *error) {
+                              if (error) {
+                                  completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+                              } else {
+                                  completionBlock(result, nil);
+                              }
+                          }];
 }
 
-- (NSString *)createFolder:(NSDictionary *)properties error:(NSError **)error;
+- (void)createFolder:(NSDictionary *)properties completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
-    NSError *internalError = nil;
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-    CMISProperties *convertedProperties = [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder error:&internalError];
-    if (internalError != nil)
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime];
-        return nil;
-    }
-
-    return [self.binding.objectService createFolderInParentFolder:self.identifier withProperties:convertedProperties error:error];
+    [converter convertProperties:properties
+                 forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
+                 completionBlock:^(CMISProperties *properties, NSError *error) {
+                     if (error) {
+                         completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+                     } else {
+                         [self.binding.objectService createFolderInParentFolder:self.identifier
+                                                                 withProperties:properties
+                                                                completionBlock:^(NSString *objectId, NSError *error) {
+                                                                    completionBlock(objectId, error);
+                                                                }];
+                     }
+                 }];
 }
 
 - (void)createDocumentFromFilePath:(NSString *)filePath withMimeType:(NSString *)mimeType
-                          withProperties:(NSDictionary *)properties completionBlock:(CMISStringCompletionBlock)completionBlock
-                          failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+                    withProperties:(NSDictionary *)properties completionBlock:(CMISStringCompletionBlock)completionBlock
+                      failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
 {
-    NSError *internalError = nil;
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-    CMISProperties *convertedProperties = [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument error:&internalError];
-    if (internalError != nil)
-    {
-        log(@"Could not convert properties: %@", [internalError description]);
-        if (failureBlock)
-        {
-            failureBlock([CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeRuntime]);
+    [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+        if (error) {
+            log(@"Could not convert properties: %@", error.description);
+            if (failureBlock) {
+                failureBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+            }
+        } else {
+            [self.binding.objectService createDocumentFromFilePath:filePath
+                                                      withMimeType:mimeType
+                                                    withProperties:convertedProperties
+                                                          inFolder:self.identifier
+                                               completionBlock:completionBlock
+                                                      failureBlock:failureBlock
+                                                     progressBlock:progressBlock];
         }
-        return;
-    }
-
-    [self.binding.objectService createDocumentFromFilePath:filePath withMimeType:mimeType withProperties:convertedProperties inFolder:self.identifier
-                                           completionBlock:completionBlock failureBlock:failureBlock progressBlock:progressBlock];
+    }];
 }
 
-- (NSArray *)deleteTreeWithDeleteAllVersions:(BOOL)deleteAllversions
+- (void)deleteTreeWithDeleteAllVersions:(BOOL)deleteAllversions
                            withUnfileObjects:(CMISUnfileObject)unfileObjects
                        withContinueOnFailure:(BOOL)continueOnFailure
-                              andReturnError:(NSError **)error;
+                             completionBlock:(void (^)(NSArray *failedObjects, NSError *error))completionBlock
 {
-    return [self.binding.objectService deleteTree:self.identifier allVersion:deleteAllversions
-                                    unfileObjects:unfileObjects continueOnFailure:continueOnFailure error:error];
+    [self.binding.objectService deleteTree:self.identifier allVersion:deleteAllversions
+                                    unfileObjects:unfileObjects continueOnFailure:continueOnFailure completionBlock:completionBlock];
 }
-
 
 @end

@@ -51,7 +51,7 @@ NSString * const kCMISSessionParameterMode = @"session_param_mode";
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"bindingType: %@, username: %@, password: %@, atomPubUrl: %@", 
+    return [NSString stringWithFormat:@"bindingType: %u, username: %@, password: %@, atomPubUrl: %@",
             self.bindingType, self.username, self.password, self.atomPubUrl];
 }
 

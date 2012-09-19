@@ -22,9 +22,9 @@
  */
 @interface CMISFileDownloadDelegate : NSObject <NSURLConnectionDataDelegate>
 
-@property (nonatomic, strong) NSString *filePathForContentRetrieval;
-@property (nonatomic, strong) CMISVoidCompletionBlock fileRetrievalCompletionBlock;
-@property (nonatomic, strong) CMISErrorFailureBlock fileRetrievalFailureBlock;
-@property (nonatomic, strong) CMISProgressBlock fileRetrievalProgressBlock;
+@property (nonatomic, strong) NSOutputStream *fileStreamForContentRetrieval;
+@property (nonatomic, copy) CMISVoidCompletionBlock fileRetrievalCompletionBlock;
+@property (nonatomic, copy) CMISErrorFailureBlock fileRetrievalFailureBlock;
+@property (nonatomic, copy) CMISProgressBlock fileRetrievalProgressBlock;
 
 @end

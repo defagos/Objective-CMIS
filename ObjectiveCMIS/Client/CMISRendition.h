@@ -25,13 +25,19 @@
 
 - (id)initWithRenditionData:(CMISRenditionData *)renditionData andObjectId:(NSString *)objectId andSession:(CMISSession *)session;
 
-- (CMISDocument *)retrieveRenditionDocumentAndReturnError:(NSError **)error;
+- (void)retrieveRenditionDocumentWithCompletionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
-- (CMISDocument *)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext withError:(NSError **)error;
+- (void)retrieveRenditionDocumentWithOperationContext:(CMISOperationContext *)operationContext
+                                      completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
 - (void)downloadRenditionContentToFile:(NSString *)filePath
                                 completionBlock:(CMISVoidCompletionBlock)completionBlock
                                 failureBlock:(CMISErrorFailureBlock)failureBlock
                                 progressBlock:(CMISProgressBlock)progressBlock;
+
+- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream
+                               completionBlock:(CMISVoidCompletionBlock)completionBlock
+                                  failureBlock:(CMISErrorFailureBlock)failureBlock
+                                 progressBlock:(CMISProgressBlock)progressBlock;
 
 @end

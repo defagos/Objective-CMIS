@@ -39,67 +39,67 @@
 // *** setup ***
 
 // returns an array of CMISRepositoryInfo objects representing the repositories available at the endpoint.
-+ (NSArray *)arrayOfRepositories:(CMISSessionParameters *)sessionParameters
-                           error:(NSError **)error;
++ (void)arrayOfRepositories:(CMISSessionParameters *)sessionParameters
+            completionBlock:(void (^)(NSArray *repositories, NSError *error))completionBlock;
 
 // Returns a CMISSession using the given session parameters.
 - (id)initWithSessionParameters:(CMISSessionParameters *)sessionParameters;
 
 // Authenticates using the CMISSessionParameters and returns if the authentication was succesful
-- (BOOL)authenticateAndReturnError:(NSError **)error;
+- (void)authenticateWithCompletionBlock:(void (^)(BOOL authenticated, NSError *error))completionBlock;
 
 // *** CMIS operations ***
 
 /**
  * Retrieves the root folder for the repository.
  */
-- (CMISFolder *)retrieveRootFolderAndReturnError:(NSError **)error;
+- (void)retrieveRootFolderWithCompletionBlock:(void (^)(CMISFolder *folder, NSError *error))completionBlock;
 
 /**
  * Retrieves the root folder for the repository using the provided operation context.
  */
-- (CMISFolder *)retrieveFolderWithOperationContext:(CMISOperationContext *)operationContext
-                                         withError:(NSError **)error;
-
+- (void)retrieveFolderWithOperationContext:(CMISOperationContext *)operationContext
+                           completionBlock:(void (^)(CMISFolder *folder, NSError *error))completionBlock;
+ 
 /**
   * Retrieves the object with the given identifier.
   */
-- (CMISObject *)retrieveObject:(NSString *)objectId error:(NSError **)error;
+- (void)retrieveObject:(NSString *)objectId
+       completionBlock:(void (^)(CMISObject *object, NSError *error))completionBlock;
 
 /**
   * Retrieves the object with the given identifier, using the provided operation context.
   */
-- (CMISObject *)retrieveObject:(NSString *)objectId
-          withOperationContext:(CMISOperationContext *)operationContext
-                         error:(NSError **)error;
+- (void)retrieveObject:(NSString *)objectId
+  withOperationContext:(CMISOperationContext *)operationContext
+       completionBlock:(void (^)(CMISObject *object, NSError *error))completionBlock;
 
 /**
   * Retrieves the object for the given path.
   */
-- (CMISObject *)retrieveObjectByPath:(NSString *)path
-                               error:(NSError **)error;
+- (void)retrieveObjectByPath:(NSString *)path
+             completionBlock:(void (^)(CMISObject *object, NSError *error))completionBlock;
 
+ 
 /**
  * Retrieves the object for the given path, using the provided operation context.
  */
-- (CMISObject *)retrieveObjectByPath:(NSString *)path
-                withOperationContext:(CMISOperationContext *)operationContext
-                               error:(NSError **)error;
+- (void)retrieveObjectByPath:(NSString *)path
+        withOperationContext:(CMISOperationContext *)operationContext
+             completionBlock:(void (^)(CMISObject *object, NSError *error))completionBlock;
 
 /**
  * Retrieves the definition for the given type.
  */
-- (CMISTypeDefinition *)retrieveTypeDefinition:(NSString *)typeId
-                                          error:(NSError **)error;
-
+- (void)retrieveTypeDefinition:(NSString *)typeId 
+               completionBlock:(void (^)(CMISTypeDefinition *typeDefinition, NSError *error))completionBlock;
 /**
  * Retrieves all objects matching the given cmis query.
  *
  * @return An array of CMISQueryResult objects.
  */
-- (CMISPagedResult *)query:(NSString *)statement
-         searchAllVersions:(BOOL)searchAllVersion
-                     error:(NSError **)error;
+- (void)query:(NSString *)statement searchAllVersions:(BOOL)searchAllVersion
+                                      completionBlock:(void (^)(CMISPagedResult *pagedResult, NSError *error))completionBlock;
 
 /**
  * Retrieves all objects matching the given cmis query, as CMISQueryResult objects.
@@ -107,32 +107,43 @@
  *
  * @return An array of CMISQueryResult objects.
  */
-- (CMISPagedResult *)query:(NSString *)statement
-         searchAllVersions:(BOOL)searchAllVersion
-          operationContext:(CMISOperationContext *)operationContext
-                     error:(NSError **)error;
+- (void)query:(NSString *)statement searchAllVersions:(BOOL)searchAllVersion
+                                     operationContext:(CMISOperationContext *)operationContext
+                                      completionBlock:(void (^)(CMISPagedResult *pagedResult, NSError *error))completionBlock;
 
 /**
  * Queries for a specific type of objects.
  * Returns a paged result set, containing CMISObject instances.
  */
-- (CMISPagedResult *)queryObjectsWithTypeid:(NSString *)typeId
-                            withWhereClause:(NSString *)whereClause
-                          searchAllVersions:(BOOL)searchAllVersion
-                           operationContext:(CMISOperationContext *)operationContext
-                                      error:(NSError **)error;
+- (void)queryObjectsWithTypeid:(NSString *)typeId
+               withWhereClause:(NSString *)whereClause
+             searchAllVersions:(BOOL)searchAllVersion
+              operationContext:(CMISOperationContext *)operationContext
+               completionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock;
+
+
 /**
  * Creates a folder in the provided folder.
  */
-- (NSString *)createFolder:(NSDictionary *)properties
-                  inFolder:(NSString *)folderObjectId
-                     error:(NSError **)error;
+- (void)createFolder:(NSDictionary *)properties
+            inFolder:(NSString *)folderObjectId
+     completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock;
+
 
 /**
  * Downloads the content of object with the provided object id to the given path.
  */
 - (void)downloadContentOfCMISObject:(NSString *)objectId
                              toFile:(NSString *)filePath
+                    completionBlock:(CMISVoidCompletionBlock)completionBlock
+                       failureBlock:(CMISErrorFailureBlock)failureBlock
+                      progressBlock:(CMISProgressBlock)progressBlock;
+
+/**
+ * Downloads the content of object with the provided object id to the given stream.
+ */
+- (void)downloadContentOfCMISObject:(NSString *)objectId
+                     toOutputStream:(NSOutputStream*)outputStream
                     completionBlock:(CMISVoidCompletionBlock)completionBlock
                        failureBlock:(CMISErrorFailureBlock)failureBlock
                       progressBlock:(CMISProgressBlock)progressBlock;

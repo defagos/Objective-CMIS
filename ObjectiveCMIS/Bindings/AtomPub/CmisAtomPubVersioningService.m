@@ -22,63 +22,65 @@
 
 @implementation CMISAtomPubVersioningService
 
-- (CMISObjectData *)retrieveObjectOfLatestVersion:(NSString *)objectId
-                                            major:(BOOL)major
-                                           filter:(NSString *)filter
-                             includeRelationShips:(CMISIncludeRelationship)includeRelationships
-                                 includePolicyIds:(BOOL)includePolicyIds
-                                  renditionFilter:(NSString *)renditionFilter
-                                       includeACL:(BOOL)includeACL
-                          includeAllowableActions:(BOOL)includeAllowableActions
-                                            error:(NSError **)error;
+- (void)retrieveObjectOfLatestVersion:(NSString *)objectId
+                                major:(BOOL)major
+                               filter:(NSString *)filter
+                 includeRelationShips:(CMISIncludeRelationship)includeRelationships
+                     includePolicyIds:(BOOL)includePolicyIds
+                      renditionFilter:(NSString *)renditionFilter
+                           includeACL:(BOOL)includeACL
+              includeAllowableActions:(BOOL)includeAllowableActions
+                      completionBlock:(void (^)(CMISObjectData *objectData, NSError *error))completionBlock
 {
-    return [self retrieveObjectInternal:objectId withReturnVersion:(major ? LATEST_MAJOR : LATEST)
-                          withFilter:filter andIncludeRelationShips:includeRelationships
-                          andIncludePolicyIds:includePolicyIds andRenditionFilder:renditionFilter
-                          andIncludeACL:includeACL andIncludeAllowableActions:includeAllowableActions error:error];
+    [self retrieveObjectInternal:objectId withReturnVersion:(major ? LATEST_MAJOR : LATEST)
+                      withFilter:filter andIncludeRelationShips:includeRelationships
+             andIncludePolicyIds:includePolicyIds andRenditionFilder:renditionFilter
+                   andIncludeACL:includeACL andIncludeAllowableActions:includeAllowableActions
+                 completionBlock:^(CMISObjectData *objectData, NSError *error) {
+                     completionBlock(objectData, error);
+                 }];
 }
 
-- (NSArray *)retrieveAllVersions:(NSString *)objectId filter:(NSString *)filter
-         includeAllowableActions:(BOOL)includeAllowableActions error:(NSError * *)error;
+- (void)retrieveAllVersions:(NSString *)objectId
+                     filter:(NSString *)filter
+    includeAllowableActions:(BOOL)includeAllowableActions
+            completionBlock:(void (^)(NSArray *objects, NSError *error))completionBlock
 {
     // Validate params
     if (!objectId)
     {
-        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:nil];
         log(@"Must provide an objectId when retrieving all versions");
-        return nil;
+        completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:nil]);
+        return;
     }
-
+    
     // Fetch version history link
-    NSError *internalError = nil;
-    NSString *versionHistoryLink = [self loadLinkForObjectId:objectId andRelation:kCMISLinkVersionHistory error:&internalError];
-    if (internalError) {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeObjectNotFound];
-        return nil;
-    }
-
-    if (filter != nil)
-    {
-        versionHistoryLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:versionHistoryLink];
-    }
-    versionHistoryLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions
-                                withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:versionHistoryLink];
-
-    // Execute call
-    NSData *data = [HttpUtil invokeGETSynchronous:[NSURL URLWithString:versionHistoryLink] 
-                                      withSession:self.bindingSession error:&internalError].data;
-
-    if (internalError) {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeConnection];
-        return nil;
-    }
-    CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:data];
-    if (![feedParser parseAndReturnError:&internalError])
-    {
-        *error = [CMISErrors cmisError:&internalError withCMISErrorCode:kCMISErrorCodeVersioning];
-        return nil;
-    }
-    return feedParser.entries;
+    [self loadLinkForObjectId:objectId andRelation:kCMISLinkVersionHistory completionBlock:^(NSString *versionHistoryLink, NSError *error) {
+        if (error) {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeObjectNotFound]);
+            return;
+        }
+        
+        if (filter) {
+            versionHistoryLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterFilter withValue:filter toUrlString:versionHistoryLink];
+        }
+        versionHistoryLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterIncludeAllowableActions
+                                                              withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:versionHistoryLink];
+        
+        // Execute call
+        [HttpUtil invokeGET:[NSURL URLWithString:versionHistoryLink] withSession:self.bindingSession completionBlock:^(HTTPResponse *httpResponse) {
+            NSData *data = httpResponse.data;
+            CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:data];
+            NSError *error;
+            if (![feedParser parseAndReturnError:&error]) {
+                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeVersioning]);
+            } else {
+                completionBlock(feedParser.entries, nil);
+            }
+        } failureBlock:^(NSError *error) {
+            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+        }];
+    }];
 }
 
 @end

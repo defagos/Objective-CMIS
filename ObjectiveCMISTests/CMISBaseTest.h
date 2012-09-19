@@ -26,7 +26,7 @@ typedef void (^CMISTestBlock)(void);
 @property (nonatomic, strong) CMISSessionParameters *parameters;
 @property (nonatomic, strong) CMISSession *session;
 @property (nonatomic, strong) CMISFolder *rootFolder;
-@property BOOL callbackCompleted;
+@property BOOL testCompleted;
 
 #pragma mark Running the test
 
@@ -41,13 +41,13 @@ typedef void (^CMISTestBlock)(void);
 
 #pragma mark Helper Methods
 
-- (CMISDocument *)retrieveVersionedTestDocument;
+- (void)retrieveVersionedTestDocumentWithCompletionBlock:(void (^)(CMISDocument *document))completionBlock;
 
-- (CMISDocument *)uploadTestFile;
+- (void)uploadTestFileWithCompletionBlock:(void (^)(CMISDocument *document))completionBlock;
+
+- (void)deleteDocumentAndVerify:(CMISDocument *)document completionBlock:(void (^)(void))completionBlock;
 
 - (void)waitForCompletion:(NSTimeInterval)timeoutSecs;
-
-- (void)deleteDocumentAndVerify:(CMISDocument *)document;
 
 - (NSDateFormatter *)testDateFormatter;
 

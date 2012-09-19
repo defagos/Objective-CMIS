@@ -32,25 +32,24 @@
 /**
 * Retrieves a collection of all versions of this document.
 */
-- (CMISCollection *)retrieveAllVersionsAndReturnError:(NSError **)error;
+- (void)retrieveAllVersionsWithCompletionBlock:(void (^)(CMISCollection *allVersionsOfDocument, NSError *error))completionBlock;
 
 /**
 * Retrieves a collection of all versions of this document.
 */
-- (CMISCollection *)retrieveAllVersionsWithOperationContext:(CMISOperationContext *)operationContext andReturnError:(NSError **)error;
+- (void)retrieveAllVersionsWithOperationContext:(CMISOperationContext *)operationContext completionBlock:(void (^)(CMISCollection *collection, NSError *error))completionBlock;
 
 /**
 * Retrieves the lastest version of this document.
 */
-- (CMISDocument *)retrieveObjectOfLatestVersionWithMajorVersion:(BOOL)major
-                                                 andReturnError:(NSError **)error;
+- (void)retrieveObjectOfLatestVersionWithMajorVersion:(BOOL)major completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
 /**
 * Retrieves the lastest version of this document.
 */
-- (CMISDocument *)retrieveObjectOfLatestVersionWithMajorVersion:(BOOL)major
-                                           withOperationContext:(CMISOperationContext *)operationContext
-                                                 andReturnError:(NSError **)error;
+- (void)retrieveObjectOfLatestVersionWithMajorVersion:(BOOL)major
+                                 withOperationContext:(CMISOperationContext *)operationContext
+                                      completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
 /**
 * Downloads the content to a local file and returns the filepath.
@@ -77,11 +76,11 @@
 /**
  * Deletes the content of this document.
  */
-- (void)deleteContentAndReturnError:(NSError * *)error;;
+- (void)deleteContentWithCompletionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
 * Deletes the document from the document store.
 */
-- (BOOL)deleteAllVersionsAndReturnError:(NSError **)error;
+- (void)deleteAllVersionsWithCompletionBlock:(void (^)(BOOL documentDeleted, NSError *error))completionBlock;
 
 @end
