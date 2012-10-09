@@ -97,15 +97,11 @@
                                                              attributes:self.extensionAttributes 
                                                                   value:self.extensionValue];
         }
+
         [self.parentDelegate extensionElementParser:self didFinishParsingExtensionElement:extElement];
         
-        [parser setDelegate:self.parentDelegate];
-        [self.parentDelegate parser:parser didEndElement:elementName namespaceURI:namespaceURI qualifiedName:qName];
+        parser.delegate = self.parentDelegate;
         self.parentDelegate = nil;
-    }
-    else 
-    {
-//        self.childDelegate = nil;
     }
 }
 

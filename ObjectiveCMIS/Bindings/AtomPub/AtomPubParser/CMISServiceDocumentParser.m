@@ -144,10 +144,6 @@
         
         [self.internalWorkspaces addObject:self.currentWorkSpace];
     }
-    else if ([elementName isEqualToString:kCMISRestAtomRepositoryInfo])
-    {
-//        self.childParserDelegate = nil;
-    }
     else if ([elementName isEqualToString:kCMISRestAtomUritemplate])
     {
         if ([self.currentType isEqualToString:kCMISUriTemplateObjectById])

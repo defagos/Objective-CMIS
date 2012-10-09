@@ -347,10 +347,7 @@
                 }
 
                 // Reseting our parent as the delegate since we're done
-                [parser setDelegate:self.parentDelegate];
-
-                // Message the parent that the element ended
-                [self.parentDelegate parser:parser didEndElement:elementName namespaceURI:namespaceURI qualifiedName:qName];
+                parser.delegate = self.parentDelegate;
                 self.parentDelegate = nil;
             }
         }
@@ -373,8 +370,6 @@
 - (void)allowableActionsParser:(CMISAllowableActionsParser *)parser didFinishParsingAllowableActions:(CMISAllowableActions *)allowableActions
 {
     self.objectData.allowableActions = allowableActions;
-
-//    self.childParserDelegate = nil;
 }
 
 @end

@@ -174,8 +174,7 @@
 
             // Reset the parser's delegate to its parent since we're done with the repositoryInfo node
             [self.parentDelegate repositoryInfoParser:self didFinishParsingRepositoryInfo:self.currentRepositoryInfo];
-            [parser setDelegate:self.parentDelegate];
-            [self.parentDelegate parser:parser didEndElement:elementName namespaceURI:namespaceURI qualifiedName:qName];
+            parser.delegate = self.parentDelegate;
             self.parentDelegate = nil;
         }
     }
@@ -202,8 +201,6 @@
     }
     
     [self.currentExtensions addObject:extensionElement];
-    
-//    self.childParserDelegate = nil;
 }
 
 @end

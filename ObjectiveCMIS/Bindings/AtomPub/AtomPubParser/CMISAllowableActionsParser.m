@@ -155,9 +155,6 @@
                 
                 // Reset Delegate to parent
                 [parser setDelegate:self.parentDelegate];
-                // Message the parent that the element ended
-                [self.parentDelegate parser:parser didEndElement:elementName namespaceURI:namespaceURI qualifiedName:qName];
-                
                 self.parentDelegate = nil;
             }
         }
