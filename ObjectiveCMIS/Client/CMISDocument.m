@@ -20,6 +20,7 @@
 #import "CMISOperationContext.h"
 #import "CMISFileUtil.h"
 #import "CMISErrors.h"
+#import "CMISRequest.h"
 
 @interface CMISDocument()
 
@@ -86,33 +87,33 @@
            }];
 }
 
-- (void)changeContentToContentOfFile:(NSString *)filePath withOverwriteExisting:(BOOL)overwrite
-                     completionBlock:(void (^)(NSError *error))completionBlock
-                       progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)changeContentToContentOfFile:(NSString *)filePath withOverwriteExisting:(BOOL)overwrite
+                             completionBlock:(void (^)(NSError *error))completionBlock
+                               progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.binding.objectService changeContentOfObject:[CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier]
-                               toContentOfFile:filePath
-                                withOverwriteExisting:overwrite
-                                      withChangeToken:[CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken]
-                                      completionBlock:completionBlock
-                                        progressBlock:progressBlock];
+    return [self.binding.objectService changeContentOfObject:[CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier]
+                                             toContentOfFile:filePath
+                                       withOverwriteExisting:overwrite
+                                             withChangeToken:[CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken]
+                                             completionBlock:completionBlock
+                                               progressBlock:progressBlock];
 }
 
-- (void)changeContentToContentOfInputStream:(NSInputStream *)inputStream
-                              bytesExpected:(unsigned long long)bytesExpected
-                               withFileName:(NSString *)filename
-                      withOverwriteExisting:(BOOL)overwrite
-                     completionBlock:(void (^)(NSError *error))completionBlock
-                       progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)changeContentToContentOfInputStream:(NSInputStream *)inputStream
+                                      bytesExpected:(unsigned long long)bytesExpected
+                                       withFileName:(NSString *)filename
+                              withOverwriteExisting:(BOOL)overwrite
+                                    completionBlock:(void (^)(NSError *error))completionBlock
+                                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.binding.objectService changeContentOfObject:[CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier]
-                               toContentOfInputStream:inputStream
-                                        bytesExpected:bytesExpected
-                                         withFilename:filename
-                                withOverwriteExisting:overwrite
-                                      withChangeToken:[CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken]
-                                      completionBlock:completionBlock
-                                        progressBlock:progressBlock];
+    return [self.binding.objectService changeContentOfObject:[CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier]
+                                      toContentOfInputStream:inputStream
+                                               bytesExpected:bytesExpected
+                                                withFilename:filename
+                                       withOverwriteExisting:overwrite
+                                             withChangeToken:[CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken]
+                                             completionBlock:completionBlock
+                                               progressBlock:progressBlock];
 }
 
 - (void)deleteContentWithCompletionBlock:(void (^)(NSError *error))completionBlock
@@ -148,13 +149,16 @@
         }];
 }
 
-- (void)downloadContentToFile:(NSString *)filePath
-              completionBlock:(void (^)(NSError *error))completionBlock
-                progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)downloadContentToFile:(NSString *)filePath
+                      completionBlock:(void (^)(NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
     NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
-    [self.binding.objectService downloadContentOfObject:self.identifier withStreamId:nil toOutputStream:outputStream
-                                 completionBlock:completionBlock progressBlock:progressBlock];
+    return [self.binding.objectService downloadContentOfObject:self.identifier
+                                                  withStreamId:nil
+                                                toOutputStream:outputStream
+                                               completionBlock:completionBlock
+                                                 progressBlock:progressBlock];
 }
 
 - (void)deleteAllVersionsWithCompletionBlock:(void (^)(BOOL documentDeleted, NSError *error))completionBlock

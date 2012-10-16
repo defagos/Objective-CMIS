@@ -34,6 +34,7 @@ typedef enum
     kCMISErrorCodeUnauthorized = 3,
     kCMISErrorCodeNoRootFolderFound = 4,
     kCMISErrorCodeNoRepositoryFound = 5,
+    kCMISErrorCodeCancelled = 6,
     
     //error ranges for General errors
     kCMISErrorCodeGeneralMinimum = 256,

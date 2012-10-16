@@ -15,6 +15,7 @@
 #import "CMISFileableObject.h"
 
 @class CMISOperationContext;
+@class CMISRequest;
 
 @interface CMISDocument : CMISFileableObject <NSURLConnectionDataDelegate>
 
@@ -55,9 +56,9 @@
 * Downloads the content to a local file and returns the filepath.
 * This is a synchronous call and will not return until the file is written to the given path.
 */
-- (void)downloadContentToFile:(NSString *)filePath
-              completionBlock:(void (^)(NSError *error))completionBlock
-                progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)downloadContentToFile:(NSString *)filePath
+                      completionBlock:(void (^)(NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Changes the content of this document to the content of the given file.
@@ -66,10 +67,10 @@
  * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
  * contentStream for the object if the object currently does not have a content-stream.
  */
-- (void)changeContentToContentOfFile:(NSString *)filePath
-               withOverwriteExisting:(BOOL)overwrite
-                     completionBlock:(void (^)(NSError *error))completionBlock
-                       progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)changeContentToContentOfFile:(NSString *)filePath
+                       withOverwriteExisting:(BOOL)overwrite
+                             completionBlock:(void (^)(NSError *error))completionBlock
+                               progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Changes the content of this document to the content of the given input stream.
@@ -78,12 +79,12 @@
  * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
  * contentStream for the object if the object currently does not have a content-stream.
  */
-- (void)changeContentToContentOfInputStream:(NSInputStream *)inputStream
-                              bytesExpected:(unsigned long long)bytesExpected
-                               withFileName:(NSString *)filename
-                      withOverwriteExisting:(BOOL)overwrite
-                            completionBlock:(void (^)(NSError *error))completionBlock
-                              progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)changeContentToContentOfInputStream:(NSInputStream *)inputStream
+                                      bytesExpected:(unsigned long long)bytesExpected
+                                       withFileName:(NSString *)filename
+                              withOverwriteExisting:(BOOL)overwrite
+                                    completionBlock:(void (^)(NSError *error))completionBlock
+                                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Deletes the content of this document.

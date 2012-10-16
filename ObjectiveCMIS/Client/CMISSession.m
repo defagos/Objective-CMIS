@@ -209,8 +209,7 @@
                                        andIncludeACL:operationContext.isIncluseACLs
                           andIncludeAllowableActions:operationContext.isIncludeAllowableActions
                                      completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                                         if (objectData != nil && error == nil)
-                                         {
+                                         if (objectData != nil && error == nil) {
                                              completionBlock([self.objectConverter convertObject:objectData], nil);
                                          } else {
                                              if (error == nil) {
@@ -391,28 +390,28 @@
                            }];
 }
 
-- (void)downloadContentOfCMISObject:(NSString *)objectId
-                             toFile:(NSString *)filePath
-                    completionBlock:(void (^)(NSError *error))completionBlock
-                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)downloadContentOfCMISObject:(NSString *)objectId
+                                     toFile:(NSString *)filePath
+                            completionBlock:(void (^)(NSError *error))completionBlock
+                              progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.binding.objectService downloadContentOfObject:objectId
-                                           withStreamId:nil
-                                                 toFile:filePath
-                                        completionBlock:completionBlock
-                                          progressBlock:progressBlock];
+    return [self.binding.objectService downloadContentOfObject:objectId
+                                                  withStreamId:nil
+                                                        toFile:filePath
+                                               completionBlock:completionBlock
+                                                 progressBlock:progressBlock];
 }
 
-- (void)downloadContentOfCMISObject:(NSString *)objectId
-                     toOutputStream:(NSOutputStream *)outputStream
-                    completionBlock:(void (^)(NSError *error))completionBlock
-                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)downloadContentOfCMISObject:(NSString *)objectId
+                             toOutputStream:(NSOutputStream *)outputStream
+                            completionBlock:(void (^)(NSError *error))completionBlock
+                              progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.binding.objectService downloadContentOfObject:objectId
-                                           withStreamId:nil
-                                         toOutputStream:outputStream
-                                        completionBlock:completionBlock
-                                          progressBlock:progressBlock];
+    return [self.binding.objectService downloadContentOfObject:objectId
+                                                  withStreamId:nil
+                                                toOutputStream:outputStream
+                                               completionBlock:completionBlock
+                                                 progressBlock:progressBlock];
 }
 
 

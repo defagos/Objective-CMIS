@@ -133,18 +133,18 @@
 /**
  * Downloads the content of object with the provided object id to the given path.
  */
-- (void)downloadContentOfCMISObject:(NSString *)objectId
-                             toFile:(NSString *)filePath
-                    completionBlock:(void (^)(NSError *error))completionBlock
-                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)downloadContentOfCMISObject:(NSString *)objectId
+                                     toFile:(NSString *)filePath
+                            completionBlock:(void (^)(NSError *error))completionBlock
+                              progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Downloads the content of object with the provided object id to the given stream.
  */
-- (void)downloadContentOfCMISObject:(NSString *)objectId
-                     toOutputStream:(NSOutputStream*)outputStream
-                    completionBlock:(void (^)(NSError *error))completionBlock
-                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)downloadContentOfCMISObject:(NSString *)objectId
+                             toOutputStream:(NSOutputStream*)outputStream
+                            completionBlock:(void (^)(NSError *error))completionBlock
+                              progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Creates a cmis document using the content from the file path.

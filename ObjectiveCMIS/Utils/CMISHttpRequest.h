@@ -25,15 +25,17 @@
 @property (nonatomic, strong) NSHTTPURLResponse *response;
 @property (nonatomic, copy) void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
 
-+ (BOOL)startRequest:(NSMutableURLRequest *)urlRequest
-      withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-         requestBody:(NSData*)requestBody
-             headers:(NSDictionary*)additionalHeaders
-     completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
++ (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
+              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                 requestBody:(NSData*)requestBody
+                     headers:(NSDictionary*)additionalHeaders
+             completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 - (BOOL)startRequest:(NSMutableURLRequest*)urlRequest;
+
+- (void)cancel;
 
 @end

@@ -35,9 +35,20 @@
 #import "CMISAtomFeedParser.h"
 #import "CMISServiceDocumentParser.h"
 #import "CMISWorkspace.h"
+#import "CMISRequest.h"
+#import "CMISErrors.h"
+
+
+@interface ObjectiveCMISTests ()
+
+@property (nonatomic, strong) CMISRequest *request;
+
+@end
 
 
 @implementation ObjectiveCMISTests
+
+@synthesize request = _request;
 
 - (void)testRepositories
 {
@@ -299,6 +310,44 @@
             }];
         }];
     }];
+}
+
+- (void)testCancelDownload
+{
+    [self runTest:^
+     {
+         [self.session retrieveObjectByPath:@"/ios-test/activiti-modeler.png" completionBlock:^(CMISObject *object, NSError *error) {
+             CMISDocument *document = (CMISDocument *)object;
+             STAssertNil(error, @"Error while retrieving object: %@", [error description]);
+
+             // Writing content of CMIS document to local file
+             NSString *filePath = [NSString stringWithFormat:@"%@/testfile", NSTemporaryDirectory()];
+             self.request = [document downloadContentToFile:filePath
+                                            completionBlock:^(NSError *error)
+             {
+                 STAssertNotNil(error, @"Could not cancel download");
+                 STAssertTrue(error.code == kCMISErrorCodeCancelled, @"Unexpected error: %@", [error description]);
+                 // Assert File exists and check file length
+                 STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
+                 NSError *fileError = nil;
+                 NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&fileError];
+                 STAssertNil(fileError, @"Could not verify attributes of file %@: %@", filePath, [fileError description]);
+                 STAssertTrue([fileAttributes fileSize] > 0, @"Expected at least some bytes but found an empty file");
+                 STAssertTrue([fileAttributes fileSize] < document.contentStreamLength, @"Could not cancel download before the complete file was downloaded");
+                                          
+                 // Nice boys clean up after themselves
+                 [[NSFileManager defaultManager] removeItemAtPath:filePath error:&fileError];
+                 STAssertNil(fileError, @"Could not remove file %@: %@", filePath, [fileError description]);
+
+                 self.testCompleted = YES;
+             } progressBlock:^(unsigned long long bytesDownloaded, unsigned long long bytesTotal) {
+                 if (bytesDownloaded > 0) { // as soon as some data was downloaded cancel the request
+                     [self.request cancel];
+                     self.request = nil;
+                 }
+             }];
+         }];
+     }];
 }
 
 - (void)testCreateAndDeleteDocument

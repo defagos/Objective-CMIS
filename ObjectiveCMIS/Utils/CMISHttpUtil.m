@@ -18,6 +18,7 @@
 #import "CMISHttpRequest.h"
 #import "CMISHttpDownloadRequest.h"
 #import "CMISHttpUploadRequest.h"
+#import "CMISRequest.h"
 
 
 @implementation HttpUtil
@@ -70,18 +71,27 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
  bytesExpected:(unsigned long long)bytesExpected
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+ requestObject:(CMISRequest *)requestObject
 {
-    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                 withHttpMethod:httpRequestMethod
-                                                   usingSession:session];
-    
-    [CMISHttpUploadRequest startRequest:urlRequest
-                         withHttpMethod:httpRequestMethod
-                            inputStream:inputStream
-                                headers:additionalHeaders
-                          bytesExpected:bytesExpected
-                        completionBlock:completionBlock
-                          progressBlock:progressBlock];
+    if (!requestObject.isCancelled) {
+        NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
+                                                     withHttpMethod:httpRequestMethod
+                                                       usingSession:session];
+        
+        CMISHttpUploadRequest *uploadRequest = [CMISHttpUploadRequest startRequest:urlRequest
+                                                                    withHttpMethod:httpRequestMethod
+                                                                       inputStream:inputStream
+                                                                           headers:additionalHeaders
+                                                                     bytesExpected:bytesExpected
+                                                                   completionBlock:completionBlock
+                                                                     progressBlock:progressBlock];
+        requestObject.httpRequest = uploadRequest;
+    } else {
+        if (completionBlock) {
+            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
+                                             withDetailedDescription:@"Request was cancelled"]);
+        }
+    }
 }
 
 + (void)invoke:(NSURL *)url
@@ -91,17 +101,27 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
     bytesExpected:(unsigned long long)bytesExpected
   completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
     progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+    requestObject:(CMISRequest *)requestObject
 {
-    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                 withHttpMethod:HTTP_GET
-                                                   usingSession:session];
+    if (!requestObject.isCancelled) {
+        NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
+                                                     withHttpMethod:HTTP_GET
+                                                       usingSession:session];
     
-    [CMISHttpDownloadRequest startRequest:urlRequest
-                           withHttpMethod:httpRequestMethod
-                             outputStream:outputStream
-                            bytesExpected:bytesExpected
-                          completionBlock:completionBlock
-                            progressBlock:progressBlock];
+        CMISHttpDownloadRequest *downloadRequest = [CMISHttpDownloadRequest startRequest:urlRequest
+                                                                          withHttpMethod:httpRequestMethod
+                                                                            outputStream:outputStream
+                                                                           bytesExpected:bytesExpected
+                                                                         completionBlock:completionBlock
+                                                                           progressBlock:progressBlock];
+        requestObject.httpRequest = downloadRequest;
+    } else {
+        if (completionBlock) {
+            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
+                                             withDetailedDescription:@"Request was cancelled"]);
+
+        }
+    }
 }
 
 + (void)invokeGET:(NSURL *)url

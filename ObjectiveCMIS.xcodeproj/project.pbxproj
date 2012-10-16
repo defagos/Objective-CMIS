@@ -163,6 +163,8 @@
 		82C1C63F15358733009B7BA7 /* CMISTypeDefinitionAtomEntryParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 82C1C63F15358733009B7BA6 /* CMISTypeDefinitionAtomEntryParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82C1C63F15358733009B7BA9 /* CMISPropertyDefinitionParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 82C1C63F15358733009B7BA8 /* CMISPropertyDefinitionParser.m */; };
 		82C1C63F15358733009B7BAB /* CMISPropertyDefinitionParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 82C1C63F15358733009B7BAA /* CMISPropertyDefinitionParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = BD30D33B162D7DD7001FFF80 /* CMISRequest.h */; };
+		BD30D33E162D7DD7001FFF80 /* CMISRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = BD30D33C162D7DD7001FFF80 /* CMISRequest.m */; };
 		BD5C96FE16281A54002DDC6E /* CMISHttpRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = BD5C96FC16281A54002DDC6E /* CMISHttpRequest.h */; };
 		BD5C96FF16281A54002DDC6E /* CMISHttpRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = BD5C96FD16281A54002DDC6E /* CMISHttpRequest.m */; };
 		BD5C970016281A54002DDC6E /* CMISHttpRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = BD5C96FD16281A54002DDC6E /* CMISHttpRequest.m */; };
@@ -350,6 +352,8 @@
 		82C1C63F15358733009B7BA6 /* CMISTypeDefinitionAtomEntryParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CMISTypeDefinitionAtomEntryParser.h; sourceTree = "<group>"; };
 		82C1C63F15358733009B7BA8 /* CMISPropertyDefinitionParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CMISPropertyDefinitionParser.m; sourceTree = "<group>"; };
 		82C1C63F15358733009B7BAA /* CMISPropertyDefinitionParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CMISPropertyDefinitionParser.h; sourceTree = "<group>"; };
+		BD30D33B162D7DD7001FFF80 /* CMISRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISRequest.h; path = Client/CMISRequest.h; sourceTree = "<group>"; };
+		BD30D33C162D7DD7001FFF80 /* CMISRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CMISRequest.m; path = Client/CMISRequest.m; sourceTree = "<group>"; };
 		BD5C96FC16281A54002DDC6E /* CMISHttpRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = CMISHttpRequest.h; path = Utils/CMISHttpRequest.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BD5C96FD16281A54002DDC6E /* CMISHttpRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = CMISHttpRequest.m; path = Utils/CMISHttpRequest.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		BD5C97071628293F002DDC6E /* CMISHttpUploadRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = CMISHttpUploadRequest.h; path = Utils/CMISHttpUploadRequest.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -527,6 +531,8 @@
 				FE417D5615761A0C009056AA /* CMISPagedResult.m */,
 				FE417D6815761A34009056C5 /* CMISRendition.m */,
 				FE417D6815761A34009056C3 /* CMISRendition.h */,
+				BD30D33B162D7DD7001FFF80 /* CMISRequest.h */,
+				BD30D33C162D7DD7001FFF80 /* CMISRequest.m */,
 				828072E31515403800EF635C /* CMISSession.h */,
 				828072E41515403800EF635C /* CMISSession.m */,
 			);
@@ -792,6 +798,7 @@
 				BD5C97091628293F002DDC6E /* CMISHttpUploadRequest.h in Headers */,
 				BD5C970E16282977002DDC6E /* CMISHttpDownloadRequest.h in Headers */,
 				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
+				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -998,6 +1005,7 @@
 				BD5C970A1628293F002DDC6E /* CMISHttpUploadRequest.m in Sources */,
 				BD5C970F16282977002DDC6E /* CMISHttpDownloadRequest.m in Sources */,
 				BD5C9714162C11E3002DDC6E /* CMISHttpResponse.m in Sources */,
+				BD30D33E162D7DD7001FFF80 /* CMISRequest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

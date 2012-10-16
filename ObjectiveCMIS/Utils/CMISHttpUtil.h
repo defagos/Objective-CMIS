@@ -23,6 +23,7 @@ typedef enum {
 } CMISHttpRequestMethod;
 
 @class CMISHttpResponse;
+@class CMISRequest;
 
 @interface HttpUtil : NSObject
 
@@ -51,7 +52,8 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
        headers:(NSDictionary *)additionalHeaders
  bytesExpected:(unsigned long long)bytesExpected
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
- progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+ progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+ requestObject:(CMISRequest *)requestObject;
 
 + (void)invoke:(NSURL *)url
 withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
@@ -59,7 +61,8 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
   outputStream:(NSOutputStream *)outputStream
  bytesExpected:(unsigned long long)bytesExpected
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
- progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+ progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+ requestObject:(CMISRequest*)requestObject;
 
 // convenience invokes
 

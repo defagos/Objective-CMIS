@@ -23,6 +23,7 @@
 #import "CMISStringInOutParameter.h"
 #import "CMISURLUtil.h"
 #import "CMISFileUtil.h"
+#import "CMISRequest.h"
 
 @implementation CMISAtomPubObjectService
 
@@ -71,23 +72,28 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                        completionBlock:completionBlock];
 }
 
-- (void)downloadContentOfObject:(NSString *)objectId
-                   withStreamId:(NSString *)streamId
-                         toFile:(NSString *)filePath
-                completionBlock:(void (^)(NSError *error))completionBlock
-                  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)downloadContentOfObject:(NSString *)objectId
+                           withStreamId:(NSString *)streamId
+                                 toFile:(NSString *)filePath
+                        completionBlock:(void (^)(NSError *error))completionBlock
+                          progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 {
     NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
-    [self downloadContentOfObject:objectId withStreamId:streamId toOutputStream:outputStream
-                  completionBlock:completionBlock progressBlock:progressBlock];
+    return [self downloadContentOfObject:objectId
+                            withStreamId:streamId
+                          toOutputStream:outputStream
+                         completionBlock:completionBlock
+                           progressBlock:progressBlock];
 }
 
-- (void)downloadContentOfObject:(NSString *)objectId
-                   withStreamId:(NSString *)streamId
-                 toOutputStream:(NSOutputStream *)outputStream
-                completionBlock:(void (^)(NSError *error))completionBlock
-                  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+- (CMISRequest*)downloadContentOfObject:(NSString *)objectId
+                           withStreamId:(NSString *)streamId
+                         toOutputStream:(NSOutputStream *)outputStream
+                        completionBlock:(void (^)(NSError *error))completionBlock
+                          progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 {
+    CMISRequest *request = [[CMISRequest alloc] init];
+    
     [self retrieveObjectInternal:objectId completionBlock:^(CMISObjectData *objectData, NSError *error) {
         if (error) {
             log(@"Error while retrieving CMIS object for object id '%@' : %@", objectId, error.description);
@@ -115,9 +121,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                      completionBlock(error);
                  }
              }
-               progressBlock:progressBlock];
+               progressBlock:progressBlock
+               requestObject:request];
         }
     }];
+    
+    return request;
 }
 
 - (void)deleteContentOfObject:(CMISStringInOutParameter *)objectIdParam
@@ -162,12 +171,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     }];
 }
 
-- (void)changeContentOfObject:(CMISStringInOutParameter *)objectIdParam
-              toContentOfFile:(NSString *)filePath
-        withOverwriteExisting:(BOOL)overwrite
-              withChangeToken:(CMISStringInOutParameter *)changeTokenParam
-              completionBlock:(void (^)(NSError *error))completionBlock
-                progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)changeContentOfObject:(CMISStringInOutParameter *)objectIdParam
+                      toContentOfFile:(NSString *)filePath
+                withOverwriteExisting:(BOOL)overwrite
+                      withChangeToken:(CMISStringInOutParameter *)changeTokenParam
+                      completionBlock:(void (^)(NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
@@ -175,7 +184,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock([CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
         }
-        return;
+        return nil;
     }
 
     NSError *fileError = nil;
@@ -184,24 +193,24 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         log(@"Could not determine size of file %@: %@", filePath, [fileError description]);
     }
 
-    [self changeContentOfObject:objectIdParam
-         toContentOfInputStream:inputStream
-                  bytesExpected:fileSize
-                   withFilename:[filePath lastPathComponent]
-          withOverwriteExisting:overwrite
-                withChangeToken:changeTokenParam
-                completionBlock:completionBlock
-                  progressBlock:progressBlock];
+    return [self changeContentOfObject:objectIdParam
+                toContentOfInputStream:inputStream
+                         bytesExpected:fileSize
+                          withFilename:[filePath lastPathComponent]
+                 withOverwriteExisting:overwrite
+                       withChangeToken:changeTokenParam
+                       completionBlock:completionBlock
+                         progressBlock:progressBlock];
 }
 
-- (void)changeContentOfObject:(CMISStringInOutParameter *)objectIdParam
-       toContentOfInputStream:(NSInputStream *)inputStream
-                bytesExpected:(unsigned long long)bytesExpected
-                 withFilename:(NSString*)filename
-        withOverwriteExisting:(BOOL)overwrite
-              withChangeToken:(CMISStringInOutParameter *)changeTokenParam
-              completionBlock:(void (^)(NSError *error))completionBlock
-                progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)changeContentOfObject:(CMISStringInOutParameter *)objectIdParam
+               toContentOfInputStream:(NSInputStream *)inputStream
+                        bytesExpected:(unsigned long long)bytesExpected
+                         withFilename:(NSString*)filename
+                withOverwriteExisting:(BOOL)overwrite
+                      withChangeToken:(CMISStringInOutParameter *)changeTokenParam
+                      completionBlock:(void (^)(NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     // Validate object id param
     if (objectIdParam == nil || objectIdParam.inParameter == nil)
@@ -210,7 +219,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock([CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Must provide object id"]);
         }
-        return;
+        return nil;
     }
 
     if (inputStream == nil) {
@@ -218,7 +227,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock([CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Invalid input stream"]);
         }
-        return;
+        return nil;
     }
 
     // Atompub DOES NOT SUPPORT returning the new object id and change token
@@ -226,6 +235,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     objectIdParam.outParameter = nil;
     changeTokenParam.outParameter = nil;
 
+    CMISRequest *request = [[CMISRequest alloc] init];
     // Get edit media link
     [self loadLinkForObjectId:objectIdParam.inParameter andRelation:kCMISLinkEditMedia completionBlock:^(NSString *editMediaLink, NSError *error) {
         if (editMediaLink == nil){
@@ -271,17 +281,20 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                  completionBlock(error);
              }
          }
-           progressBlock:progressBlock];
+           progressBlock:progressBlock
+           requestObject:request];
     }];
+    
+    return request;
 }
 
 
-- (void)createDocumentFromFilePath:(NSString *)filePath
-                      withMimeType:(NSString *)mimeType
-                          withProperties:(CMISProperties *)properties
-                          inFolder:(NSString *)folderObjectId
-                         completionBlock:(void (^)(NSString *objectId, NSError *Error))completionBlock
-                           progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)createDocumentFromFilePath:(NSString *)filePath
+                              withMimeType:(NSString *)mimeType
+                            withProperties:(CMISProperties *)properties
+                                  inFolder:(NSString *)folderObjectId
+                           completionBlock:(void (^)(NSString *objectId, NSError *Error))completionBlock
+                             progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
@@ -289,7 +302,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Invalid file"]);
         }
-        return;
+        return nil;
     }
     
     NSError *fileError = nil;
@@ -298,62 +311,21 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         log(@"Could not determine size of file %@: %@", filePath, [fileError description]);
     }
     
-    [self createDocumentFromInputStream:inputStream
-                           withMimeType:mimeType withProperties:properties
-                               inFolder:folderObjectId
-                          bytesExpected:bytesExpected
-                        completionBlock:completionBlock
-                          progressBlock:progressBlock];
-    /*
-    // Validate properties
-    if ([properties propertyValueForId:kCMISPropertyName] == nil || [properties propertyValueForId:kCMISPropertyObjectTypeId] == nil)
-    {
-        log(@"Must provide %@ and %@ as properties", kCMISPropertyName, kCMISPropertyObjectTypeId);
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
-        }
-        return;
-    }
-
-    // Validate mimetype
-    if (!mimeType)
-    {
-        log(@"Must provide a mimetype when creating a cmis document");
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
-        }
-        return;
-    }
-
-    // Get Down link
-    [self loadLinkForObjectId:folderObjectId andRelation:kCMISLinkRelationDown
-                      andType:kCMISMediaTypeChildren completionBlock:^(NSString *downLink, NSError *error) {
-                          if (error) {
-                              log(@"Could not retrieve down link: %@", error.description);
-                              if (completionBlock) {
-                                  completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeObjectNotFound]);
-                              }
-                          } else {
-                              
-                          }
-                          [self sendAtomEntryXmlToLink:downLink
-                                 withHttpRequestMethod:HTTP_POST
-                                        withProperties:properties
-                                   withContentFilePath:filePath
-                                   withContentMimeType:mimeType
-                                       completionBlock:completionBlock
-                                         progressBlock:progressBlock];
-                      }];
-     */
+    return [self createDocumentFromInputStream:inputStream
+                                  withMimeType:mimeType withProperties:properties
+                                      inFolder:folderObjectId
+                                 bytesExpected:bytesExpected
+                               completionBlock:completionBlock
+                                 progressBlock:progressBlock];
 }
 
-- (void)createDocumentFromInputStream:(NSInputStream *)inputStream
-                         withMimeType:(NSString *)mimeType
-                       withProperties:(CMISProperties *)properties
-                             inFolder:(NSString *)folderObjectId
-                        bytesExpected:(unsigned long long)bytesExpected // optional
-                      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
-                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+- (CMISRequest*)createDocumentFromInputStream:(NSInputStream *)inputStream
+                                 withMimeType:(NSString *)mimeType
+                               withProperties:(CMISProperties *)properties
+                                     inFolder:(NSString *)folderObjectId
+                                bytesExpected:(unsigned long long)bytesExpected // optional
+                              completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                                progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     // Validate input stream
     if (inputStream == nil) {
@@ -361,7 +333,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Invalid input stream"]);
         }
-        return;
+        return nil;
     }
 
     // Validate properties
@@ -371,7 +343,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
         }
-        return;
+        return nil;
     }
     
     // Validate mimetype
@@ -381,9 +353,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         if (completionBlock) {
             completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
         }
-        return;
+        return nil;
     }
     
+    CMISRequest *request = [[CMISRequest alloc] init];
     // Get Down link
     [self loadLinkForObjectId:folderObjectId andRelation:kCMISLinkRelationDown
                       andType:kCMISMediaTypeChildren completionBlock:^(NSString *downLink, NSError *error) {
@@ -402,8 +375,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                    withContentMimeType:mimeType
                                          bytesExpected:bytesExpected
                                        completionBlock:completionBlock
-                                         progressBlock:progressBlock];
+                                         progressBlock:progressBlock
+                                         requestObject:request];
                       }];
+    return request;
 }
 
 
@@ -655,179 +630,6 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
 }
 
 
-/*
-
-
-- (void)sendAtomEntryXmlToLink:(NSString *)link
-         withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod
-                withProperties:(CMISProperties *)properties
-           withContentFilePath:(NSString *)contentFilePath
-           withContentMimeType:(NSString *)contentMimeType
-                 storeInMemory:(BOOL)isXmlStoredInMemory
-               completionBlock:(void (^)(CMISObjectData *objectData, NSError *error))completionBlock
-{
-    // Validate params
-    if (link == nil) {
-        log(@"Could not retrieve link from object to do creation or update");
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
-        }
-        return;
-    }
-    
-    // Generate XML
-    NSString *writeResult = [self createAtomEntryWriter:properties
-                                        contentFilePath:contentFilePath
-                                        contentMimeType:contentMimeType
-                                    isXmlStoredInMemory:isXmlStoredInMemory];
-    
-    // Execute call
-    if (isXmlStoredInMemory) {
-        [HttpUtil invoke:[NSURL URLWithString:link]
-          withHttpMethod:httpRequestMethod
-             withSession:self.bindingSession
-                    body:[writeResult dataUsingEncoding:NSUTF8StringEncoding]
-                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
-         completionBlock:^(CMISHttpResponse *response, NSError *error) {
-             if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
-                 if (completionBlock) {
-                     CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:response.data];
-                     NSError *parseError = nil;
-                     [atomEntryParser parseAndReturnError:&parseError];
-                     if (parseError == nil) {
-                         completionBlock(atomEntryParser.objectData, nil);
-                     } else {
-                         log(@"Error while parsing response: %@", [parseError description]);
-                         completionBlock(nil, [CMISErrors cmisError:parseError withCMISErrorCode:kCMISErrorCodeUpdateConflict]);
-                     }
-                 }
-             } else {
-                 log(@"Invalid http response status code when creating/uploading content: %d", response.statusCode);
-                 NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-                 log(@"Error content: %@", errorContent);
-                 if (completionBlock) {
-                     completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-                 }
-             }
-         }];
-        
-    } else {
-        NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:writeResult];
-        [HttpUtil invoke:[NSURL URLWithString:link]
-          withHttpMethod:httpRequestMethod
-             withSession:self.bindingSession
-             inputStream:inputStream
-                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
-         completionBlock:^(CMISHttpResponse *response, NSError *error) {
-             // close stream to and delete temporary file
-             [inputStream close];
-             NSError *fileError = nil;
-             [[NSFileManager defaultManager] removeItemAtPath:writeResult error:&fileError];
-             if (fileError) {
-                 // the upload itself is not impacted by this error, so do not report it in the completion block
-                 log(@"Could not delete temporary file %@: %@", writeResult, [fileError description]);
-             }
-             
-             if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
-                 if (completionBlock) {
-                     CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:response.data];
-                     NSError *parseError = nil;
-                     [atomEntryParser parseAndReturnError:&parseError];
-                     
-                     if (parseError == nil) {
-                         completionBlock(atomEntryParser.objectData, nil);
-                     } else {
-                         log(@"Error while parsing response: %@", [parseError description]);
-                         completionBlock(nil, [CMISErrors cmisError:parseError withCMISErrorCode:kCMISErrorCodeUpdateConflict]);
-                     }
-                 }
-             } else {
-                 log(@"Invalid http response status code when creating/uploading content: %d", response.statusCode);
-                 NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-                 log(@"Error content: %@", errorContent);
-                 if (completionBlock) {
-                     completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-                 }
-             }
-         }];
-    }
-}
-
- 
-- (void)sendAtomEntryXmlToLink:(NSString *)link
-         withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod
-                withProperties:(CMISProperties *)properties
-           withContentFilePath:(NSString *)contentFilePath
-           withContentMimeType:(NSString *)contentMimeType
-               completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
-                 progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
-{
-    // Validate param
-    if (link == nil) {
-        log(@"Could not retrieve link from object to do creation or update");
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
-        }
-        return;
-    }
-
-    // Generate XML
-    NSString *writeResult = [self createAtomEntryWriter:properties
-                                        contentFilePath:contentFilePath
-                                        contentMimeType:contentMimeType
-                                    isXmlStoredInMemory:NO];
-
-    // Start the asynchronous POST http call
-    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:writeResult];
-    
-    NSError *fileSizeError = nil;
-    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:writeResult error:&fileSizeError];
-    if (fileSizeError) {
-        log(@"Could not determine file size of %@ : %@", writeResult, [fileSizeError description]);
-    }
-    
-    [HttpUtil invoke:[NSURL URLWithString:link]
-      withHttpMethod:HTTP_POST
-         withSession:self.bindingSession
-         inputStream:inputStream
-             headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
-       bytesExpected:fileSize
-     completionBlock:^(CMISHttpResponse *response, NSError *error) {
-         // close stream to and delete temporary file
-         [inputStream close];
-         NSError *fileError = nil;
-         [[NSFileManager defaultManager] removeItemAtPath:writeResult error:&fileError];
-         if (fileError) {
-             // the upload itself is not impacted by this error, so do not report it in the completion block
-             log(@"Could not delete temporary file %@: %@", writeResult, [fileError description]);
-         }
-         
-         if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
-             if (completionBlock) {
-                 NSError *parseError = nil;
-                 CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:response.data];
-                 [atomEntryParser parseAndReturnError:&parseError];
-                 if (parseError == nil) {
-                     completionBlock(atomEntryParser.objectData.identifier, nil);
-                 } else {
-                     log(@"Error while parsing response: %@", [parseError description]);
-                     completionBlock(nil, [CMISErrors cmisError:parseError withCMISErrorCode:kCMISErrorCodeUpdateConflict]);
-                 }
-             }
-         } else {
-             log(@"Invalid http response status code when creating/uploading content: %d", response.statusCode);
-             NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-             log(@"Error content: %@", errorContent);
-             if (completionBlock) {
-                 completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime
-                                                  withDetailedDescription:[NSString stringWithFormat:@"Could not create content: http status code %d", response.statusCode]]);
-             }
-         }
-     }
-       progressBlock:progressBlock];
-}
-*/
-
 - (void)sendAtomEntryXmlToLink:(NSString *)link
          withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod
                 withProperties:(CMISProperties *)properties
@@ -836,6 +638,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                  bytesExpected:(unsigned long long)bytesExpected
                completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                  progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+                 requestObject:(CMISRequest*)request
 {
     // Validate param
     if (link == nil) {
@@ -899,7 +702,8 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
              }
          }
      }
-       progressBlock:progressBlock];
+       progressBlock:progressBlock
+       requestObject:request];
 }
 
 

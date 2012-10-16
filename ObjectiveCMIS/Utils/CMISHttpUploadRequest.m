@@ -23,13 +23,13 @@
 @synthesize bytesExpected = _bytesExpected;
 @synthesize bytesUploaded = _bytesUploaded;
 
-+ (BOOL)startRequest:(NSMutableURLRequest *)urlRequest
-      withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-         inputStream:(NSInputStream*)inputStream
-             headers:(NSDictionary*)additionalHeaders
-       bytesExpected:(unsigned long long)bytesExpected
-     completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
-       progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
++ (CMISHttpUploadRequest*)startRequest:(NSMutableURLRequest *)urlRequest
+                        withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                           inputStream:(NSInputStream*)inputStream
+                               headers:(NSDictionary*)additionalHeaders
+                         bytesExpected:(unsigned long long)bytesExpected
+                       completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
+                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     CMISHttpUploadRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
                                                           completionBlock:completionBlock
@@ -38,8 +38,13 @@
     httpRequest.headers = additionalHeaders;
     httpRequest.bytesExpected = bytesExpected;
     
-    return [httpRequest startRequest:urlRequest];
+    if ([httpRequest startRequest:urlRequest]) {
+        httpRequest = nil;
+    }
+    
+    return httpRequest;
 }
+
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
@@ -53,6 +58,7 @@
     return self;
 }
 
+
 - (BOOL)startRequest:(NSMutableURLRequest*)urlRequest
 {
     if (self.inputStream) {
@@ -61,6 +67,15 @@
 
     return [super startRequest:urlRequest];
 }
+
+
+- (void)cancel
+{
+    self.progressBlock = nil;
+    
+    [super cancel];
+}
+
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {

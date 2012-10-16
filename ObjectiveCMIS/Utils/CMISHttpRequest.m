@@ -27,18 +27,22 @@
 @synthesize completionBlock = _completionBlock;
 @synthesize connection = _connection;
 
-+ (BOOL)startRequest:(NSMutableURLRequest *)urlRequest
-      withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-         requestBody:(NSData*)requestBody
-             headers:(NSDictionary*)additionalHeaders
-     completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
++ (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
+              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                 requestBody:(NSData*)requestBody
+                     headers:(NSDictionary*)additionalHeaders
+             completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
     CMISHttpRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
                                                     completionBlock:completionBlock];
     httpRequest.requestBody = requestBody;
     httpRequest.headers = additionalHeaders;
     
-    return [httpRequest startRequest:urlRequest];
+    if ([httpRequest startRequest:urlRequest] == NO) {
+        httpRequest = nil;
+    }
+    
+    return httpRequest;
 }
 
 
@@ -77,6 +81,23 @@
     }
 }
 
+- (void)cancel
+{
+    if (self.connection) {
+        void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
+        completionBlock = self.completionBlock; // remember completion block in order to invoke it after the connection was cancelled
+        
+        self.completionBlock = nil; // prevent potential NSURLConnection delegate callbacks to invoke the completion block redundantly
+        
+        [self.connection cancel];
+        
+        self.connection = nil;
+        
+        NSError *cmisError = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled withDetailedDescription:@"Request was cancelled"];
+        completionBlock(nil, cmisError);
+    }
+}
+
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
@@ -96,11 +117,14 @@
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     if (self.completionBlock) {
-        NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection];
+        CMISErrorCodes cmisErrorCode = (error.code == NSURLErrorCancelled) ? kCMISErrorCodeCancelled : kCMISErrorCodeConnection;
+        NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:cmisErrorCode];
         self.completionBlock(nil, cmisError);
     }
     
     self.completionBlock = nil;
+    
+    self.connection = nil;
 }
 
 
@@ -117,6 +141,8 @@
     }
     
     self.completionBlock = nil;
+    
+    self.connection = nil;
 }
 
 
