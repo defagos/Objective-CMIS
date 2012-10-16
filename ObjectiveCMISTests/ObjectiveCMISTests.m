@@ -278,22 +278,22 @@
                 
                 // Writing content of CMIS document to local file
                 NSString *filePath = @"testfile";
-                [randomDoc downloadContentToFile:filePath completionBlock:^{
-                    // Assert File exists and check file length
-                    STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
-                    NSError *error = nil;
-                    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&error];
-                    STAssertNil(error, @"Could not verify attributes of file %@: %@", filePath, [error description]);
-                    STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
-                    
-                    // Nice boys clean up after themselves
-                    [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-                    STAssertNil(error, @"Could not remove file %@: %@", filePath, [error description]);
-                    
-                    self.testCompleted = YES;
-                } failureBlock:^(NSError *failureError) {
-                    STAssertNil(failureError, @"Error while writing content: %@", [error description]);
-
+                [randomDoc downloadContentToFile:filePath
+                                 completionBlock:^(NSError *error) {
+                    if (error == nil) {
+                        // Assert File exists and check file length
+                        STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
+                        NSError *fileError = nil;
+                        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&fileError];
+                        STAssertNil(fileError, @"Could not verify attributes of file %@: %@", filePath, [fileError description]);
+                        STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
+                        
+                        // Nice boys clean up after themselves
+                        [[NSFileManager defaultManager] removeItemAtPath:filePath error:&fileError];
+                        STAssertNil(fileError, @"Could not remove file %@: %@", filePath, [fileError description]);
+                    } else {
+                        STAssertNil(error, @"Error while writing content: %@", [error description]);
+                    }
                     self.testCompleted = YES;
                 } progressBlock:nil];
             }];
@@ -316,37 +316,38 @@
         [documentProperties setObject:documentName forKey:kCMISPropertyName];
         [documentProperties setObject:kCMISPropertyObjectTypeIdValueDocument forKey:kCMISPropertyObjectTypeId];
 
-        __block NSInteger previousBytesUploaded = -1;
-        [self.rootFolder createDocumentFromFilePath:filePath withMimeType:@"text/plain"
-             withProperties:documentProperties
-             completionBlock:^ (NSString *objectId)
+        __block long long previousBytesUploaded = -1;
+        [self.rootFolder createDocumentFromFilePath:filePath
+                                       withMimeType:@"text/plain"
+                                     withProperties:documentProperties
+                                    completionBlock:^ (NSString *objectId, NSError *error)
              {
-                 STAssertNotNil(objectId, @"Object id received should be non-nil");
+                 if (objectId) {
+                     STAssertNotNil(objectId, @"Object id received should be non-nil");
 
-                 // Verify creation
-                 [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
-                     CMISDocument *document = (CMISDocument *)object;
-                     STAssertTrue([documentName isEqualToString:document.name],
-                                  @"Document name of created document is wrong: should be %@, but was %@", documentName, document.name);
-                     
-                     // Cleanup after ourselves
-                     [document deleteAllVersionsWithCompletionBlock:^(BOOL documentDeleted, NSError *deleteError) {
-                         STAssertNil(deleteError, @"Error while deleting created document: %@", [error description]);
-                         STAssertTrue(documentDeleted, @"Document was not deleted");
+                     // Verify creation
+                     [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
+                         CMISDocument *document = (CMISDocument *)object;
+                         STAssertTrue([documentName isEqualToString:document.name],
+                                      @"Document name of created document is wrong: should be %@, but was %@", documentName, document.name);
                          
-                         self.testCompleted = YES;
+                         // Cleanup after ourselves
+                         [document deleteAllVersionsWithCompletionBlock:^(BOOL documentDeleted, NSError *deleteError) {
+                             STAssertNil(deleteError, @"Error while deleting created document: %@", [error description]);
+                             STAssertTrue(documentDeleted, @"Document was not deleted");
+                             
+                             self.testCompleted = YES;
+                         }];
                      }];
-                 }];
+                 } else {
+                     STAssertNil(error, @"Got error while creating document: %@", [error description]);
+                     
+                     self.testCompleted = YES;
+                 }
              }
-             failureBlock: ^ (NSError *uploadError)
+             progressBlock: ^ (unsigned long long bytesUploaded, unsigned long long bytesTotal)
              {
-                STAssertNil(uploadError, @"Got error while creating document: %@", [uploadError description]);
-
-                 self.testCompleted = YES;
-             }
-             progressBlock: ^ (NSInteger bytesUploaded, NSInteger bytesTotal)
-             {
-                 STAssertTrue(bytesUploaded > previousBytesUploaded, @"No progress was made");
+                 STAssertTrue((long long)bytesUploaded > previousBytesUploaded, @"No progress was made");
                  previousBytesUploaded = bytesUploaded;
              }];
     }];
@@ -365,39 +366,38 @@
         [documentProperties setObject:kCMISPropertyObjectTypeIdValueDocument forKey:kCMISPropertyObjectTypeId];
 
         // Upload test file
-        __block NSInteger previousUploadedBytes = -1;
+        __block long long previousUploadedBytes = -1;
         __block NSString *objectId = nil;
         [self.session createDocumentFromFilePath:filePath
                 withMimeType:@"text/plain"
                 withProperties:documentProperties
                 inFolder:self.rootFolder.identifier
-                completionBlock: ^ (NSString *newObjectId)
+                completionBlock: ^ (NSString *newObjectId, NSError *error)
                 {
-                    STAssertNotNil(newObjectId, @"Object id should not be nil");
-                    objectId = newObjectId;
+                    if (newObjectId) {
+                        objectId = newObjectId;
                    
-                    [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
-                        CMISDocument *document = (CMISDocument *)object;
-                        STAssertNil(error, @"Got error while creating document: %@", [error description]);
-                        STAssertNotNil(objectId, @"Object id received should be non-nil");
-                        STAssertNotNil(document, @"Retrieved document should not be nil");
-                        STAssertTrue(document.contentStreamLength > 0, @"No content found for document");
-                        
-                        // Cleanup
-                        [self deleteDocumentAndVerify:document completionBlock:^{
-                            self.testCompleted = YES;
+                        [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
+                            CMISDocument *document = (CMISDocument *)object;
+                            STAssertNil(error, @"Got error while creating document: %@", [error description]);
+                            STAssertNotNil(objectId, @"Object id received should be non-nil");
+                            STAssertNotNil(document, @"Retrieved document should not be nil");
+                            STAssertTrue(document.contentStreamLength > 0, @"No content found for document");
+                            
+                            // Cleanup
+                            [self deleteDocumentAndVerify:document completionBlock:^{
+                                self.testCompleted = YES;
+                            }];
                         }];
-                    }];
+                    } else {
+                        STAssertNotNil(error, @"Object id should not be nil");
+                        STAssertNil(error, @"Got error while uploading document: %@", [error description]);
+                        self.testCompleted = YES;
+                    }
                 }
-                failureBlock: ^ (NSError *failureError)
+                progressBlock: ^ (unsigned long long uploadedBytes, unsigned long long totalBytes)
                 {
-                    STAssertNil(failureError, @"Got error while uploading document: %@", [failureError description]);
-
-                    self.testCompleted = YES;
-                }
-                progressBlock: ^ (NSInteger uploadedBytes, NSInteger totalBytes)
-                {
-                    STAssertTrue(uploadedBytes > previousUploadedBytes, @"no progress");
+                    STAssertTrue((long long)uploadedBytes > previousUploadedBytes, @"no progress");
                     previousUploadedBytes = uploadedBytes;
                 }];
     }];
@@ -413,69 +413,74 @@
             @"Test file 'cmis-spec-v1.0.pdf' cannot be found as resource for the test");
 
         // Upload test file
-        NSString *documentName = @"cmis-spec-v1.0.pdf";
+        NSString *documentName = [NSString stringWithFormat:@"cmis-spec-v1.0_%@.pdf", [self stringFromCurrentDate]];
         NSMutableDictionary *documentProperties = [NSMutableDictionary dictionary];
         [documentProperties setObject:documentName forKey:kCMISPropertyName];
         [documentProperties setObject:kCMISPropertyObjectTypeIdValueDocument forKey:kCMISPropertyObjectTypeId];
 
-        __block NSInteger previousBytesUploaded = -1;
+        __block long long previousBytesUploaded = -1;
         __block NSString *objectId;
-        [self.rootFolder createDocumentFromFilePath:fileToUploadPath withMimeType:@"application/pdf"
-               withProperties:documentProperties
-               completionBlock:^(NSString *newObjectId)
+        [self.rootFolder createDocumentFromFilePath:fileToUploadPath
+                                       withMimeType:@"application/pdf"
+                                     withProperties:documentProperties
+                                    completionBlock:^(NSString *newObjectId, NSError *error)
                {
-                   objectId = newObjectId;
-                   STAssertNotNil(objectId, @"Object id received should be non-nil");
-
-                   // Verify created file by downloading it again
-                   [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
-                       CMISDocument *document = (CMISDocument *)object;
-                       STAssertTrue([documentName isEqualToString:document.name],
-                                    @"Document name of created document is wrong: should be %@, but was %@", documentName, document.name);
+                   if (newObjectId) {
+                       NSLog(@"File upload completed");
                        
-                       __block NSInteger previousBytesDownloaded = -1;
-                       NSString *downloadedFilePath = @"testfile.pdf";
-                       [document downloadContentToFile:downloadedFilePath completionBlock:^{
-                           NSLog(@"File upload completed");
-
-                           // Compare file sizes
-                           NSError *error;
-                           long long originalFileSize = [FileUtil fileSizeForFileAtPath:fileToUploadPath error:&error];
-                           STAssertNil(error, @"Got error while getting file size for %@: %@", fileToUploadPath, [error description]);
-                           long long downloadedFileSize = [FileUtil fileSizeForFileAtPath:downloadedFilePath error:&error];
-                           STAssertNil(error, @"Got error while getting file size for %@: %@", downloadedFilePath, [error description]);
-                           STAssertTrue(originalFileSize == downloadedFileSize, @"Original file size (%lld) is not equal to downloaded file size (%lld)", originalFileSize, downloadedFilePath);
+                       objectId = newObjectId;
+                       STAssertNotNil(objectId, @"Object id received should be non-nil");
+                       
+                       // Verify created file by downloading it again
+                       [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
+                           CMISDocument *document = (CMISDocument *)object;
+                           STAssertTrue([documentName isEqualToString:document.name],
+                                        @"Document name of created document is wrong: should be %@, but was %@", documentName, document.name);
                            
-                           // Cleanup after ourselves
-                           [document deleteAllVersionsWithCompletionBlock:^(BOOL documentDeleted, NSError *error) {
-                               STAssertNil(error, @"Error while deleting created document: %@", [error description]);
-                               STAssertTrue(documentDeleted, @"Document was not deleted");
-                               
-                               NSError *internalError;
-                               [[NSFileManager defaultManager] removeItemAtPath:downloadedFilePath error:&internalError];
-                               STAssertNil(error, @"Could not remove file %@: %@", downloadedFilePath, [error description]);
-
-                               self.testCompleted = YES;
+                           __block long long previousBytesDownloaded = -1;
+                           NSString *downloadedFilePath = @"testfile.pdf";
+                           [document downloadContentToFile:downloadedFilePath completionBlock:^(NSError *error) {
+                               if (error == nil) {
+                                   NSLog(@"File download completed");
+                                   
+                                   // Compare file sizes
+                                   NSError *fileError;
+                                   unsigned long long originalFileSize = [FileUtil fileSizeForFileAtPath:fileToUploadPath error:&fileError];
+                                   STAssertNil(fileError, @"Got error while getting file size for %@: %@", fileToUploadPath, [fileError description]);
+                                   unsigned long long downloadedFileSize = [FileUtil fileSizeForFileAtPath:downloadedFilePath error:&fileError];
+                                   STAssertNil(fileError, @"Got error while getting file size for %@: %@", downloadedFilePath, [fileError description]);
+                                   STAssertTrue(originalFileSize == downloadedFileSize, @"Original file size (%llu) is not equal to downloaded file size (%llu)", originalFileSize, downloadedFileSize);
+                                   
+                                   // Cleanup after ourselves
+                                   [document deleteAllVersionsWithCompletionBlock:^(BOOL documentDeleted, NSError *error) {
+                                       STAssertNil(error, @"Error while deleting created document: %@", [error description]);
+                                       STAssertTrue(documentDeleted, @"Document was not deleted");
+                                       
+                                       NSError *internalError;
+                                       [[NSFileManager defaultManager] removeItemAtPath:downloadedFilePath error:&internalError];
+                                       STAssertNil(error, @"Could not remove file %@: %@", downloadedFilePath, [error description]);
+                                       
+                                       self.testCompleted = YES;
+                                   }];
+                               } else {
+                                   STAssertNil(error, @"Error while writing content: %@", [error description]);
+                                   
+                                   self.testCompleted = YES;
+                               }
+                           } progressBlock:^(unsigned long long bytesDownloaded, unsigned long long bytesTotal) {
+                               STAssertTrue((long long)bytesDownloaded > previousBytesDownloaded, @"No progress in downloading file");
+                               previousBytesDownloaded = bytesDownloaded;
                            }];
-                       } failureBlock:^(NSError *failureError) {
-                           STAssertNil(failureError, @"Error while writing content: %@", [error description]);
-
-                           self.testCompleted = YES;
-                       } progressBlock:^(NSInteger bytesDownloaded, NSInteger bytesTotal) {
-                           STAssertTrue(bytesDownloaded > previousBytesDownloaded, @"No progress in downloading file");
-                           previousBytesDownloaded = bytesDownloaded;
                        }];
-                   }];
+                   } else {
+                       STAssertNil(error, @"Got error while creating document: %@", [error description]);
+                       
+                       self.testCompleted = YES;
+                   }
                }
-               failureBlock:^(NSError *uploadError)
+               progressBlock:^(unsigned long long bytesUploaded, unsigned long long bytesTotal)
                {
-                   STAssertNil(uploadError, @"Got error while creating document: %@", [uploadError description]);
-
-                   self.testCompleted = YES;
-               }
-               progressBlock:^(NSInteger bytesUploaded, NSInteger bytesTotal)
-               {
-                   STAssertTrue(bytesUploaded > previousBytesUploaded, @"No progress was made");
+                   STAssertTrue((long long)bytesUploaded > previousBytesUploaded, @"No progress was made");
                    previousBytesUploaded = bytesUploaded;
                }];
     }];
@@ -900,46 +905,50 @@
          // Upload test file
          [self uploadTestFileWithCompletionBlock:^(CMISDocument *originalDocument) {
              // Change content of test file using overwrite
-             __block NSInteger previousUploadedBytes = -1;
+             __block long long previousUploadedBytes = -1;
              NSString *newContentFilePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"test_file_2.txt" ofType:nil];
              [self.session.binding.objectService
               changeContentOfObject:[CMISStringInOutParameter inOutParameterUsingInParameter:originalDocument.identifier]
               toContentOfFile:newContentFilePath
               withOverwriteExisting:YES
               withChangeToken:nil
-              completionBlock: ^{
-                  NSLog(@"Content has been successfully changed");
-
-                  // Verify content of document
-                  NSString *tempDownloadFilePath = @"temp_download_file.txt";
-                  // some repos will up the version when uploading new content
-                  [originalDocument retrieveObjectOfLatestVersionWithMajorVersion:NO completionBlock:^(CMISDocument *latestVersionOfDocument , NSError *error) {
-                      [latestVersionOfDocument downloadContentToFile:tempDownloadFilePath completionBlock:^{
-                          NSString *contentOfDownloadedFile = [NSString stringWithContentsOfFile:tempDownloadFilePath encoding:NSUTF8StringEncoding error:nil];
-                          STAssertEqualObjects(@"In theory, there is no difference between theory and practice. But in practice, there is.",
-                                               contentOfDownloadedFile, @"Downloaded file content does not match: '%@'", contentOfDownloadedFile);
-                          
-                          // Delete downloaded file
-                          NSError *error;
-                          [[NSFileManager defaultManager] removeItemAtPath:tempDownloadFilePath error:&error];
-                          STAssertNil(error, @"Error when deleting temporary downloaded file: %@", [error description]);
-                          
-                          // Delete test document from server
-                          [self deleteDocumentAndVerify:originalDocument completionBlock:^{
-                              self.testCompleted = YES;
-                          }];
-                      } failureBlock:^(NSError *failureError) {
-                          STAssertNil(failureError, @"Error while writing content: %@", [error description]);
-
-                          self.testCompleted = YES;
-                      } progressBlock:nil];
-                  }];
-              } failureBlock: ^ (NSError *failureError) {
-                  STAssertNil(failureError, @"Got error while changing content of document: %@", [failureError description]);
+              completionBlock: ^(NSError *error) {
+                  if (error == nil) {
+                      NSLog(@"Content has been successfully changed");
+                      
+                      // Verify content of document
+                      NSString *tempDownloadFilePath = @"temp_download_file.txt";
+                      // some repos will up the version when uploading new content
+                      [originalDocument retrieveObjectOfLatestVersionWithMajorVersion:NO completionBlock:^(CMISDocument *latestVersionOfDocument , NSError *error) {
+                          [latestVersionOfDocument downloadContentToFile:tempDownloadFilePath completionBlock:^(NSError *error) {
+                              if (error == nil) {
+                                  NSString *contentOfDownloadedFile = [NSString stringWithContentsOfFile:tempDownloadFilePath encoding:NSUTF8StringEncoding error:nil];
+                                  STAssertEqualObjects(@"In theory, there is no difference between theory and practice. But in practice, there is.",
+                                                       contentOfDownloadedFile, @"Downloaded file content does not match: '%@'", contentOfDownloadedFile);
+                                  
+                                  // Delete downloaded file
+                                  NSError *fileError;
+                                  [[NSFileManager defaultManager] removeItemAtPath:tempDownloadFilePath error:&fileError];
+                                  STAssertNil(fileError, @"Error when deleting temporary downloaded file: %@", [fileError description]);
+                                  
+                                  // Delete test document from server
+                                  [self deleteDocumentAndVerify:originalDocument completionBlock:^{
+                                      self.testCompleted = YES;
+                                  }];
+                              } else {
+                                  STAssertNil(error, @"Error while writing content: %@", [error description]);
+                                  
+                                  self.testCompleted = YES;
+                              }
+                          } progressBlock:nil];
+                      }];
+                  } else {
+                      STAssertNil(error, @"Got error while changing content of document: %@", [error description]);
                   
-                  self.testCompleted = YES;
-              } progressBlock: ^ (NSInteger bytesUploaded, NSInteger bytesTotal) {
-                  STAssertTrue(bytesUploaded > previousUploadedBytes, @"No progress");
+                      self.testCompleted = YES;
+                  }
+              } progressBlock: ^ (unsigned long long bytesUploaded, unsigned long long bytesTotal) {
+                  STAssertTrue((long long)bytesUploaded > previousUploadedBytes, @"No progress");
                   previousUploadedBytes = bytesUploaded;
               }];
          }];
@@ -1511,23 +1520,25 @@
              
              // Get content
              NSString *filePath = @"testfile.pdf";
-             [thumbnailRendition downloadRenditionContentToFile:filePath completionBlock:^{
-                 // Assert File exists and check file length
-                 STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
-                 NSError *error;
-                 NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&error];
-                 STAssertNil(error, @"Could not verify attributes of file %@: %@", filePath, [error description]);
-                 STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
+             [thumbnailRendition downloadRenditionContentToFile:filePath completionBlock:^(NSError *error) {
+                 if (error == nil) {
+                     // Assert File exists and check file length
+                     STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
+                     NSError *fileError;
+                     NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&fileError];
+                     STAssertNil(fileError, @"Could not verify attributes of file %@: %@", filePath, [fileError description]);
+                     STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
+                     
+                     // Nice boys clean up after themselves
+                     [[NSFileManager defaultManager] removeItemAtPath:filePath error:&fileError];
+                     STAssertNil(fileError, @"Could not remove file %@: %@", filePath, [fileError description]);
+                     
+                     self.testCompleted = YES;
+                 } else {
+                     STAssertNil(error, @"Error while writing content: %@", [error description]);
                  
-                 // Nice boys clean up after themselves
-                 [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-                 STAssertNil(error, @"Could not remove file %@: %@", filePath, [error description]);
-
-                 self.testCompleted = YES;
-             } failureBlock:^(NSError *failureError) {
-                 STAssertNil(failureError, @"Error while writing content: %@", [error description]);
-                 
-                 self.testCompleted = YES;
+                     self.testCompleted = YES;
+                 }
              } progressBlock:nil];
          }];
      }];
@@ -1571,22 +1582,22 @@
                    downloadContentOfObject:document.identifier
                    withStreamId:thumbnailRendition.streamId
                    toFile:filePath
-                   completionBlock: ^{
-                       // Assert File exists and check file length
-                       STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
-                       NSError *error;
-                       NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&error];
-                       STAssertNil(error, @"Could not verify attributes of file %@: %@", filePath, [error description]);
-                       STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
-                       
-                       // Nice boys clean up after themselves
-                       [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-                       STAssertNil(error, @"Could not remove file %@: %@", filePath, [error description]);
-                       
-                       self.testCompleted = YES;
-                   } failureBlock:^(NSError *failureError) {
-                       STAssertNil(failureError, @"Error while writing content: %@", [error description]);
+                   completionBlock: ^(NSError *error) {
+                       if (error == nil) {
+                           // Assert File exists and check file length
+                           STAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:filePath], @"File does not exist");
+                           NSError *fileError;
+                           NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:&fileError];
+                           STAssertNil(error, @"Could not verify attributes of file %@: %@", filePath, [error description]);
+                           STAssertTrue([fileAttributes fileSize] > 10, @"Expected a file of at least 10 bytes, but found one of %d bytes", [fileAttributes fileSize]);
 
+                           // Nice boys clean up after themselves
+                           [[NSFileManager defaultManager] removeItemAtPath:filePath error:&fileError];
+                           STAssertNil(fileError, @"Could not remove file %@: %@", filePath, [fileError description]);
+                       } else {
+                           STAssertNil(error, @"Error while downloading content: %@", [error description]);
+                       }
+                       
                        self.testCompleted = YES;
                    } progressBlock:nil];
               }];

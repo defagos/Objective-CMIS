@@ -21,7 +21,7 @@
 @property (nonatomic, strong, readonly) NSString *contentStreamId;
 @property (nonatomic, strong, readonly) NSString *contentStreamFileName;
 @property (nonatomic, strong, readonly) NSString *contentStreamMediaType;
-@property (readonly) NSInteger contentStreamLength;
+@property (readonly) unsigned long long contentStreamLength;
 
 @property (nonatomic, strong, readonly) NSString *versionLabel;
 @property (readonly) BOOL isLatestVersion;
@@ -55,8 +55,9 @@
 * Downloads the content to a local file and returns the filepath.
 * This is a synchronous call and will not return until the file is written to the given path.
 */
-- (void)downloadContentToFile:(NSString *)filePath completionBlock:(CMISVoidCompletionBlock)completionBlock
-            failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock;
+- (void)downloadContentToFile:(NSString *)filePath
+              completionBlock:(void (^)(NSError *error))completionBlock
+                progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Changes the content of this document to the content of the given file.
@@ -64,14 +65,25 @@
  * Optional overwrite flag: If TRUE (default), then the Repository MUST replace the existing content stream for the
  * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
  * contentStream for the object if the object currently does not have a content-stream.
- *
- * Note that this is an asynchronous method.
  */
 - (void)changeContentToContentOfFile:(NSString *)filePath
                withOverwriteExisting:(BOOL)overwrite
-                     completionBlock:(CMISVoidCompletionBlock)completionBlock
-                        failureBlock:(CMISErrorFailureBlock)failureBlock
-                       progressBlock:(CMISProgressBlock)progressBlock;
+                     completionBlock:(void (^)(NSError *error))completionBlock
+                       progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+
+/**
+ * Changes the content of this document to the content of the given input stream.
+ *
+ * Optional overwrite flag: If TRUE (default), then the Repository MUST replace the existing content stream for the
+ * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
+ * contentStream for the object if the object currently does not have a content-stream.
+ */
+- (void)changeContentToContentOfInputStream:(NSInputStream *)inputStream
+                              bytesExpected:(unsigned long long)bytesExpected
+                               withFileName:(NSString *)filename
+                      withOverwriteExisting:(BOOL)overwrite
+                            completionBlock:(void (^)(NSError *error))completionBlock
+                              progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Deletes the content of this document.

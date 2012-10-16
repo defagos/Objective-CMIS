@@ -16,6 +16,7 @@
 #import "CMISAtomPubBaseService+Protected.h"
 #import "CMISAtomPubConstants.h"
 #import "CMISHttpUtil.h"
+#import "CMISHttpResponse.h"
 #import "CMISAtomFeedParser.h"
 #import "CMISErrors.h"
 #import "CMISURLUtil.h"
@@ -68,18 +69,22 @@
                                                               withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:versionHistoryLink];
         
         // Execute call
-        [HttpUtil invokeGET:[NSURL URLWithString:versionHistoryLink] withSession:self.bindingSession completionBlock:^(HTTPResponse *httpResponse) {
-            NSData *data = httpResponse.data;
-            CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:data];
-            NSError *error;
-            if (![feedParser parseAndReturnError:&error]) {
-                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeVersioning]);
-            } else {
-                completionBlock(feedParser.entries, nil);
-            }
-        } failureBlock:^(NSError *error) {
-            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-        }];
+        [HttpUtil invokeGET:[NSURL URLWithString:versionHistoryLink]
+                withSession:self.bindingSession
+            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                if (httpResponse) {
+                    NSData *data = httpResponse.data;
+                    CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:data];
+                    NSError *error;
+                    if (![feedParser parseAndReturnError:&error]) {
+                        completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeVersioning]);
+                    } else {
+                        completionBlock(feedParser.entries, nil);
+                    }
+                } else {
+                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+                }
+            }];
     }];
 }
 

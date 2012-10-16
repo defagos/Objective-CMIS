@@ -15,6 +15,7 @@
 #import "CMISAtomPubBaseService.h"
 #import "CMISAtomPubBaseService+Protected.h"
 #import "CMISHttpUtil.h"
+#import "CMISHttpResponse.h"
 #import "CMISServiceDocumentParser.h"
 #import "CMISConstants.h"
 #import "CMISAtomEntryParser.h"
@@ -128,26 +129,27 @@
     } else {
         [HttpUtil invokeGET:self.atomPubUrl
                 withSession:self.bindingSession
-            completionBlock:^(HTTPResponse *httpResponse) {
-                NSData *data = httpResponse.data;
-                // Uncomment to see the service document
-                //        NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-                //        log(@"Service document: %@", dataString);
-                
-                // Parse the cmis service document
-                if (data) {
-                    CMISServiceDocumentParser *parser = [[CMISServiceDocumentParser alloc] initWithData:data];
-                    NSError *error = nil;
-                    if ([parser parseAndReturnError:&error]) {
-                        [self.bindingSession setObject:parser.workspaces forKey:kCMISSessionKeyWorkspaces];
-                    } else {
-                        log(@"Error while parsing service document: %@", error.description);
+            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                if (httpResponse) {
+                    NSData *data = httpResponse.data;
+                    // Uncomment to see the service document
+                    //        NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                    //        log(@"Service document: %@", dataString);
+                    
+                    // Parse the cmis service document
+                    if (data) {
+                        CMISServiceDocumentParser *parser = [[CMISServiceDocumentParser alloc] initWithData:data];
+                        NSError *error = nil;
+                        if ([parser parseAndReturnError:&error]) {
+                            [self.bindingSession setObject:parser.workspaces forKey:kCMISSessionKeyWorkspaces];
+                        } else {
+                            log(@"Error while parsing service document: %@", error.description);
+                        }
+                        completionBlock(parser.workspaces, error);
                     }
-                    completionBlock(parser.workspaces, error);
+                } else {
+                    completionBlock(nil, error);
                 }
-                
-            } failureBlock:^(NSError *error) {
-                completionBlock(nil, error);
             }];
     }
 }
@@ -185,22 +187,24 @@
         // Execute actual call
         [HttpUtil invokeGET:objectIdUrl
                 withSession:self.bindingSession
-            completionBlock:^(HTTPResponse *httpResponse) {
-                if (httpResponse.statusCode == 200 && httpResponse.data) {
-                    CMISObjectData *objectData = nil;
-                    NSError *error = nil;
-                    CMISAtomEntryParser *parser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
-                    if ([parser parseAndReturnError:&error]) {
-                        objectData = parser.objectData;
-                        
-                        // Add links to link cache
-                        CMISLinkCache *linkCache = [self linkCache];
-                        [linkCache addLinks:objectData.linkRelations forObjectId:objectData.identifier];
+            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                if (httpResponse) {
+                    if (httpResponse.statusCode == 200 && httpResponse.data) {
+                        CMISObjectData *objectData = nil;
+                        NSError *error = nil;
+                        CMISAtomEntryParser *parser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
+                        if ([parser parseAndReturnError:&error]) {
+                            objectData = parser.objectData;
+                            
+                            // Add links to link cache
+                            CMISLinkCache *linkCache = [self linkCache];
+                            [linkCache addLinks:objectData.linkRelations forObjectId:objectData.identifier];
+                        }
+                        completionBlock(objectData, error);
                     }
-                    completionBlock(objectData, error);
+                } else {
+                    completionBlock(nil, error);
                 }
-            } failureBlock:^(NSError *error) {
-                completionBlock(nil, error);
             }];
     }];
 }
@@ -227,22 +231,24 @@
         // Execute actual call
         [HttpUtil invokeGET:[objectByPathUriBuilder buildUrl]
                 withSession:self.bindingSession
-            completionBlock:^(HTTPResponse *httpResponse) {
-                if (httpResponse.statusCode == 200 && httpResponse.data != nil) {
-                    CMISObjectData *objectData = nil;
-                    NSError *error = nil;
-                    CMISAtomEntryParser *parser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
-                    if ([parser parseAndReturnError:&error]) {
-                        objectData = parser.objectData;
-                        
-                        // Add links to link cache
-                        CMISLinkCache *linkCache = [self linkCache];
-                        [linkCache addLinks:objectData.linkRelations forObjectId:objectData.identifier];
+            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                if (httpResponse) {
+                    if (httpResponse.statusCode == 200 && httpResponse.data != nil) {
+                        CMISObjectData *objectData = nil;
+                        NSError *error = nil;
+                        CMISAtomEntryParser *parser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
+                        if ([parser parseAndReturnError:&error]) {
+                            objectData = parser.objectData;
+                            
+                            // Add links to link cache
+                            CMISLinkCache *linkCache = [self linkCache];
+                            [linkCache addLinks:objectData.linkRelations forObjectId:objectData.identifier];
+                        }
+                        completionBlock(objectData, error);
                     }
-                    completionBlock(objectData, error);
+                } else {
+                    completionBlock(nil, error);
                 }
-            } failureBlock:^(NSError *error) {
-                completionBlock(nil, error);
             }];
     }];
 }

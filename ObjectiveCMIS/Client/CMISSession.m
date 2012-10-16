@@ -371,7 +371,9 @@
                  }];
 }
 
-- (void)createFolder:(NSDictionary *)properties inFolder:(NSString *)folderObjectId completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+- (void)createFolder:(NSDictionary *)properties
+            inFolder:(NSString *)folderObjectId
+     completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
     [converter convertProperties:properties
@@ -391,49 +393,75 @@
 
 - (void)downloadContentOfCMISObject:(NSString *)objectId
                              toFile:(NSString *)filePath
-                    completionBlock:(CMISVoidCompletionBlock)completionBlock
-                    failureBlock:(CMISErrorFailureBlock)failureBlock
-                    progressBlock:(CMISProgressBlock)progressBlock;
+                    completionBlock:(void (^)(NSError *error))completionBlock
+                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
     [self.binding.objectService downloadContentOfObject:objectId
                                            withStreamId:nil
                                                  toFile:filePath
                                         completionBlock:completionBlock
-                                           failureBlock:failureBlock
                                           progressBlock:progressBlock];
 }
 
 - (void)downloadContentOfCMISObject:(NSString *)objectId
                      toOutputStream:(NSOutputStream *)outputStream
-                    completionBlock:(CMISVoidCompletionBlock)completionBlock
-                       failureBlock:(CMISErrorFailureBlock)failureBlock
-                      progressBlock:(CMISProgressBlock)progressBlock;
+                    completionBlock:(void (^)(NSError *error))completionBlock
+                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
     [self.binding.objectService downloadContentOfObject:objectId
                                            withStreamId:nil
                                          toOutputStream:outputStream
                                         completionBlock:completionBlock
-                                           failureBlock:failureBlock
                                           progressBlock:progressBlock];
 }
 
 
 - (void)createDocumentFromFilePath:(NSString *)filePath withMimeType:(NSString *)mimeType
                     withProperties:(NSDictionary *)properties inFolder:(NSString *)folderObjectId
-                   completionBlock:(CMISStringCompletionBlock)completionBlock
-                      failureBlock:(CMISErrorFailureBlock)failureBlock
-                     progressBlock:(CMISProgressBlock)progressBlock
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                     progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
     [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
-            if (failureBlock) {
-                failureBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+            if (completionBlock) {
+                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             }
         } else {
-            [self.binding.objectService createDocumentFromFilePath:filePath withMimeType:mimeType withProperties:convertedProperties
-                                                      inFolder:folderObjectId completionBlock:completionBlock failureBlock:failureBlock progressBlock:progressBlock];
+            [self.binding.objectService createDocumentFromFilePath:filePath
+                                                      withMimeType:mimeType
+                                                    withProperties:convertedProperties
+                                                      inFolder:folderObjectId
+                                                   completionBlock:completionBlock
+                                                     progressBlock:progressBlock];
+        }
+    }];
+}
+
+- (void)createDocumentFromInputStream:(NSInputStream *)inputStream
+                         withMimeType:(NSString *)mimeType
+                       withProperties:(NSDictionary *)properties
+                             inFolder:(NSString *)folderObjectId
+                        bytesExpected:(unsigned long long)bytesExpected
+                      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
+{
+    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
+    [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+        if (error) {
+            log(@"Could not convert properties: %@", error.description);
+            if (completionBlock) {
+                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+            }
+        } else {
+            [self.binding.objectService createDocumentFromInputStream:inputStream
+                                                         withMimeType:mimeType
+                                                       withProperties:convertedProperties
+                                                             inFolder:folderObjectId
+                                                        bytesExpected:bytesExpected
+                                                      completionBlock:completionBlock
+                                                        progressBlock:progressBlock];
         }
     }];
 }

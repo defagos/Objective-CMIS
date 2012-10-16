@@ -15,6 +15,7 @@
 #import "CMISAtomPubDiscoveryService.h"
 #import "CMISQueryAtomEntryWriter.h"
 #import "CMISHttpUtil.h"
+#import "CMISHttpResponse.h"
 #import "CMISAtomPubConstants.h"
 #import "CMISAtomFeedParser.h"
 #import "CMISObjectList.h"
@@ -63,23 +64,26 @@
     [HttpUtil invokePOST:queryURL
              withSession:self.bindingSession
                     body:[[atomEntryWriter generateAtomEntryXML] dataUsingEncoding:NSUTF8StringEncoding]
-                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeQuery forKey:@"Content-type"]completionBlock:^(HTTPResponse *httpResponse) {
-                     CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
-                     NSError *error = nil;
-                     if ([feedParser parseAndReturnError:&error]) {
-                         NSString *nextLink = [feedParser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
-                         
-                         CMISObjectList *objectList = [[CMISObjectList alloc] init];
-                         objectList.hasMoreItems = (nextLink != nil);
-                         objectList.numItems = feedParser.numItems;
-                         objectList.objects = feedParser.entries;
-                         completionBlock(objectList, nil);
-                     } else {
-                         completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                     }
-                 } failureBlock:^(NSError *error) {
-                     completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-                 }];
+                 headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeQuery forKey:@"Content-type"]
+         completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+             if (httpResponse) {
+                 CMISAtomFeedParser *feedParser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                 NSError *error = nil;
+                 if ([feedParser parseAndReturnError:&error]) {
+                     NSString *nextLink = [feedParser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
+                     
+                     CMISObjectList *objectList = [[CMISObjectList alloc] init];
+                     objectList.hasMoreItems = (nextLink != nil);
+                     objectList.numItems = feedParser.numItems;
+                     objectList.objects = feedParser.entries;
+                     completionBlock(objectList, nil);
+                 } else {
+                     completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+                 }
+             } else {
+                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+             }
+         }];
 }
 
 @end

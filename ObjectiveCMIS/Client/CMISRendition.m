@@ -66,7 +66,9 @@
     }];
 }
 
-- (void)downloadRenditionContentToFile:(NSString *)filePath completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+- (void)downloadRenditionContentToFile:(NSString *)filePath
+                       completionBlock:(void (^)(NSError *error))completionBlock
+                         progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
     if (self.objectId == nil || self.streamId == nil)
     {
@@ -78,11 +80,12 @@
                                                    withStreamId:self.streamId
                                                          toFile:filePath
                                                 completionBlock:completionBlock
-                                                   failureBlock:failureBlock
                                                   progressBlock:progressBlock];
 }
 
-- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream completionBlock:(CMISVoidCompletionBlock)completionBlock failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+- (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream
+                               completionBlock:(void (^)(NSError *error))completionBlock
+                                 progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
     if (self.objectId == nil || self.streamId == nil)
     {
@@ -94,7 +97,6 @@
                                                    withStreamId:self.streamId
                                                          toOutputStream:outputStream
                                                 completionBlock:completionBlock
-                                                   failureBlock:failureBlock
                                                   progressBlock:progressBlock];
 }
 

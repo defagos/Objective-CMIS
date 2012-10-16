@@ -50,11 +50,11 @@
 
 - (void)createFolder:(NSDictionary *)properties completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock;
 
-- (void)createDocumentFromFilePath:(NSString *)filePath withMimeType:(NSString *)mimeType
-                          withProperties:(NSDictionary *)properties
-                         completionBlock:(CMISStringCompletionBlock)completionBlock // the returned string is the object id of the newly created document
-                            failureBlock:(CMISErrorFailureBlock)failureBlock
-                           progressBlock:(CMISProgressBlock)progressBlock;
+- (void)createDocumentFromFilePath:(NSString *)filePath
+                      withMimeType:(NSString *)mimeType
+                    withProperties:(NSDictionary *)properties
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                     progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 - (void)deleteTreeWithDeleteAllVersions:(BOOL)deleteAllversions
                       withUnfileObjects:(CMISUnfileObject)unfileObjects

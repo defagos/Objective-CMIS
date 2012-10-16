@@ -18,6 +18,7 @@
 #import "CMISErrors.h"
 #import "CMISTypeByIdUriBuilder.h"
 #import "CMISHttpUtil.h"
+#import "CMISHttpResponse.h"
 #import "CMISTypeDefinitionAtomEntryParser.h"
 
 @interface CMISAtomPubRepositoryService ()
@@ -83,21 +84,23 @@
     CMISTypeByIdUriBuilder *typeByIdUriBuilder = [self.bindingSession objectForKey:kCMISBindingSessionKeyTypeByIdUriBuilder];
     typeByIdUriBuilder.id = typeId;
     
-    [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(HTTPResponse *httpResponse) {
-        if (httpResponse.data != nil) {
-            CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];
-            NSError *error;
-            if ([parser parseAndReturnError:&error]) {
-                completionBlock(parser.typeDefinition, nil);
+    [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+        if (httpResponse) {
+            if (httpResponse.data != nil) {
+                CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];
+                NSError *error;
+                if ([parser parseAndReturnError:&error]) {
+                    completionBlock(parser.typeDefinition, nil);
+                } else {
+                    completionBlock(nil, error);
+                }
             } else {
+                NSError *error = [[NSError alloc] init]; // TODO: proper error init
                 completionBlock(nil, error);
             }
         } else {
-            NSError *error = [[NSError alloc] init]; // TODO: proper error init
             completionBlock(nil, error);
         }
-    } failureBlock:^(NSError *error) {
-        completionBlock(nil, error);
     }];
 }
 

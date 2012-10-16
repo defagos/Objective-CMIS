@@ -16,6 +16,7 @@
 #import "CMISAtomPubBaseService+Protected.h"
 #import "CMISAtomFeedParser.h"
 #import "CMISHttpUtil.h"
+#import "CMISHttpResponse.h"
 #import "CMISErrors.h"
 #import "CMISURLUtil.h"
 #import "CMISObjectList.h"
@@ -53,34 +54,35 @@
                           // execute the request
                           [HttpUtil invokeGET:[NSURL URLWithString:downLink]
                                   withSession:self.bindingSession
-                              completionBlock:^(HTTPResponse *httpResponse) {
-                                  if (httpResponse.data == nil) {
-                                      NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConnection withDetailedDescription:nil];
-                                      completionBlock(nil, error);
-                                      return;
-                                  }
-                                  
-                                  // Parse the feed (containing entries for the children) you get back
-                                  CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
-                                  NSError *internalError = nil;
-                                  if ([parser parseAndReturnError:&internalError])
-                                  {
-                                      NSString *nextLink = [parser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
+                              completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                                  if (httpResponse) {
+                                      if (httpResponse.data == nil) {
+                                          NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConnection withDetailedDescription:nil];
+                                          completionBlock(nil, error);
+                                          return;
+                                      }
                                       
-                                      CMISObjectList *objectList = [[CMISObjectList alloc] init];
-                                      objectList.hasMoreItems = (nextLink != nil);
-                                      objectList.numItems = parser.numItems;
-                                      objectList.objects = parser.entries;
-                                      completionBlock(objectList, nil);
-                                  }
-                                  else
-                                  {
-                                      NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
+                                      // Parse the feed (containing entries for the children) you get back
+                                      CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                                      NSError *internalError = nil;
+                                      if ([parser parseAndReturnError:&internalError])
+                                      {
+                                          NSString *nextLink = [parser.linkRelations linkHrefForRel:kCMISLinkRelationNext];
+                                          
+                                          CMISObjectList *objectList = [[CMISObjectList alloc] init];
+                                          objectList.hasMoreItems = (nextLink != nil);
+                                          objectList.numItems = parser.numItems;
+                                          objectList.objects = parser.entries;
+                                          completionBlock(objectList, nil);
+                                      }
+                                      else
+                                      {
+                                          NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
+                                          completionBlock(nil, error);
+                                      }
+                                  } else {
                                       completionBlock(nil, error);
                                   }
-                                  
-                              } failureBlock:^(NSError *error) {
-                                  completionBlock(nil, error);
                               }];
                       }];
 }
@@ -118,20 +120,22 @@
         
         [HttpUtil invokeGET:[NSURL URLWithString:upLink]
                 withSession:self.bindingSession
-            completionBlock:^(HTTPResponse *httpResponse) {
-                CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
-                NSError *internalError;
-                if (![parser parseAndReturnError:&internalError])
-                {
-                    NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
-                    log(@"Failing because parsing the Atom Feed XML returns an error");
-                    completionBlock([NSArray array], error);
+            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                if (httpResponse) {
+                    CMISAtomFeedParser *parser = [[CMISAtomFeedParser alloc] initWithData:httpResponse.data];
+                    NSError *internalError;
+                    if (![parser parseAndReturnError:&internalError])
+                    {
+                        NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
+                        log(@"Failing because parsing the Atom Feed XML returns an error");
+                        completionBlock([NSArray array], error);
+                    } else {
+                        completionBlock(parser.entries, nil);
+                    }
                 } else {
-                    completionBlock(parser.entries, nil);
+                    log(@"Failing because the invokeGET returns an error");
+                    completionBlock([NSArray array], error);
                 }
-            } failureBlock:^(NSError *error) {
-                log(@"Failing because the invokeGET returns an error");
-                completionBlock([NSArray array], error);
             }];
     }];
 }

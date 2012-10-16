@@ -127,24 +127,25 @@
                  }];
 }
 
-- (void)createDocumentFromFilePath:(NSString *)filePath withMimeType:(NSString *)mimeType
-                    withProperties:(NSDictionary *)properties completionBlock:(CMISStringCompletionBlock)completionBlock
-                      failureBlock:(CMISErrorFailureBlock)failureBlock progressBlock:(CMISProgressBlock)progressBlock
+- (void)createDocumentFromFilePath:(NSString *)filePath
+                      withMimeType:(NSString *)mimeType
+                    withProperties:(NSDictionary *)properties
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                     progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
     [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
-            if (failureBlock) {
-                failureBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
+            if (completionBlock) {
+                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             }
         } else {
             [self.binding.objectService createDocumentFromFilePath:filePath
                                                       withMimeType:mimeType
                                                     withProperties:convertedProperties
                                                           inFolder:self.identifier
-                                               completionBlock:completionBlock
-                                                      failureBlock:failureBlock
+                                                   completionBlock:completionBlock
                                                      progressBlock:progressBlock];
         }
     }];

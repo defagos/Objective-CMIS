@@ -14,7 +14,6 @@
 
 #import <Foundation/Foundation.h>
 #import "CMISRenditionData.h"
-#import "CMISTypeDefs.h"
 
 @class CMISDocument;
 @class CMISOperationContext;
@@ -31,13 +30,11 @@
                                       completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
 - (void)downloadRenditionContentToFile:(NSString *)filePath
-                                completionBlock:(CMISVoidCompletionBlock)completionBlock
-                                failureBlock:(CMISErrorFailureBlock)failureBlock
-                                progressBlock:(CMISProgressBlock)progressBlock;
+                       completionBlock:(void (^)(NSError *error))completionBlock
+                         progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 - (void)downloadRenditionContentToOutputStream:(NSOutputStream *)outputStream
-                               completionBlock:(CMISVoidCompletionBlock)completionBlock
-                                  failureBlock:(CMISErrorFailureBlock)failureBlock
-                                 progressBlock:(CMISProgressBlock)progressBlock;
+                               completionBlock:(void (^)(NSError *error))completionBlock
+                                 progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 @end

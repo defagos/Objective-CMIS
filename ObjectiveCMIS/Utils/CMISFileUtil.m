@@ -31,14 +31,12 @@
     [fileHandle closeFile];
 }
 
-+ (long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError
++ (unsigned long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError
 {
     NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:outError];
 
-    if (*outError == nil)
-    {
-        NSNumber *fileSizeNumber = [attributes objectForKey:NSFileSize];
-        return [fileSizeNumber longLongValue];
+    if (*outError == nil) {
+        return [attributes fileSize];
     }
 
     return 0LL;

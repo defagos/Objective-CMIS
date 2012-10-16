@@ -31,6 +31,7 @@
 
 // Exposed properties
 @synthesize contentFilePath = _contentFilePath;
+@synthesize inputStream = _inputStream;
 @synthesize mimeType = _mimeType;
 @synthesize cmisProperties = _cmisProperties;
 @synthesize generateXmlInMemory = _generateXmlInMemory;
@@ -44,7 +45,7 @@
 {
     [self addEntryStartElement];
 
-    if (self.contentFilePath)
+    if (self.contentFilePath || self.inputStream)
     {
         [self addContent];
     }
@@ -80,14 +81,21 @@
     [self appendStringToReturnResult:contentXMLStart];
 
     // Generate the base64 representation of the content
-    if (self.generateXmlInMemory)
-    {
-        NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
-        [self appendToInMemoryXml:encodedContent];
-    }
-    else
-    {
-        [CMISBase64Encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
+    if (self.contentFilePath) {
+        if (self.generateXmlInMemory) {
+            NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
+            [self appendToInMemoryXml:encodedContent];
+        } else {
+            [CMISBase64Encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
+        }
+    } else if (self.inputStream) {
+        if (self.generateXmlInMemory)
+        {
+            NSString *encodedContent = [CMISBase64Encoder encodeContentFromInputStream:self.inputStream];
+            [self appendToInMemoryXml:encodedContent];
+        } else {
+            [CMISBase64Encoder encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
+        }
     }
 
     NSString *contentXMLEnd = @"</cmisra:base64></cmisra:content>";

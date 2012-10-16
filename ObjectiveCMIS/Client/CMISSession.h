@@ -135,18 +135,16 @@
  */
 - (void)downloadContentOfCMISObject:(NSString *)objectId
                              toFile:(NSString *)filePath
-                    completionBlock:(CMISVoidCompletionBlock)completionBlock
-                       failureBlock:(CMISErrorFailureBlock)failureBlock
-                      progressBlock:(CMISProgressBlock)progressBlock;
+                    completionBlock:(void (^)(NSError *error))completionBlock
+                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Downloads the content of object with the provided object id to the given stream.
  */
 - (void)downloadContentOfCMISObject:(NSString *)objectId
                      toOutputStream:(NSOutputStream*)outputStream
-                    completionBlock:(CMISVoidCompletionBlock)completionBlock
-                       failureBlock:(CMISErrorFailureBlock)failureBlock
-                      progressBlock:(CMISProgressBlock)progressBlock;
+                    completionBlock:(void (^)(NSError *error))completionBlock
+                      progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Creates a cmis document using the content from the file path.
@@ -155,7 +153,17 @@
                       withMimeType:(NSString *)mimeType
                     withProperties:(NSDictionary *)properties
                           inFolder:(NSString *)folderObjectId
-                   completionBlock:(CMISStringCompletionBlock)completionBlock  // The returned id is the object id of the newly created document
-                      failureBlock:(CMISErrorFailureBlock)failureBlock
-                     progressBlock:(CMISProgressBlock)progressBlock;
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                     progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+
+/**
+ * Creates a cmis document using the content from the given stream.
+ */
+- (void)createDocumentFromInputStream:(NSInputStream *)inputStream
+                         withMimeType:(NSString *)mimeType
+                       withProperties:(NSDictionary *)properties
+                             inFolder:(NSString *)folderObjectId
+                        bytesExpected:(unsigned long long)bytesExpected
+                      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 @end

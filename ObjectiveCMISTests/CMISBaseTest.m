@@ -59,7 +59,7 @@
             
             testBlock();
         }];
-        [self waitForCompletion:60];
+        [self waitForCompletion:90];
     }
 }
 
@@ -140,31 +140,31 @@
     [documentProperties setObject:kCMISPropertyObjectTypeIdValueDocument forKey:kCMISPropertyObjectTypeId];
 
     // Upload test file
-    __block NSInteger previousUploadedBytes = -1;
+    __block long long previousUploadedBytes = -1;
     __block NSString *objectId = nil;
     [self.rootFolder createDocumentFromFilePath:filePath
             withMimeType:@"text/plain"
             withProperties:documentProperties
-            completionBlock: ^ (NSString *newObjectId)
+            completionBlock: ^ (NSString *newObjectId, NSError *error)
             {
-                STAssertNotNil(newObjectId, @"Object id should not be nil");
-                objectId = newObjectId;
-
-                [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
-                    CMISDocument *document = (CMISDocument *)object;
-                    STAssertNil(error, @"Got error while creating document: %@", [error description]);
-                    STAssertNotNil(objectId, @"Object id received should be non-nil");
-                    STAssertNotNil(document, @"Retrieved document should not be nil");
-                    completionBlock(document);
-                }];
+                if (newObjectId) {
+                    objectId = newObjectId;
+                    
+                    [self.session retrieveObject:objectId completionBlock:^(CMISObject *object, NSError *error) {
+                        CMISDocument *document = (CMISDocument *)object;
+                        STAssertNil(error, @"Got error while creating document: %@", [error description]);
+                        STAssertNotNil(objectId, @"Object id received should be non-nil");
+                        STAssertNotNil(document, @"Retrieved document should not be nil");
+                        completionBlock(document);
+                    }];
+                } else {
+                    STAssertNotNil(error, @"Object id should not be nil");
+                    STAssertNil(error, @"Got error while uploading document: %@", [error description]);
+                }
             }
-            failureBlock: ^ (NSError *failureError)
+            progressBlock: ^ (unsigned long long uploadedBytes, unsigned long long totalBytes)
             {
-                STAssertNil(failureError, @"Got error while uploading document: %@", [failureError description]);
-            }
-            progressBlock: ^ (NSInteger uploadedBytes, NSInteger totalBytes)
-            {
-                STAssertTrue(uploadedBytes > previousUploadedBytes, @"no progress");
+                STAssertTrue((long long)uploadedBytes > previousUploadedBytes, @"no progress");
                 previousUploadedBytes = uploadedBytes;
             }];
 

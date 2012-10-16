@@ -27,8 +27,9 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
 
 + (NSData *)dataByEncodingText:(NSData *)plainText
 {
-    uint encodedLength = (4 * (([plainText length] / 3) + (1 - (3 - ([plainText length] % 3)) / 3))) + 1;
-    char *outputBuffer = malloc(encodedLength);
+    uint encodedLength = (4 * (([plainText length] / 3) + (1 - (3 - ([plainText length] % 3)) / 3)));
+    NSMutableData *encodedData = [[NSMutableData alloc] initWithLength:encodedLength];
+    char *outputBuffer = encodedData.mutableBytes;
     unsigned char *inputBuffer = (unsigned char *) [plainText bytes];
 
     NSInteger i;
@@ -55,12 +56,7 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
             outputBuffer[j++] = '=';
     }
 
-    outputBuffer[j] = 0;
-
-    NSData *result = [NSData dataWithBytes:outputBuffer length:j];
-    free(outputBuffer);
-
-    return result;
+    return encodedData;
 }
 
 + (NSString *)encodeContentOfFile:(NSString *)sourceFilePath
@@ -100,6 +96,26 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
     return result;
 }
 
++ (NSString *)encodeContentFromInputStream:(NSInputStream*)inputStream
+{
+    NSMutableString *result = [[NSMutableString alloc] init];
+
+    while ([inputStream hasBytesAvailable]) {
+        @autoreleasepool {
+            NSMutableData *chunkOfData = [[NSMutableData alloc] initWithLength:524288]; // 512 kb
+            NSInteger length = [inputStream read:chunkOfData.mutableBytes maxLength:chunkOfData.length];
+            if (length > 0) {
+                [chunkOfData setLength:length];
+                [result appendString:[self stringByEncodingText:chunkOfData]];
+            } else {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+
 + (void)encodeContentOfFile:(NSString *)sourceFilePath andAppendToFile:(NSString *)destinationFilePath
 {
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:sourceFilePath];
@@ -118,7 +134,7 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
             @autoreleasepool
             {
                 [fileHandle seekToFileOffset:currentOffset];
-                NSData *chunkOfData = [fileHandle readDataOfLength:524288]; // 512 kb, note that the base64 encoding will alloc this twice at a given point, so don't make it too high
+                NSData *chunkOfData = [fileHandle readDataOfLength:524288]; // 512 kb
                 [FileUtil appendToFileAtPath:destinationFilePath data:[self dataByEncodingText:chunkOfData]];
                 currentOffset += chunkOfData.length;
             }
@@ -131,6 +147,27 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
     {
         log(@"Could not create a file handle for %@", sourceFilePath);
     }
+}
+
++ (void)encodeContentFromInputStream:(NSInputStream*)inputStream andAppendToFile:(NSString *)destinationFilePath
+{
+    [inputStream open];
+    
+    while ([inputStream hasBytesAvailable]) {
+        @autoreleasepool {
+            NSMutableData *chunkOfData = [[NSMutableData alloc] initWithLength:524288]; // 512 kb
+            NSInteger length = [inputStream read:chunkOfData.mutableBytes maxLength:chunkOfData.length];
+            if (length > 0) {
+                [chunkOfData setLength:length];
+                NSData *encodedChunkOfData = [self dataByEncodingText:chunkOfData];
+                [FileUtil appendToFileAtPath:destinationFilePath data:encodedChunkOfData];
+            } else {
+                break;
+            }
+        }
+    }
+    
+    [inputStream close];
 }
 
 

@@ -14,7 +14,6 @@
 
 #import <Foundation/Foundation.h>
 #import "CMISObjectData.h"
-#import "CMISTypeDefs.h"
 
 @class CMISDocument;
 @class CMISStringInOutParameter;
@@ -51,29 +50,23 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
 * Gets the content stream for the specified Document object, or gets a rendition stream for a specified
 * rendition of a document or folder object. Downloads the content to a local file.
 *
-* Do note that this is an ASYNCHRONOUS call, as a synchronous call would have
-* bad performance/memory implications.
 */
 - (void)downloadContentOfObject:(NSString *)objectId
                    withStreamId:(NSString *)streamId
                          toFile:(NSString *)filePath
-                completionBlock:(CMISVoidCompletionBlock)completionBlock
-                   failureBlock:(CMISErrorFailureBlock)failureBlock
-                  progressBlock:(CMISProgressBlock)progressBlock;
+                completionBlock:(void (^)(NSError *error))completionBlock
+                  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Gets the content stream for the specified Document object, or gets a rendition stream for a specified
  * rendition of a document or folder object. Downloads the content to an output stream.
  *
- * Do note that this is an ASYNCHRONOUS call, as a synchronous call would have
- * bad performance/memory implications.
  */
 - (void)downloadContentOfObject:(NSString *)objectId
                    withStreamId:(NSString *)streamId
                  toOutputStream:(NSOutputStream *)outputStream
-                completionBlock:(CMISVoidCompletionBlock)completionBlock
-                   failureBlock:(CMISErrorFailureBlock)failureBlock
-                  progressBlock:(CMISProgressBlock)progressBlock;
+                completionBlock:(void (^)(NSError *error))completionBlock
+                  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Deletes the content stream for the specified document object.
@@ -89,7 +82,24 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
               completionBlock:(void (^)(NSError *error))completionBlock;
 
 /**
- * Changes the content of the given document to the content of the given file.
+ * Changes the content of the given document to the content of a given file.
+ *
+ * Optional overwrite flag: If TRUE (default), then the Repository MUST replace the existing content stream for the
+ * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
+ * contentStream for the object if the object currently does not have a content-stream.
+ *
+ * NOTE for atom pub binding: This does not return the new object id and change token as specified by the domain model.
+ * (This is not possible without introducing a new HTTP header).
+ */
+- (void)changeContentOfObject:(CMISStringInOutParameter *)objectIdParam
+              toContentOfFile:(NSString *)filePath
+        withOverwriteExisting:(BOOL)overwrite
+              withChangeToken:(CMISStringInOutParameter *)changeTokenParam
+              completionBlock:(void (^)(NSError *error))completionBlock
+                progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+
+/**
+ * Changes the content of the given document to the content from a give input stream.
  *
  * Optional overwrite flag: If TRUE (default), then the Repository MUST replace the existing content stream for the
  * object (if any) with the input contentStream. If FALSE, then the Repository MUST only set the input
@@ -99,25 +109,36 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
  * (This is not possible without introducing a new HTTP header).
  */
 - (void)changeContentOfObject:(CMISStringInOutParameter *)objectId
-                  toContentOfFile:(NSString *)filePath
-            withOverwriteExisting:(BOOL)overwrite
-                  withChangeToken:(CMISStringInOutParameter *)changeToken
-                  completionBlock:(CMISVoidCompletionBlock)completionBlock
-                     failureBlock:(CMISErrorFailureBlock)failureBlock
-                    progressBlock:(CMISProgressBlock)progressBlock;
+       toContentOfInputStream:(NSInputStream *)inputStream
+                bytesExpected:(unsigned long long)bytesExpected
+                 withFilename:(NSString *)filename
+        withOverwriteExisting:(BOOL)overwrite
+              withChangeToken:(CMISStringInOutParameter *)changeToken
+              completionBlock:(void (^)(NSError *error))completionBlock
+                progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 /**
 * uploads the file from the given path to the given folder.
 *
-* This is an asynchronous call, due to performance reasons.
 */
 - (void)createDocumentFromFilePath:(NSString *)filePath
                       withMimeType:(NSString *)mimeType
                     withProperties:(CMISProperties *)properties
                           inFolder:(NSString *)folderObjectId
-                   completionBlock:(CMISStringCompletionBlock)completionBlock // The returned string is the object id of the created document
-                      failureBlock:(CMISErrorFailureBlock)failureBlock
-                     progressBlock:(CMISProgressBlock)progressBlock;
+                   completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                     progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
+
+/**
+ * uploads the file from the given input stream to the given folder.
+ *
+ */
+- (void)createDocumentFromInputStream:(NSInputStream *)inputStream
+                         withMimeType:(NSString *)mimeType
+                       withProperties:(CMISProperties *)properties
+                             inFolder:(NSString *)folderObjectId
+                        bytesExpected:(unsigned long long)bytesExpected // optional
+                      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
+                        progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock;
 
 /**
 * Deletes the given object.
