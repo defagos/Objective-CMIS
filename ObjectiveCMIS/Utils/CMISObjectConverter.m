@@ -22,6 +22,7 @@
 #import "CMISISO8601DateFormatter.h"
 #import "CMISSession.h"
 #import "CMISConstants.h"
+#import "CMISDateUtil.h"
 
 @interface CMISObjectConverter ()
 @property (nonatomic, weak) CMISSession *session;
@@ -182,8 +183,7 @@
 
                     if (isString)
                     {
-                        CMISISO8601DateFormatter *formatter = [[CMISISO8601DateFormatter alloc] init];
-                        propertyValue = [formatter dateFromString:propertyValue];
+                        propertyValue = [[CMISDateUtil defaultDateFormatter] dateFromString:propertyValue];
                     }
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withDateTimeValue:propertyValue]];
                     break;

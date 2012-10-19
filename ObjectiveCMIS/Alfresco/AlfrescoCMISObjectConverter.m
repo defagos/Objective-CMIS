@@ -32,6 +32,7 @@
 #import "AlfrescoCMISDocument.h"
 #import "CMISISO8601DateFormatter.h"
 #import "AlfrescoCMISFolder.h"
+#import "CMISDateUtil.h"
 
 @interface AlfrescoCMISObjectConverter ()
 
@@ -336,8 +337,7 @@
 
 - (NSString *)stringFromDate:(NSDate *)date
 {
-    CMISISO8601DateFormatter *dateFormatter = [[CMISISO8601DateFormatter alloc] init];
-    return [dateFormatter stringFromDate:date];
+    return [[CMISDateUtil defaultDateFormatter] stringFromDate:date];
 }
 
 

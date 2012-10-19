@@ -26,6 +26,7 @@
 #import "CMISAtomParserUtil.h"
 #import "CMISAtomPubConstants.h"
 #import "CMISISO8601DateFormatter.h"
+#import "CMISDateUtil.h"
 
 
 @implementation CMISAtomParserUtil
@@ -80,8 +81,7 @@
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
     {
-        CMISISO8601DateFormatter *df = [[CMISISO8601DateFormatter alloc] init];
-        return [NSArray arrayWithObject:[df dateFromString:stringValue]];
+        return [NSArray arrayWithObject:[[CMISDateUtil defaultDateFormatter] dateFromString:stringValue]];
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyDecimal])
     {

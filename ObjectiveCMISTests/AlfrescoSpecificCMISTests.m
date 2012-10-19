@@ -11,6 +11,7 @@
 #import "AlfrescoCMISObjectConverter.h"
 #import "CMISISO8601DateFormatter.h"
 #import "AlfrescoCMISDocument.h"
+#import "CMISDateUtil.h"
 
 // TODO: Maintain these tests on an 'alfresco' branch, also remove the Alfresco specific code from master.
 
@@ -120,8 +121,7 @@
         STAssertEqualObjects([document.properties propertyValueForId:@"exif:flash"], [NSNumber numberWithBool:NO], nil);
         STAssertEqualObjects([document.properties propertyValueForId:@"exif:pixelXDimension"], [NSNumber numberWithInt:800], nil);
         STAssertEqualObjects([document.properties propertyValueForId:@"exif:exposureTime"], [NSNumber numberWithFloat:0.012987012987013f], nil);
-        CMISISO8601DateFormatter *df = [[CMISISO8601DateFormatter alloc] init];
-        STAssertEqualObjects([document.properties propertyValueForId:@"exif:dateTimeOriginal"], [df dateFromString:@"2001-04-06T11:51:00.000Z"], nil);
+        STAssertEqualObjects([document.properties propertyValueForId:@"exif:dateTimeOriginal"], [[CMISDateUtil defaultDateFormatter] dateFromString:@"2012-10-19T00:00:00.000Z"], nil);
     }];
 }
 
@@ -130,34 +130,52 @@
     [self runTest:^
     {
         NSError *error = nil;
-        CMISDocument *document = (CMISDocument *) [self.session retrieveObjectByPath:@"/ios-test/image-with-exif.jpg" error:&error];
         NSString *originalModelName = @"E950";
+
+        NSDate *originalDate = [[CMISDateUtil defaultDateFormatter] dateFromString:@"2012-10-19T00:00:00.000Z"];
+        NSDate *now = [NSDate date];
+
+        CMISDocument *document = (CMISDocument *) [self.session retrieveObjectByPath:@"/ios-test/image-with-exif.jpg" error:&error];
+
+        // Verify original state is as expected
         [self verifyDocument:document hasExtensionProperty:@"exif:model" withValue:originalModelName];
         [self verifyDocument:document hasExtensionProperty:@"exif:pixelYDimension" withValue:@"600"];
         [self verifyDocument:document hasExtensionProperty:@"exif:flash" withValue:@"false"];
+        [self verifyDocument:document hasExtensionProperty:@"exif:dateTimeOriginal" withValue:[[CMISDateUtil defaultDateFormatter] stringFromDate:originalDate]];
+
+
+        // Update document properties
 
         NSMutableDictionary *properties = [NSMutableDictionary dictionary];
         NSString *newModelName = @"Ultimate Flash Model 101";
         [properties setValue:newModelName forKey:@"exif:model"];
         [properties setValue:[NSNumber numberWithInt:101] forKey:@"exif:pixelYDimension"];
-        [properties setValue:[NSNumber numberWithDouble:101.101] forKey:@"exif:fNumber"];
         [properties setValue:[NSNumber numberWithBool:YES] forKey:@"exif:flash"];
+        [properties setValue:now forKey:@"exif:dateTimeOriginal"];
 
         document = (CMISDocument *) [document updateProperties:properties error:&error];
-        STAssertNil(error, @"Got error while retrieving document with updated description: %@", [error description]);
+
+
+        // Verify updated document
+        STAssertNil(error, @"Got error while retrieving document with updated properties: %@", [error description]);
         [self verifyDocument:document hasExtensionProperty:@"exif:model" withValue:newModelName];
         [self verifyDocument:document hasExtensionProperty:@"exif:pixelYDimension" withValue:@"101"];
+        [self verifyDocument:document hasExtensionProperty:@"exif:flash" withValue:@"true"];
+        [self verifyDocument:document hasExtensionProperty:@"exif:dateTimeOriginal" withValue:[[CMISDateUtil defaultDateFormatter] stringFromDate:now]];
+
 
         // Reset image exif data again
         [properties setValue:originalModelName forKey:@"exif:model"];
         [properties setValue:[NSNumber numberWithInt:600] forKey:@"exif:pixelYDimension"];
         [properties setValue:[NSNumber numberWithBool:NO] forKey:@"exif:flash"];
+        [properties setValue:originalDate forKey:@"exif:dateTimeOriginal"];
         document = (CMISDocument *) [document updateProperties:properties error:&error];
 
-        STAssertNil(error, @"Got error while retrieving document with updated description: %@", [error description]);
+        STAssertNil(error, @"Got error while retrieving document with updated properties: %@", [error description]);
         [self verifyDocument:document hasExtensionProperty:@"exif:model" withValue:originalModelName];
         [self verifyDocument:document hasExtensionProperty:@"exif:pixelYDimension" withValue:@"600"];
         [self verifyDocument:document hasExtensionProperty:@"exif:flash" withValue:@"false"];
+        [self verifyDocument:document hasExtensionProperty:@"exif:dateTimeOriginal" withValue:[[CMISDateUtil defaultDateFormatter] stringFromDate:originalDate]];
     }];
 }
 
@@ -233,6 +251,7 @@
         NSMutableDictionary *documentProperties = [NSMutableDictionary dictionary];
         NSString *description = @"This is a 'test'";
         [documentProperties setObject:description forKey:@"cm:description"];
+        [documentProperties setObject:description forKey:@"cm:title"];
 
         NSError *error = nil;
         [document updateProperties:documentProperties error:&error];
@@ -242,6 +261,7 @@
         document = (AlfrescoCMISDocument *) [self.session retrieveObject:document.identifier error:&error];
         STAssertNil(error, @"Error while fetching document: %@", error.description);
         STAssertEqualObjects([document.properties propertyValueForId:@"cm:description"], description, nil);
+        STAssertEqualObjects([document.properties propertyValueForId:@"cm:title"], description, nil);
 
         // Clean up
         [self deleteDocumentAndVerify:document];
@@ -337,7 +357,7 @@
     CMISExtensionElement *valueElement = [propertyElement.children objectAtIndex:0];
     STAssertNotNil(valueElement, @"There is no value element for the property");
     STAssertTrue([valueElement.value isEqual:expectedValue],
-        @"Document property value does not match: was %@ but expected %@", valueElement.value, expectedValue);
+        @"Document property '%@' value does not match: was %@ but expected %@", expectedProperty, valueElement.value, expectedValue);
 }
 
 

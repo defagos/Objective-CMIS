@@ -18,7 +18,13 @@ unichar ISO8601DefaultTimeSeparatorCharacter = DEFAULT_TIME_SEPARATOR;
 #define ISO_CALENDAR_DATE_FORMAT @"yyyy-MM-dd"
 //#define ISO_WEEK_DATE_FORMAT @"YYYY-'W'ww-ee" //Doesn't actually work because NSDateComponents counts the weekday starting at 1.
 #define ISO_ORDINAL_DATE_FORMAT @"yyyy-DDD"
-#define ISO_TIME_FORMAT @"HH:mm:ss"
+
+// [JORAM]: used to be
+//#define ISO_TIME_FORMAT @"HH:mm:ss"
+#define ISO_TIME_FORMAT @"HH:mm:ss.SSS"
+// [JORAM] end change
+
+
 #define ISO_TIME_WITH_TIMEZONE_FORMAT  ISO_TIME_FORMAT @"Z"
 //printf formats.
 #define ISO_TIMEZONE_UTC_FORMAT @"Z"
@@ -646,7 +652,12 @@ static BOOL is_leap_year(unsigned year);
 	formatter.dateFormat = dateFormat;
 	formatter.calendar = calendar;
 
-	NSString *str = [formatter stringForObjectValue:date];
+    // ADDED BY JORAM
+    // Needed to have correct date properties
+    [formatter setTimeZone:timeZone];
+    // ADDED BY JORAM
+
+    NSString *str = [formatter stringForObjectValue:date];
 
 	[formatter release];
 

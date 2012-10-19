@@ -35,6 +35,7 @@
 #import "CMISAtomFeedParser.h"
 #import "CMISServiceDocumentParser.h"
 #import "CMISWorkspace.h"
+#import "CMISDateUtil.h"
 
 
 @implementation ObjectiveCMISTests
@@ -653,6 +654,37 @@
             @"Expected allowable actions, as the operation ctx excluded them, but found %d allowable actions", firstResult.allowableActions.allowableActionsSet.count);
     }];
 }
+
+
+// Fails on /cmisatom server!
+//- (void)testQueryJustUploadedFile
+//{
+//    [self runTest:^
+//    {
+//        CMISDocument *document = (CMISDocument *) [self uploadTestFile];
+//        STAssertTrue([document.name hasPrefix:@"test_"], nil);
+//
+//        NSError *error = nil;
+//        CMISPagedResult *result = [self.session queryObjectsWithTypeid:@"cmis:document" withWhereClause:@"cmis:name LIKE 'test%'"
+//                                                     searchAllVersions:NO operationContext:[CMISOperationContext defaultOperationContext] error:&error];
+//        STAssertNil(error, @"Got error while querying: %@", error.description);
+//
+//        BOOL found = NO;
+//        for (CMISObject *object in result.resultArray)
+//        {
+//            if ([document.name isEqualToString:object.name])
+//            {
+//                found = YES;
+//                break;
+//            }
+//        }
+//
+//        STAssertTrue(found, @"Did not found test document that was just uploaded");
+//
+//        // Cleanup
+//        [self deleteDocumentAndVerify:document];
+//    }];
+//}
 
 - (void)testQueryWithPaging
 {
@@ -1281,9 +1313,8 @@
         NSError *error = nil;
 
         NSDate *testDate = [NSDate date];
-        CMISISO8601DateFormatter *dateFormatter = [[CMISISO8601DateFormatter alloc] init];
-        dateFormatter.includeTime = YES;
-        
+        CMISISO8601DateFormatter *dateFormatter = [CMISDateUtil defaultDateFormatter];
+
         NSCalendar *calendar = [NSCalendar currentCalendar];
         NSUInteger unitflags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit;
         NSDateComponents *origComponents = [calendar components:unitflags fromDate:testDate];
