@@ -326,7 +326,7 @@
                                      
                                      NSMutableArray *resultArray = [[NSMutableArray alloc] init];
                                      result.resultArray = resultArray;
-                                     CMISObjectConverter *converter = [[CMISObjectConverter alloc] init];
+                                     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
                                      for (CMISObjectData *objectData in objectList.objects)
                                      {
                                          [resultArray addObject:[converter convertObject:objectData]];
