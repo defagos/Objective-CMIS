@@ -288,7 +288,8 @@
                 NSLog(@"Fetching content stream for document %@", randomDoc.name);
                 
                 // Writing content of CMIS document to local file
-                NSString *filePath = @"testfile";
+                NSString *filePath = [NSString stringWithFormat:@"%@/testfile", NSTemporaryDirectory()];
+//                NSString *filePath = @"testfile";
                 [randomDoc downloadContentToFile:filePath
                                  completionBlock:^(NSError *error) {
                     if (error == nil) {
@@ -487,7 +488,8 @@
                                         @"Document name of created document is wrong: should be %@, but was %@", documentName, document.name);
                            
                            __block long long previousBytesDownloaded = -1;
-                           NSString *downloadedFilePath = @"testfile.pdf";
+                           NSString *downloadedFilePath = [NSString stringWithFormat:@"%@/testfile.pdf", NSTemporaryDirectory()];
+//                           NSString *downloadedFilePath = @"testfile.pdf";
                            [document downloadContentToFile:downloadedFilePath completionBlock:^(NSError *error) {
                                if (error == nil) {
                                    NSLog(@"File download completed");
@@ -966,7 +968,8 @@
                       NSLog(@"Content has been successfully changed");
                       
                       // Verify content of document
-                      NSString *tempDownloadFilePath = @"temp_download_file.txt";
+                      NSString *tempDownloadFilePath = [NSString stringWithFormat:@"%@/temp_download_file.txt", NSTemporaryDirectory()];
+//                      NSString *tempDownloadFilePath = @"temp_download_file.txt";
                       // some repos will up the version when uploading new content
                       [originalDocument retrieveObjectOfLatestVersionWithMajorVersion:NO completionBlock:^(CMISDocument *latestVersionOfDocument , NSError *error) {
                           [latestVersionOfDocument downloadContentToFile:tempDownloadFilePath completionBlock:^(NSError *error) {
@@ -1437,6 +1440,9 @@
          NSDate *testDate = [NSDate date];
          CMISISO8601DateFormatter *dateFormatter = [[CMISISO8601DateFormatter alloc] init];
          dateFormatter.includeTime = YES;
+         NSCalendar *calendar = [NSCalendar currentCalendar];
+         NSUInteger unitflags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit;
+         NSDateComponents *origComponents = [calendar components:unitflags fromDate:testDate];
          
          // Create converter
          CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
@@ -1477,8 +1483,16 @@
                  // NSDate is using sub-second precision ... and the formatter is not.
                  // ... sigh ... hence we test if the dates are 'relatively' (ie 1 second) close
                  NSDate *convertedDate = [[convertedProperties propertyForId:kCMISPropertyCreationDate] propertyDateTimeValue];
-                 STAssertTrue(testDate.timeIntervalSince1970 - 1000 <= convertedDate.timeIntervalSince1970
-                              && convertedDate.timeIntervalSince1970 <= testDate.timeIntervalSince1970 + 1000, @"Converted property value did not match");
+                 NSDateComponents *convertedComps = [calendar components:unitflags fromDate:convertedDate];
+                 BOOL isOnSameDate = (origComponents.year == convertedComps.year) && (origComponents.month == convertedComps.month) && (origComponents.day == convertedComps.day);
+                 STAssertTrue(isOnSameDate, @"We expected the reconverted date to be on the same date as the original one");
+                 
+                 BOOL isOnSameTime = (origComponents.hour == convertedComps.hour) && (origComponents.minute == convertedComps.minute) && (origComponents.second == convertedComps.second);
+                 STAssertTrue(isOnSameTime, @"We expected the reconverted time to be at the same time as the original one");
+                 
+//                 NSDate *convertedDate = [[convertedProperties propertyForId:kCMISPropertyCreationDate] propertyDateTimeValue];
+//                 STAssertTrue(testDate.timeIntervalSince1970 - 1000 <= convertedDate.timeIntervalSince1970
+//                              && convertedDate.timeIntervalSince1970 <= testDate.timeIntervalSince1970 + 1000, @"Converted property value did not match");
                  STAssertEqualObjects([NSNumber numberWithBool:NO], [[convertedProperties propertyForId:kCMISPropertyIsLatestVersion] propertyBooleanValue], @"Converted property value did not match");
                  STAssertEqualObjects([NSNumber numberWithInteger:4], [[convertedProperties propertyForId:kCMISPropertyContentStreamLength] propertyIntegerValue], @"Converted property value did not match");
                  
@@ -1568,7 +1582,8 @@
              STAssertTrue(thumbnailRendition.length > 0, @"Rendition length should be greater than 0");
              
              // Get content
-             NSString *filePath = @"testfile.pdf";
+             NSString *filePath = [NSString stringWithFormat:@"%@/testfile.pdf" , NSTemporaryDirectory()];
+//             NSString *filePath = @"testfile.pdf";
              [thumbnailRendition downloadRenditionContentToFile:filePath completionBlock:^(NSError *error) {
                  if (error == nil) {
                      // Assert File exists and check file length
@@ -1626,7 +1641,8 @@
                   STAssertTrue(thumbnailRendition.length > 0, @"Rendition length should be greater than 0");
                   
                   // Download content through objectService
-                  NSString *filePath = @"testfile-rendition-through-objectservice.pdf";
+                  NSString *filePath = [NSString stringWithFormat:@"%@/testfile-rendition-through-objectservice.pdf", NSTemporaryDirectory()];
+//                  NSString *filePath = @"testfile-rendition-through-objectservice.pdf";
                   [self.session.binding.objectService
                    downloadContentOfObject:document.identifier
                    withStreamId:thumbnailRendition.streamId
