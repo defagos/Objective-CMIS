@@ -78,22 +78,18 @@
         bogusParams.username = @"bogus";
         bogusParams.password = @"sugob";
 
-        CMISSession *session = [[CMISSession alloc] initWithSessionParameters:bogusParams];
-        STAssertNotNil(session, @"session object should not be nil");
-
-        [session authenticateWithCompletionBlock:^(BOOL authenticated, NSError *error) {
-            if (!authenticated) {
+        [CMISSession connectWithSessionParameters:bogusParams completionBlock:^(CMISSession *session, NSError *error){
+            STAssertNil(session, @"we should not get back a valid session");
+            if (nil == session)
+            {
                 log(@"*** testAuthenticateWithInvalidCredentials: error domain is %@, error code is %d and error description is %@",[error domain], [error code], [error description]);
                 NSError *underlyingError = [[error userInfo] valueForKey:NSUnderlyingErrorKey];
                 if (underlyingError) {
                     log(@"There is an underlying error with reason %@ and error code %d",[underlyingError localizedDescription], [underlyingError code]);
                 }
             }
-            STAssertFalse(session.isAuthenticated, @"session should NOT be authenticated");
-            STAssertNotNil(error, @"Error should not be nil");
-
             self.testCompleted = YES;
-        }];
+        }];        
     }];
 }
 

@@ -29,6 +29,11 @@
 @property (nonatomic, assign, readwrite) BOOL isAuthenticated;
 @property (nonatomic, strong, readwrite) id<CMISBinding> binding;
 @property (nonatomic, strong, readwrite) CMISRepositoryInfo *repositoryInfo;
+// Returns a CMISSession using the given session parameters.
+- (id)initWithSessionParameters:(CMISSessionParameters *)sessionParameters;
+
+// Authenticates using the CMISSessionParameters and returns if the authentication was succesful
+- (void)authenticateWithCompletionBlock:(void (^)(CMISSession *session, NSError * error))completionBlock;
 @end
 
 @interface CMISSession (PrivateMethods)
@@ -55,6 +60,19 @@
     // return list of repositories
     [session.binding.repositoryService retrieveRepositoriesWithCompletionBlock:completionBlock];
 }
+
++ (void)connectWithSessionParameters:(CMISSessionParameters *)sessionParameters
+                     completionBlock:(void (^)(CMISSession *session, NSError * error))completionBlock
+{
+    CMISSession *session = [[CMISSession alloc] initWithSessionParameters:sessionParameters];
+    if (nil != session)
+    {
+        [session authenticateWithCompletionBlock:completionBlock];
+    }
+    
+}
+
+#pragma internal authentication methods
 
 - (id)initWithSessionParameters:(CMISSessionParameters *)sessionParameters
 {
@@ -97,7 +115,7 @@
     return self;
 }
 
-- (void)authenticateWithCompletionBlock:(void (^)(BOOL authenticated, NSError *error))completionBlock
+- (void)authenticateWithCompletionBlock:(void (^)(CMISSession *session, NSError * error))completionBlock
 {
     // TODO: validate session parameters, extract the checks below?
     
@@ -107,7 +125,7 @@
         NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
                                      withDetailedDescription:@"Must provide repository id"];
         log(@"Error: %@", error.description);
-        completionBlock(NO, error);
+        completionBlock(nil, error);
         return;
     }
     
@@ -118,7 +136,7 @@
     {
         NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:nil];
         log(@"Error: %@",error.description);
-        completionBlock(NO, error);
+        completionBlock(nil, error);
         return;
     }
     
@@ -132,18 +150,21 @@
             self.repositoryInfo = repositoryInfo;
             if (self.repositoryInfo == nil)
             {
-                if (error) {
+                if (error)
+                {
                     log(@"Error because repositoryInfo is nil: %@", error.description);
-                    completionBlock(NO, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeInvalidArgument]);
-                } else {
-                    completionBlock(NO, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeInvalidArgument]);
+                }
+                else
+                {
+                    completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
                                                     withDetailedDescription:@"Could not fetch repository information"]);
                 }
                 return;
             } else {
                 // no errors have occurred so set authenticated flag and return success flag
                 self.isAuthenticated = YES;
-                completionBlock(YES, nil);
+                completionBlock(self, nil);
             }
         }];
     }

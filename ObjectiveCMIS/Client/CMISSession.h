@@ -42,11 +42,9 @@
 + (void)arrayOfRepositories:(CMISSessionParameters *)sessionParameters
             completionBlock:(void (^)(NSArray *repositories, NSError *error))completionBlock;
 
-// Returns a CMISSession using the given session parameters.
-- (id)initWithSessionParameters:(CMISSessionParameters *)sessionParameters;
 
-// Authenticates using the CMISSessionParameters and returns if the authentication was succesful
-- (void)authenticateWithCompletionBlock:(void (^)(BOOL authenticated, NSError *error))completionBlock;
++ (void)connectWithSessionParameters:(CMISSessionParameters *)sessionParameters
+                     completionBlock:(void (^)(CMISSession *session, NSError * error))completionBlock;
 
 // *** CMIS operations ***
 

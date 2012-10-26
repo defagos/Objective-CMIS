@@ -91,22 +91,25 @@
             [self.parameters setObject:[customParameters objectForKey:customParamKey] forKey:customParamKey];
         }
     }
+    [CMISSession connectWithSessionParameters:self.parameters completionBlock:^(CMISSession *session, NSError *error){
+        if (nil == session)
+        {
 
-    self.session = [[CMISSession alloc] initWithSessionParameters:self.parameters];
-    STAssertNotNil(self.session, @"Session should not be nil");
-    STAssertFalse(self.session.isAuthenticated, @"Session should not yet be authenticated");
-
-    [self.session authenticateWithCompletionBlock:^(BOOL authenticated, NSError *error) {
-        STAssertTrue(self.session.isAuthenticated, @"Session should be authenticated");
-        
-        [self.session retrieveRootFolderWithCompletionBlock:^(CMISFolder *rootFolder, NSError *error) {
-            self.rootFolder = rootFolder;
-            STAssertNil(error, @"Error while retrieving root folder: %@", [error description]);
-            STAssertNotNil(self.rootFolder, @"rootFolder object should not be nil");
-            
-            completionBlock();
-        }];
+        }
+        else
+        {
+            self.session = session;
+            STAssertTrue(self.session.isAuthenticated, @"Session should be authenticated");
+            [self.session retrieveRootFolderWithCompletionBlock:^(CMISFolder *rootFolder, NSError *error) {
+                self.rootFolder = rootFolder;
+                STAssertNil(error, @"Error while retrieving root folder: %@", [error description]);
+                STAssertNotNil(self.rootFolder, @"rootFolder object should not be nil");
+                
+                completionBlock();
+            }];
+        }
     }];
+
 }
 
 - (NSDictionary *)customCmisParameters
