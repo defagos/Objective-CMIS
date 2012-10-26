@@ -18,7 +18,13 @@ unichar ISO8601DefaultTimeSeparatorCharacter = DEFAULT_TIME_SEPARATOR;
 #define ISO_CALENDAR_DATE_FORMAT @"yyyy-MM-dd"
 //#define ISO_WEEK_DATE_FORMAT @"YYYY-'W'ww-ee" //Doesn't actually work because NSDateComponents counts the weekday starting at 1.
 #define ISO_ORDINAL_DATE_FORMAT @"yyyy-DDD"
-#define ISO_TIME_FORMAT @"HH:mm:ss"
+
+// [JORAM]: used to be
+//#define ISO_TIME_FORMAT @"HH:mm:ss"
+#define ISO_TIME_FORMAT @"HH:mm:ss.SSS"
+// [JORAM] end change
+
+
 #define ISO_TIME_WITH_TIMEZONE_FORMAT  ISO_TIME_FORMAT @"Z"
 //printf formats.
 #define ISO_TIMEZONE_UTC_FORMAT @"Z"
@@ -330,7 +336,7 @@ static BOOL is_leap_year(unsigned year);
 								} else {
 									//Get month and/or date.
 									segment = read_segment_4digits(ch, &ch, &num_digits);
-									NSLog(@"(%@) parsing month; segment is %u and ch is %s", string, segment, ch);
+									log(@"(%@) parsing month; segment is %u and ch is %s", string, segment, ch);
 									switch(num_digits) {
 										case 4: //YY-MMDD
 											day = segment % 100U;
@@ -387,7 +393,7 @@ static BOOL is_leap_year(unsigned year);
 							break;
 
 						case 1:; //-YY; -YY-MM (implicit century)
-							NSLog(@"(%@) found %u digits and one hyphen, so this is either -YY or -YY-MM; segment (year) is %u", string, num_digits, segment);
+							log(@"(%@) found %u digits and one hyphen, so this is either -YY or -YY-MM; segment (year) is %u", string, num_digits, segment);
 							unsigned current_year = nowComponents.year;
 							unsigned century = (current_year % 100U);
 							year = segment + (current_year - century);
@@ -397,7 +403,7 @@ static BOOL is_leap_year(unsigned year);
 							if (*ch == '-') {
 								++ch;
 								month_or_week = read_segment_2digits(ch, &ch);
-								NSLog(@"(%@) month is %u", string, month_or_week);
+								log(@"(%@) month is %u", string, month_or_week);
 							}
 
 							day = 1U;
@@ -646,7 +652,12 @@ static BOOL is_leap_year(unsigned year);
 	formatter.dateFormat = dateFormat;
 	formatter.calendar = calendar;
 
-	NSString *str = [formatter stringForObjectValue:date];
+    // ADDED BY JORAM
+    // Needed to have correct date properties
+    [formatter setTimeZone:timeZone];
+    // ADDED BY JORAM
+
+    NSString *str = [formatter stringForObjectValue:date];
 
 	[formatter release];
 

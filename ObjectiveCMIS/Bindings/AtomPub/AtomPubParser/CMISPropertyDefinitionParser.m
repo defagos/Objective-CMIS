@@ -77,6 +77,10 @@
         {
             self.propertyDefinition.propertyType = CMISPropertyTypeInteger;
         }
+        else if ([propertyDefinitionElementName isEqualToString:kCMISCorePropertyDecimalDefinition])
+        {
+            self.propertyDefinition.propertyType = CMISPropertyTypeDecimal;
+        }
     }
     return self;
 }
@@ -107,10 +111,11 @@
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
 {
     if ([elementName isEqualToString:kCMISCorePropertyStringDefinition]
-            || [elementName isEqualToString:kCMISCorePropertyIdDefinition]
-            || [elementName isEqualToString:kCMISCorePropertyBooleanDefinition]
-            || [elementName isEqualToString:kCMISCorePropertyIntegerDefinition]
-            || [elementName isEqualToString:kCMISCorePropertyDateTimeDefinition])
+        || [elementName isEqualToString:kCMISCorePropertyIdDefinition]
+        || [elementName isEqualToString:kCMISCorePropertyBooleanDefinition]
+        || [elementName isEqualToString:kCMISCorePropertyIntegerDefinition]
+        || [elementName isEqualToString:kCMISCorePropertyDateTimeDefinition]
+        || [elementName isEqualToString:kCMISCorePropertyDecimalDefinition])
     {
         if (self.parentDelegate)
         {

@@ -77,7 +77,17 @@
         CMISBindingFactory *bindingFactory = [[CMISBindingFactory alloc] init];
         self.binding = [bindingFactory bindingWithParameters:sessionParameters];
 
-        self.objectConverter = [[CMISObjectConverter alloc] initWithSession:self];
+        id objectConverterClassValue = [self.sessionParameters objectForKey:kCMISSessionParameterObjectConverterClassName];
+        if (objectConverterClassValue != nil && [objectConverterClassValue isKindOfClass:[NSString class]])
+        {
+            NSString *objectConverterClassName = (NSString *)objectConverterClassValue;
+            log(@"Using a custom object converter class: %@", objectConverterClassName);
+            self.objectConverter = [[NSClassFromString(objectConverterClassName) alloc] initWithSession:self];
+        }
+        else // default
+        {
+            self.objectConverter = [[CMISObjectConverter alloc] initWithSession:self];
+        }
     
         // TODO: setup locale
         // TODO: setup default session parameters

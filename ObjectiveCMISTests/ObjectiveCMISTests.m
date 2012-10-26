@@ -37,7 +37,7 @@
 #import "CMISWorkspace.h"
 #import "CMISRequest.h"
 #import "CMISErrors.h"
-
+#import "CMISDateUtil.h"
 
 @interface ObjectiveCMISTests ()
 
@@ -1438,7 +1438,7 @@
     [self runTest:^
      {
          NSDate *testDate = [NSDate date];
-         CMISISO8601DateFormatter *dateFormatter = [[CMISISO8601DateFormatter alloc] init];
+         CMISISO8601DateFormatter *dateFormatter = [CMISDateUtil defaultDateFormatter];
          dateFormatter.includeTime = YES;
          NSCalendar *calendar = [NSCalendar currentCalendar];
          NSUInteger unitflags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit;
