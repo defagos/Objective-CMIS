@@ -25,7 +25,7 @@
 #import "CMISTypeDefinition.h"
 
 @interface CMISSession ()
-@property (nonatomic, strong) CMISObjectConverter *objectConverter;
+@property (nonatomic, strong, readwrite) CMISObjectConverter *objectConverter;
 @property (nonatomic, assign, readwrite) BOOL isAuthenticated;
 @property (nonatomic, strong, readwrite) id<CMISBinding> binding;
 @property (nonatomic, strong, readwrite) CMISRepositoryInfo *repositoryInfo;
@@ -357,10 +357,9 @@
                                      
                                      NSMutableArray *resultArray = [[NSMutableArray alloc] init];
                                      result.resultArray = resultArray;
-                                     CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
                                      for (CMISObjectData *objectData in objectList.objects)
                                      {
-                                         [resultArray addObject:[converter convertObject:objectData]];
+                                         [resultArray addObject:[self.objectConverter convertObject:objectData]];
                                      }
                                      pageBlockCompletionBlock(result, nil);
                                  }
@@ -405,8 +404,8 @@
             inFolder:(NSString *)folderObjectId
      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
-    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
-    [converter convertProperties:properties
+//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
+    [self.objectConverter convertProperties:properties
                  forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                                if (error) {
@@ -451,8 +450,8 @@
                    completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
-    [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
+    [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
             if (completionBlock) {
@@ -477,8 +476,8 @@
                       completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
-    [converter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
+    [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
             if (completionBlock) {

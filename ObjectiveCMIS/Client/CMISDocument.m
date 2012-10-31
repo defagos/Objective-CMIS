@@ -21,6 +21,7 @@
 #import "CMISFileUtil.h"
 #import "CMISErrors.h"
 #import "CMISRequest.h"
+#import "CMISSession.h"
 
 @interface CMISDocument()
 
@@ -81,8 +82,8 @@
                    log(@"Error while retrieving all versions: %@", error.description);
                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
                } else {
-                   CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-                   completionBlock([converter convertObjects:objects], nil);
+//                   CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+                   completionBlock([self.session.objectConverter convertObjects:objects], nil);
                }
            }];
 }
@@ -143,8 +144,8 @@
             if (error) {
                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             } else {
-                CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-                completionBlock((CMISDocument *) [converter convertObject:objectData], nil);
+//                CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+                completionBlock((CMISDocument *) [self.session.objectConverter convertObject:objectData], nil);
             }
         }];
 }

@@ -21,6 +21,7 @@
 @class CMISOperationContext;
 @class CMISPagedResult;
 @class CMISTypeDefinition;
+@class CMISObjectConverter;
 
 @interface CMISSession : NSObject
 
@@ -35,6 +36,9 @@
 
 // Information about the repository the session is connected to, will be nil until the session is authenticated.
 @property (nonatomic, strong, readonly) CMISRepositoryInfo *repositoryInfo;
+
+//used for converting properties. This can be set to a custom object converter
+@property (nonatomic, strong, readonly) CMISObjectConverter *objectConverter;
 
 // *** setup ***
 

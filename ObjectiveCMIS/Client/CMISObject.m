@@ -118,8 +118,8 @@
     }
 
     // Convert properties to an understandable format for the service
-    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
-    [converter convertProperties:properties forObjectTypeId:self.objectType completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+    [self.session.objectConverter convertProperties:properties forObjectTypeId:self.objectType completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (convertedProperties) {
             CMISStringInOutParameter *objectIdInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.identifier];
             CMISStringInOutParameter *changeTokenInOutParam = [CMISStringInOutParameter inOutParameterUsingInParameter:self.changeToken];

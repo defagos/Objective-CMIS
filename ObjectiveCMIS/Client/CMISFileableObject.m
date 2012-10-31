@@ -15,6 +15,7 @@
 #import "CMISFileableObject.h"
 #import "CMISObjectConverter.h"
 #import "CMISOperationContext.h"
+#import "CMISSession.h"
 
 @implementation CMISFileableObject
 
@@ -35,10 +36,10 @@
                               withIncludeRelativePathSegment:operationContext.isIncludePathSegments
                                              completionBlock:^(NSArray *parentObjectDataArray, NSError *error) {
                                                  NSMutableArray *parentFolders = [NSMutableArray array];
-                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+//                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
                                                  for (CMISObjectData *parentObjectData in parentObjectDataArray)
                                                  {
-                                                     [parentFolders addObject:[converter convertObject:parentObjectData]];
+                                                     [parentFolders addObject:[self.session.objectConverter convertObject:parentObjectData]];
                                                  }
                                                  
                                                  completionBlock(parentFolders, error);

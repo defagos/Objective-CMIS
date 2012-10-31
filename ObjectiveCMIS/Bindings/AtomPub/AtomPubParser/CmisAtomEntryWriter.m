@@ -19,6 +19,7 @@
 #import "CMISFileUtil.h"
 #import "CMISProperties.h"
 #import "CMISISO8601DateFormatter.h"
+#import "CMISDateUtil.h"
 
 @interface CMISAtomEntryWriter ()
 
@@ -139,7 +140,7 @@
             }
             case CMISPropertyTypeDateTime:
             {
-                CMISISO8601DateFormatter *dateFormatter = [[CMISISO8601DateFormatter alloc] init];
+                CMISISO8601DateFormatter *dateFormatter = [CMISDateUtil defaultDateFormatter];
                 [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyDateTime propertyDefinitionId=\"%@\"><cmis:value>%@</cmis:value></cmis:propertyDateTime>",
                                 propertyData.identifier, [dateFormatter stringFromDate:propertyData.propertyDateTimeValue]]];
                 break;

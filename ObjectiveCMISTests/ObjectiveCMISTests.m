@@ -1441,7 +1441,7 @@
          NSDateComponents *origComponents = [calendar components:unitflags fromDate:testDate];
          
          // Create converter
-         CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
+//         CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
          
          // Try to convert with already CMISPropertyData. This should work just fine.
          NSMutableDictionary *properties = [[NSMutableDictionary alloc] init];
@@ -1451,7 +1451,7 @@
          [properties setObject:[CMISPropertyData createPropertyForId:kCMISPropertyIsLatestVersion withBoolValue:YES] forKey:kCMISPropertyIsLatestVersion];
          [properties setObject:[CMISPropertyData createPropertyForId:kCMISPropertyContentStreamLength withIntegerValue:5] forKey:kCMISPropertyContentStreamLength];
          
-         [converter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+         [self.session.objectConverter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
              STAssertNil(error, @"Error while converting properties: %@", [error description]);
              STAssertNotNil(convertedProperties, @"Conversion failed, nil was returned");
              STAssertTrue(convertedProperties.propertyList.count == 5, @"Expected 5 converted properties, but was %d", convertedProperties.propertyList.count);
@@ -1469,7 +1469,7 @@
              [properties setObject:[NSNumber numberWithBool:NO] forKey:kCMISPropertyIsLatestVersion];
              [properties setObject:[NSNumber numberWithInt:4] forKey:kCMISPropertyContentStreamLength];
              
-             [converter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+             [self.session.objectConverter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                  STAssertNil(error, @"Error while converting properties: %@", [error description]);
                  STAssertNotNil(convertedProperties, @"Conversion failed, nil was returned");
                  STAssertTrue(convertedProperties.propertyList.count == 5, @"Expected 5 converted properties, but was %d", convertedProperties.propertyList.count);
@@ -1493,18 +1493,18 @@
                  STAssertEqualObjects([NSNumber numberWithInteger:4], [[convertedProperties propertyForId:kCMISPropertyContentStreamLength] propertyIntegerValue], @"Converted property value did not match");
                  
                  // Test error return
-                 [converter convertProperties:nil forObjectTypeId:@"doesntmatter" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+                 [self.session.objectConverter convertProperties:nil forObjectTypeId:@"doesntmatter" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                      STAssertNil(convertedProperties, @"Should be nil");
 
                      NSMutableDictionary *properties = [[NSMutableDictionary alloc] init];
                      [properties setObject:@"test" forKey:kCMISPropertyContentStreamLength];
-                     [converter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+                     [self.session.objectConverter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                          STAssertNotNil(error, @"Expecting an error when converting");
                          STAssertNil(convertedProperties, @"When conversion goes wrong, should return nil");
                          
                          NSMutableDictionary *properties = [[NSMutableDictionary alloc] init];
                          [properties setObject:[NSNumber numberWithBool:YES] forKey:kCMISPropertyName];
-                         [converter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+                         [self.session.objectConverter convertProperties:properties forObjectTypeId:@"cmis:document" completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                              STAssertNotNil(error, @"Expecting an error when converting");
                              STAssertNil(convertedProperties, @"When conversion goes wrong, should return nil");
                              
