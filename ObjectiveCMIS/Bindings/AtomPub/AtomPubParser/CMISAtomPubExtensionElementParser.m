@@ -24,7 +24,7 @@
 // ExtensionElement properties
 @property (nonatomic, strong) NSString *extensionName;
 @property (nonatomic, strong) NSString *extensionNamespaceUri;
-@property (nonatomic, strong) NSString *extensionValue;
+@property (nonatomic, strong) NSMutableString *extensionValue;
 @property (nonatomic, strong) NSDictionary *extensionAttributes;
 @property (nonatomic, strong) NSMutableArray *extensionChildren;
 
@@ -75,7 +75,11 @@
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
 {
-    self.extensionValue = string;
+    if (nil == self.extensionValue)
+    {
+        self.extensionValue = [[NSMutableString alloc] init];
+    }
+    [self.extensionValue appendString:string];
 }
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
