@@ -65,11 +65,15 @@
                      completionBlock:(void (^)(CMISSession *session, NSError * error))completionBlock
 {
     CMISSession *session = [[CMISSession alloc] initWithSessionParameters:sessionParameters];
-    if (nil != session)
+    if (session)
     {
         [session authenticateWithCompletionBlock:completionBlock];
     }
-    
+    else
+    {
+        completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                         withDetailedDescription:@"Not enough session parameters to connect"]);
+    }
 }
 
 #pragma internal authentication methods
@@ -82,13 +86,19 @@
         self.sessionParameters = sessionParameters;
         self.isAuthenticated = NO;
     
-        // setup authentication provider delegate (if not present)
+        // setup authentication provider if not present
         if (self.sessionParameters.authenticationProvider == nil)
         {
-            // TODO: Do we need to cache the instance in the session parameters?
-            self.sessionParameters.authenticationProvider = [[CMISStandardAuthenticationProvider alloc] 
-                                                             initWithUsername:self.sessionParameters.username 
-                                                             andPassword:self.sessionParameters.password];
+            NSString *username = self.sessionParameters.username;
+            NSString *password = self.sessionParameters.password;
+            if (username == nil || password == nil)
+            {
+                log(@"No username or password provided for standard authentication provider");
+                return nil;
+            }
+            
+            self.sessionParameters.authenticationProvider = [[CMISStandardAuthenticationProvider alloc] initWithUsername:username
+                                                                                                             andPassword:password];
         }
 
         // create the binding the session will use
@@ -129,45 +139,36 @@
         return;
     }
     
-    // check if we have enough authentication credentials
-    NSString *username = self.sessionParameters.username;
-    NSString *password = self.sessionParameters.password;
-    if (self.sessionParameters.authenticationProvider == nil && username == nil && password == nil)
-    {
-        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:nil];
-        log(@"Error: %@",error.description);
+    if (self.sessionParameters.authenticationProvider == nil) {
+        NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:@"Must provide authentication provider"];
+        log(@"Error: %@", error.description);
         completionBlock(nil, error);
         return;
     }
     
     // TODO: use authentication provider to make sure we have enough credentials, it may need to make another call to get a ticket or do handshake i.e. NTLM.
     
-    // retrieve the repository info, if the repository id is provided
-    if (self.sessionParameters.repositoryId != nil)
-    {
-        // get repository info
-        [self.binding.repositoryService retrieveRepositoryInfoForId:self.sessionParameters.repositoryId completionBlock:^(CMISRepositoryInfo *repositoryInfo, NSError *error) {
-            self.repositoryInfo = repositoryInfo;
-            if (self.repositoryInfo == nil)
+    // get repository info
+    [self.binding.repositoryService retrieveRepositoryInfoForId:self.sessionParameters.repositoryId completionBlock:^(CMISRepositoryInfo *repositoryInfo, NSError *error) {
+        self.repositoryInfo = repositoryInfo;
+        if (self.repositoryInfo == nil)
+        {
+            if (error)
             {
-                if (error)
-                {
-                    log(@"Error because repositoryInfo is nil: %@", error.description);
-                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeInvalidArgument]);
-                }
-                else
-                {
-                    completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
-                                                    withDetailedDescription:@"Could not fetch repository information"]);
-                }
-                return;
-            } else {
-                // no errors have occurred so set authenticated flag and return success flag
-                self.isAuthenticated = YES;
-                completionBlock(self, nil);
+                log(@"Error because repositoryInfo is nil: %@", error.description);
+                completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeInvalidArgument]);
             }
-        }];
-    }
+            else
+            {
+                completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                                 withDetailedDescription:@"Could not fetch repository information"]);
+            }
+        } else {
+            // no errors have occurred so set authenticated flag and return success flag
+            self.isAuthenticated = YES;
+            completionBlock(self, nil);
+        }
+    }];
 }
 
 
