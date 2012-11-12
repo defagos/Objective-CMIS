@@ -620,8 +620,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
              }
          } else {
              log(@"Invalid http response status code when creating/uploading content: %d", response.statusCode);
-             NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-             log(@"Error content: %@", errorContent);
+             log(@"Error content: %@", [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding]);
              if (completionBlock) {
                  completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
              }
@@ -694,8 +693,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
              }
          } else {
              log(@"Invalid http response status code when creating/uploading content: %d", response.statusCode);
-             NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-             log(@"Error content: %@", errorContent);
+             log(@"Error content: %@", [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding]);
              if (completionBlock) {
                  completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime
                                                   withDetailedDescription:[NSString stringWithFormat:@"Could not create content: http status code %d", response.statusCode]]);

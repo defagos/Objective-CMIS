@@ -153,8 +153,7 @@
         || (httpRequestMethod == HTTP_DELETE && response.statusCode != 204)
         || (httpRequestMethod == HTTP_PUT && ((response.statusCode < 200 || response.statusCode > 299))))
     {
-        NSString *errorContent = [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding];
-        log(@"Error content: %@", errorContent);
+        log(@"Error content: %@", [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding]);
         
         if (error) {
             switch (response.statusCode)
