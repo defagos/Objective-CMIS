@@ -19,9 +19,9 @@
 @property (nonatomic, strong, readwrite) NSData *feedData;
 @property (nonatomic, strong, readwrite) NSMutableArray *internalEntries;
 @property (readwrite) NSInteger numItems;
-@property (nonatomic, strong, readwrite) NSString *elementBeingParsed;
 @property (nonatomic, strong, readwrite) NSMutableSet *feedLinkRelations;
 @property (nonatomic, strong, readwrite) id childParserDelegate;
+@property (nonatomic, strong) NSMutableString *string;
 @end
 
 @implementation CMISAtomFeedParser
@@ -29,9 +29,9 @@
 @synthesize feedData = _feedData;
 @synthesize internalEntries = _internalEntries;
 @synthesize numItems = _numItems;
-@synthesize elementBeingParsed = _elementBeingParsed;
 @synthesize feedLinkRelations = _feedLinkRelations;
 @synthesize childParserDelegate = _childParserDelegate;
+@synthesize string = _string;
 
 - (id)initWithData:(NSData*)feedData
 {
@@ -91,33 +91,35 @@
 
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict 
 {
-    self.elementBeingParsed = elementName;
-    
-    if ([self.elementBeingParsed isEqualToString:kCMISAtomEntry])
+    if ([elementName isEqualToString:kCMISAtomEntry])
     {
         // Delegate parsing of AtomEntry element to the entry child parser
         self.childParserDelegate = [CMISAtomEntryParser atomEntryParserWithAtomEntryAttributes:attributeDict parentDelegate:self parser:parser];
     }
-    else if ([self.elementBeingParsed isEqualToString:kCMISAtomEntryLink])
+    else if ([elementName isEqualToString:kCMISAtomEntryLink])
     {
         CMISAtomLink *link = [[CMISAtomLink alloc] init];
         [link setValuesForKeysWithDictionary:attributeDict];
         [self.feedLinkRelations addObject:link];
     }
+    
+    self.string = [NSMutableString string];
 }
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
 {
-    if ([self.elementBeingParsed isEqualToString:kCMISAtomFeedNumItems])
-    {
-        self.numItems = [string integerValue];
-    }
+    [self.string appendString:string];
 }
 
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName 
 {
-    self.elementBeingParsed = nil;
+    if ([elementName isEqualToString:kCMISAtomFeedNumItems])
+    {
+        self.numItems = [self.string integerValue];
+    }
+
+    self.string = nil;
 }
 
 

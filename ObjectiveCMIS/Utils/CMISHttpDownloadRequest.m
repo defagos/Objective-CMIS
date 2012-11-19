@@ -91,9 +91,6 @@
         if (!isStreamReady) {
             [self.outputStream open];
             isStreamReady = self.outputStream.streamStatus == NSStreamStatusOpen;
-        } else { // stream is already open, reset it
-            isStreamReady = [self.outputStream setProperty:[NSNumber numberWithInteger:0]
-                                                    forKey:NSStreamFileCurrentOffsetKey];
         }
     
         if (!isStreamReady) {

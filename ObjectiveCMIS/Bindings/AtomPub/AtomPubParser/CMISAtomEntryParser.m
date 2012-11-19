@@ -23,13 +23,13 @@
 @property (nonatomic, strong, readwrite) CMISObjectData *objectData;
 
 @property (nonatomic, strong) NSData *atomData;
-@property (nonatomic, strong) NSString *elementBeingParsed;
 @property (nonatomic, strong) NSString *currentPropertyType;
 @property (nonatomic, strong) CMISPropertyData *currentPropertyData;
 @property (nonatomic, strong) CMISProperties *currentObjectProperties;
 @property (nonatomic, strong) NSMutableSet *currentLinkRelations;
 @property (nonatomic, strong) CMISRenditionData *currentRendition;
 @property (nonatomic, strong) NSMutableArray *currentRenditions;
+@property (nonatomic, strong) NSMutableString *string;
 
 @property (nonatomic, strong) CMISISO8601DateFormatter *dateFormatter;
 
@@ -48,7 +48,6 @@
 
 @synthesize objectData = _objectData;
 @synthesize atomData = _atomData;
-@synthesize elementBeingParsed = _elementBeingParsed;
 @synthesize currentPropertyType = _currentPropertyType;
 @synthesize currentPropertyData = _currentPropertyData;
 @synthesize currentObjectProperties = _currentObjectProperties;
@@ -58,6 +57,7 @@
 @synthesize entryAttributesDict = _entryAttributesDict;
 @synthesize currentRendition = _currentRendition;
 @synthesize currentRenditions = _currentRenditions;
+@synthesize string = _string;
 
 // Designated Initializer
 - (id)init
@@ -134,8 +134,6 @@
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI
                                             qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict
 {
-    self.elementBeingParsed = elementName;
-    
     if ([namespaceURI isEqualToString:kCMISNamespaceCmis])
     {
         if ([elementName isEqualToString:kCMISAtomEntryPropertyId] ||
@@ -205,79 +203,83 @@
                                                                                                      attributes:attributeDict parentDelegate:self parser:parser];
         }
     }
+    
+    self.string = [NSMutableString string];
 }
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
 {
-    if ([self.elementBeingParsed isEqualToString:kCMISAtomEntryValue])
-    {
-        // TODO: Deal with multi-valued properties
-        self.currentPropertyData.values = [CMISAtomParserUtil parsePropertyValue:string withPropertyType:self.currentPropertyType];
-/*
-        // add the value to the current property
-        if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyString] ||
-                [self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyId])
-        {
-            self.currentPropertyData.values = [NSArray arrayWithObject:string];
-        }
-        else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyInteger])
-        {
-            self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithInt:[string intValue]]];
-        }
-        else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyBoolean])
-        {
-            self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithBool:[string isEqualToString:kCMISAtomEntryValueTrue]]];
-        }
-        else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
-        {
-            if (!self.dateFormatter)
-            {
-                self.dateFormatter = [[CMISISO8601DateFormatter alloc] init];
-            }
-            self.currentPropertyData.values = [NSArray arrayWithObject:[self.dateFormatter dateFromString:string]];
-        }
- */
-    }
-    else if (self.currentRendition != nil)
-    {
-        if ([self.elementBeingParsed isEqualToString:kCMISCoreStreamId])
-        {
-            self.currentRendition.streamId = string;
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreMimetype])
-        {
-            self.currentRendition.mimeType = string;
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreLength])
-        {
-            self.currentRendition.length = [NSNumber numberWithInteger:[string integerValue]];
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreTitle])
-        {
-            self.currentRendition.title = string;
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreKind])
-        {
-            self.currentRendition.kind = string;
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreHeight])
-        {
-            self.currentRendition.height = [NSNumber numberWithInteger:[string integerValue]];
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreWidth])
-        {
-            self.currentRendition.width = [NSNumber numberWithInteger:[string integerValue]];
-        }
-        else if ([self.elementBeingParsed isEqualToString:kCMISCoreRenditionDocumentId])
-        {
-            self.currentRendition.renditionDocumentId = string;
-        }
-    }
+    [self.string appendString:string];
 }
 
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName 
 {
+   
+    if ([elementName isEqualToString:kCMISAtomEntryValue])
+    {
+        // TODO: Deal with multi-valued properties
+        self.currentPropertyData.values = [CMISAtomParserUtil parsePropertyValue:self.string withPropertyType:self.currentPropertyType];
+        /*
+         // add the value to the current property
+         if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyString] ||
+         [self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyId])
+         {
+         self.currentPropertyData.values = [NSArray arrayWithObject:string];
+         }
+         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyInteger])
+         {
+         self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithInt:[string intValue]]];
+         }
+         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyBoolean])
+         {
+         self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithBool:[string isEqualToString:kCMISAtomEntryValueTrue]]];
+         }
+         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
+         {
+         if (!self.dateFormatter)
+         {
+         self.dateFormatter = [[CMISISO8601DateFormatter alloc] init];
+         }
+         self.currentPropertyData.values = [NSArray arrayWithObject:[self.dateFormatter dateFromString:string]];
+         }
+         */
+    }
+    else if (self.currentRendition != nil)
+    {
+        if ([elementName isEqualToString:kCMISCoreStreamId])
+        {
+            self.currentRendition.streamId = self.string;
+        }
+        else if ([elementName isEqualToString:kCMISCoreMimetype])
+        {
+            self.currentRendition.mimeType = self.string;
+        }
+        else if ([elementName isEqualToString:kCMISCoreLength])
+        {
+            self.currentRendition.length = [NSNumber numberWithInteger:[self.string integerValue]];
+        }
+        else if ([elementName isEqualToString:kCMISCoreTitle])
+        {
+            self.currentRendition.title = self.string;
+        }
+        else if ([elementName isEqualToString:kCMISCoreKind])
+        {
+            self.currentRendition.kind = self.string;
+        }
+        else if ([elementName isEqualToString:kCMISCoreHeight])
+        {
+            self.currentRendition.height = [NSNumber numberWithInteger:[self.string integerValue]];
+        }
+        else if ([elementName isEqualToString:kCMISCoreWidth])
+        {
+            self.currentRendition.width = [NSNumber numberWithInteger:[self.string integerValue]];
+        }
+        else if ([elementName isEqualToString:kCMISCoreRenditionDocumentId])
+        {
+            self.currentRendition.renditionDocumentId = self.string;
+        }
+    }
     
     if ([namespaceURI isEqualToString:kCMISNamespaceCmis])
     {
@@ -363,8 +365,8 @@
     {
         // TODO other namespaces?
     }
-    
-    self.elementBeingParsed = nil;
+
+    self.string = nil;
 }
 
 #pragma mark -

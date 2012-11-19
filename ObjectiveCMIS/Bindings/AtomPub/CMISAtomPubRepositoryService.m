@@ -81,26 +81,28 @@
         return;
     }
     
-    CMISTypeByIdUriBuilder *typeByIdUriBuilder = [self.bindingSession objectForKey:kCMISBindingSessionKeyTypeByIdUriBuilder];
-    typeByIdUriBuilder.id = typeId;
-    
-    [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
-        if (httpResponse) {
-            if (httpResponse.data != nil) {
-                CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];
-                NSError *error;
-                if ([parser parseAndReturnError:&error]) {
-                    completionBlock(parser.typeDefinition, nil);
+    [self retrieveFromCache:kCMISBindingSessionKeyTypeByIdUriBuilder completionBlock:^(id object, NSError *error) {
+        CMISTypeByIdUriBuilder *typeByIdUriBuilder = object;
+        typeByIdUriBuilder.id = typeId;
+        
+        [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+            if (httpResponse) {
+                if (httpResponse.data != nil) {
+                    CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];
+                    NSError *error;
+                    if ([parser parseAndReturnError:&error]) {
+                        completionBlock(parser.typeDefinition, nil);
+                    } else {
+                        completionBlock(nil, error);
+                    }
                 } else {
+                    NSError *error = [[NSError alloc] init]; // TODO: proper error init
                     completionBlock(nil, error);
                 }
             } else {
-                NSError *error = [[NSError alloc] init]; // TODO: proper error init
                 completionBlock(nil, error);
             }
-        } else {
-            completionBlock(nil, error);
-        }
+        }];
     }];
 }
 

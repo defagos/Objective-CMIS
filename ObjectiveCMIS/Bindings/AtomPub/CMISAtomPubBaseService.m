@@ -77,13 +77,9 @@
 - (void)fetchRepositoryInfoWithCompletionBlock:(void (^)(NSError *error))completionBlock
 {
     [self retrieveCMISWorkspacesWithCompletionBlock:^(NSArray *cmisWorkSpaces, NSError *error) {
-        if (!error)
-        {
+        if (!error) {
             BOOL repositoryFound = NO;
-            uint index = 0;
-            while (!repositoryFound && index < cmisWorkSpaces.count)
-            {
-                CMISWorkspace *workspace = [cmisWorkSpaces objectAtIndex:index];
+            for (CMISWorkspace *workspace in cmisWorkSpaces) {
                 if ([workspace.repositoryInfo.identifier isEqualToString:self.bindingSession.repositoryId])
                 {
                     repositoryFound = YES;
@@ -103,22 +99,19 @@
                     [self.bindingSession setObject:typeByIdUriBuilder forKey:kCMISBindingSessionKeyTypeByIdUriBuilder];
                     
                     [self.bindingSession setObject:workspace.queryUriTemplate forKey:kCMISBindingSessionKeyQueryUri];
-                }
-                else {
-                    index++;
+
+                    break;
                 }
             }
             
-            if (!repositoryFound)
-            {
+            if (!repositoryFound) {
                 log(@"No matching repository found for repository id %@", self.bindingSession.repositoryId);
                 // TODO: populate error properly
                 NSString *detailedDescription = [NSString stringWithFormat:@"No matching repository found for repository id %@", self.bindingSession.repositoryId];
-                completionBlock([CMISErrors createCMISErrorWithCode:kCMISErrorCodeNoRepositoryFound withDetailedDescription:detailedDescription]);
-                return;
+                error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNoRepositoryFound withDetailedDescription:detailedDescription];
             }
         }
-        completionBlock(nil);
+        completionBlock(error);
     }];
 }
 

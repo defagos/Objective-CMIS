@@ -20,7 +20,6 @@
 @property (nonatomic, strong) NSMutableDictionary *internalAllowableActionsDict;
 @property (nonatomic, weak) id<NSXMLParserDelegate, CMISAllowableActionsParserDelegate> parentDelegate;
 @property (nonatomic, strong) NSMutableString *string;
-@property (nonatomic, strong) NSString *elementBeingParsed;
 @property (nonatomic, strong) NSData *atomData;
 
 // Private init Used for child delegate parser
@@ -33,7 +32,6 @@
 @synthesize internalAllowableActionsDict = _internalAllowableActionsDict;
 @synthesize parentDelegate = _parentDelegate;
 @synthesize string = _string;
-@synthesize elementBeingParsed = _elementBeingParsed;
 @synthesize atomData = _atomData;
 @synthesize allowableActions;
 
@@ -103,8 +101,6 @@
   namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qualifiedName
     attributes:(NSDictionary *)attributeDict 
 {
-    self.elementBeingParsed = elementName;
-    
     if ([namespaceURI isEqualToString:kCMISNamespaceCmis])
     {
         
@@ -129,10 +125,7 @@
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string 
 {
-    if (self.string)
-    {
-        [self.string appendString:string];
-    }
+    [self.string appendString:string];
 }
 
 - (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName 
@@ -164,7 +157,6 @@
         }
     }
     
-    self.elementBeingParsed = nil;
     self.string = nil;
 }
 
