@@ -13,7 +13,6 @@
  */
 
 #import "CMISAtomEntryParser.h"
-#import "CMISISO8601DateFormatter.h"
 #import "CMISAtomLink.h"
 #import "CMISRenditionData.h"
 #import "CMISAtomParserUtil.h"
@@ -30,8 +29,6 @@
 @property (nonatomic, strong) CMISRenditionData *currentRendition;
 @property (nonatomic, strong) NSMutableArray *currentRenditions;
 @property (nonatomic, strong) NSMutableString *string;
-
-@property (nonatomic, strong) CMISISO8601DateFormatter *dateFormatter;
 
 @property (nonatomic, weak) id<NSXMLParserDelegate, CMISAtomEntryParserDelegate> parentDelegate;
 @property (nonatomic, strong) NSDictionary *entryAttributesDict;
@@ -52,7 +49,6 @@
 @synthesize currentPropertyData = _currentPropertyData;
 @synthesize currentObjectProperties = _currentObjectProperties;
 @synthesize currentLinkRelations = _currentLinkRelations;
-@synthesize dateFormatter = _dateFormatter;
 @synthesize parentDelegate = _parentDelegate;
 @synthesize entryAttributesDict = _entryAttributesDict;
 @synthesize currentRendition = _currentRendition;
@@ -237,10 +233,6 @@
          }
          else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
          {
-         if (!self.dateFormatter)
-         {
-         self.dateFormatter = [[CMISISO8601DateFormatter alloc] init];
-         }
          self.currentPropertyData.values = [NSArray arrayWithObject:[self.dateFormatter dateFromString:string]];
          }
          */

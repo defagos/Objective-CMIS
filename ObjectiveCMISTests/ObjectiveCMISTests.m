@@ -26,7 +26,6 @@
 #import "CMISTypeDefinition.h"
 #import "CMISPropertyDefinition.h"
 #import "CMISObjectConverter.h"
-#import "CMISISO8601DateFormatter.h"
 #import "CMISOperationContext.h"
 #import "CMISPagedResult.h"
 #import "CMISRenditionData.h"
@@ -1434,8 +1433,6 @@
     [self runTest:^
      {
          NSDate *testDate = [NSDate date];
-         CMISISO8601DateFormatter *dateFormatter = [CMISDateUtil defaultDateFormatter];
-         dateFormatter.includeTime = YES;
          NSCalendar *calendar = [NSCalendar currentCalendar];
          NSUInteger unitflags = NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit;
          NSDateComponents *origComponents = [calendar components:unitflags fromDate:testDate];
@@ -1465,7 +1462,7 @@
              NSMutableDictionary *properties = [[NSMutableDictionary alloc] init];
              [properties setObject:@"test" forKey:kCMISPropertyName];
              [properties setObject:@"cmis:document" forKey:kCMISPropertyObjectTypeId];
-             [properties setObject:[dateFormatter stringFromDate:testDate] forKey:kCMISPropertyCreationDate];
+             [properties setObject:[CMISDateUtil stringFromDate:testDate] forKey:kCMISPropertyCreationDate];
              [properties setObject:[NSNumber numberWithBool:NO] forKey:kCMISPropertyIsLatestVersion];
              [properties setObject:[NSNumber numberWithInt:4] forKey:kCMISPropertyContentStreamLength];
              
