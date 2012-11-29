@@ -11,6 +11,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
  */
+
 #import "CMISPagedResult.h"
 #import "CMISErrors.h"
 
@@ -36,7 +37,7 @@
 @property (readwrite) NSInteger maxItems;
 @property (readwrite) NSInteger skipCount;
 
-@property (nonatomic, strong) CMISFetchNextPageBlock fetchNextPageBlock;
+@property (nonatomic, copy) CMISFetchNextPageBlock fetchNextPageBlock;
 
 @end
 
@@ -55,9 +56,9 @@
 
 /** Internal init */
 - (id)initWithResultArray:(NSArray *)resultArray
-             retrievedUsingFetchBlock:(CMISFetchNextPageBlock)fetchNextPageBlock
-             andNumItems:(NSInteger)numItems andHasMoreItems:(BOOL)hasMoreItems
-             andMaxItems:(NSInteger)maxItems andSkipCount:(NSInteger)skipCount;
+ retrievedUsingFetchBlock:(CMISFetchNextPageBlock)fetchNextPageBlock
+              andNumItems:(NSInteger)numItems andHasMoreItems:(BOOL)hasMoreItems
+              andMaxItems:(NSInteger)maxItems andSkipCount:(NSInteger)skipCount;
 {
     self = [super init];
     if (self)
@@ -94,11 +95,34 @@
 
 - (void)fetchNextPageWithCompletionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock
 {
-    return [CMISPagedResult pagedResultUsingFetchBlock:self.fetchNextPageBlock
-                                    andLimitToMaxItems:self.maxItems
-                                 andStartFromSkipCount:(self.skipCount + self.resultArray.count)
-                                       completionBlock:completionBlock];
+    [CMISPagedResult pagedResultUsingFetchBlock:self.fetchNextPageBlock
+                             andLimitToMaxItems:self.maxItems
+                          andStartFromSkipCount:(self.skipCount + self.resultArray.count)
+                                completionBlock:completionBlock];
 }
 
+- (void)enumerateItemsUsingBlock:(void (^)(CMISObject *object, BOOL *stop))enumerationBlock completionBlock:(void (^)(NSError *error))completionBlock
+{
+    BOOL stop = NO;
+    for (CMISObject *object in self.resultArray) {
+        enumerationBlock(object, &stop);
+        if (stop) {
+            NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled withDetailedDescription:@"Item enumeration was stopped"];
+            completionBlock(error);
+            return;
+        }
+    }
+    if (self.hasMoreItems) {
+        [self fetchNextPageWithCompletionBlock:^(CMISPagedResult *result, NSError *error) {
+            if (error) {
+                completionBlock(error);
+            } else {
+                [result enumerateItemsUsingBlock:enumerationBlock completionBlock:completionBlock];
+            }
+        }];
+    } else {
+        completionBlock(nil);
+    }
+}
 
 @end
