@@ -17,11 +17,11 @@
 //
 #import <Foundation/Foundation.h>
 
-@class CMISISO8601DateFormatter;
-
 
 @interface CMISDateUtil : NSObject
 
-+ (CMISISO8601DateFormatter *)defaultDateFormatter;
++ (NSString*)stringFromDate:(NSDate*)date;
++ (NSDate *)dateFromString:(NSString *)string;
+
 
 @end

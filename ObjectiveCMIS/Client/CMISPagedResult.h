@@ -28,6 +28,8 @@
 typedef void (^CMISFetchNextPageBlockCompletionBlock)(CMISFetchNextPageBlockResult *result, NSError *error);
 typedef void (^CMISFetchNextPageBlock)(int skipCount, int maxItems, CMISFetchNextPageBlockCompletionBlock completionBlock);
 
+@class CMISObject;
+
 /**
  * The result of executing an operation which has potentially more results than returned in once.
  */
@@ -42,5 +44,7 @@ typedef void (^CMISFetchNextPageBlock)(int skipCount, int maxItems, CMISFetchNex
                    completionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock;
 
 - (void)fetchNextPageWithCompletionBlock:(void (^)(CMISPagedResult *result, NSError *error))completionBlock;
+- (void)enumerateItemsUsingBlock:(void (^)(CMISObject *object, BOOL *stop))enumerationBlock
+                 completionBlock:(void (^)(NSError *error))completionBlock;
 
 @end

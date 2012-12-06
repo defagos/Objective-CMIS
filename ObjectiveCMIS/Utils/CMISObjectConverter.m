@@ -19,7 +19,6 @@
 #import "CMISTypeDefinition.h"
 #import "CMISErrors.h"
 #import "CMISPropertyDefinition.h"
-#import "CMISISO8601DateFormatter.h"
 #import "CMISSession.h"
 #import "CMISConstants.h"
 #import "CMISDateUtil.h"
@@ -175,7 +174,7 @@
                     
                     if (isString)
                     {
-                        propertyValue = [[CMISDateUtil defaultDateFormatter] dateFromString:propertyValue];
+                        propertyValue = [CMISDateUtil dateFromString:propertyValue];
                     }
                     [convertedProperties addProperty:[CMISPropertyData createPropertyForId:propertyId withDateTimeValue:propertyValue]];
                     break;

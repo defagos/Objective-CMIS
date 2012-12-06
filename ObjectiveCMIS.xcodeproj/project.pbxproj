@@ -40,7 +40,6 @@
 		4EA61BE91564F75000C759E4 /* CMISErrors.h in Headers */ = {isa = PBXBuildFile; fileRef = 4EA61BE71564F75000C759E4 /* CMISErrors.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4EA61BEA1564F75000C759E4 /* CMISErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EA61BE81564F75000C759E4 /* CMISErrors.m */; };
 		4EA61BEB1564F75000C759E4 /* CMISErrors.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EA61BE81564F75000C759E4 /* CMISErrors.m */; };
-		4EBFBF2B15A71CC6006599B1 /* CMISISO8601DateFormatter.h in Headers */ = {isa = PBXBuildFile; fileRef = 82807348151541CF00EF635C /* CMISISO8601DateFormatter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		750CB2BE159C56A5004576F7 /* AllowableActions.xml in Resources */ = {isa = PBXBuildFile; fileRef = 750CB2BB159C56A5004576F7 /* AllowableActions.xml */; };
 		750CB2BF159C56A5004576F7 /* FolderChildren-webscripts.xml in Resources */ = {isa = PBXBuildFile; fileRef = 750CB2BC159C56A5004576F7 /* FolderChildren-webscripts.xml */; };
 		750CB2C0159C56A5004576F7 /* FolderChildren-opencmis.xml in Resources */ = {isa = PBXBuildFile; fileRef = 750CB2BD159C56A5004576F7 /* FolderChildren-opencmis.xml */; };
@@ -122,7 +121,6 @@
 		828073261515405C00EF635C /* CMISBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 828073191515405C00EF635C /* CMISBinding.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8280732B1515407000EF635C /* CMISObjectConverter.h in Headers */ = {isa = PBXBuildFile; fileRef = 828073291515407000EF635C /* CMISObjectConverter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8280732C1515407000EF635C /* CMISObjectConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 8280732A1515407000EF635C /* CMISObjectConverter.m */; };
-		828073751515424E00EF635C /* CMISISO8601DateFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = 82807349151541CF00EF635C /* CMISISO8601DateFormatter.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		828073DE15154F9400EF635C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82807383151542F400EF635C /* MobileCoreServices.framework */; };
 		82ABA0481554655A00935225 /* CMISBindingSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 82ABA0461554655900935225 /* CMISBindingSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82ABA0491554655A00935225 /* CMISBindingSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 82ABA0471554655A00935225 /* CMISBindingSession.m */; };
@@ -312,8 +310,6 @@
 		828073191515405C00EF635C /* CMISBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = CMISBinding.h; path = Bindings/CMISBinding.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		828073291515407000EF635C /* CMISObjectConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = CMISObjectConverter.h; path = Utils/CMISObjectConverter.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		8280732A1515407000EF635C /* CMISObjectConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; name = CMISObjectConverter.m; path = Utils/CMISObjectConverter.m; sourceTree = "<group>"; };
-		82807348151541CF00EF635C /* CMISISO8601DateFormatter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CMISISO8601DateFormatter.h; sourceTree = "<group>"; };
-		82807349151541CF00EF635C /* CMISISO8601DateFormatter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CMISISO8601DateFormatter.m; sourceTree = "<group>"; };
 		82807383151542F400EF635C /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		82ABA0461554655900935225 /* CMISBindingSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISBindingSession.h; path = Bindings/CMISBindingSession.h; sourceTree = "<group>"; };
 		82ABA0471554655A00935225 /* CMISBindingSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CMISBindingSession.m; path = Bindings/CMISBindingSession.m; sourceTree = "<group>"; };
@@ -445,7 +441,6 @@
 			children = (
 				828072A815153DE800EF635C /* ObjectiveCMIS */,
 				828072BC15153DE900EF635C /* ObjectiveCMISTests */,
-				82807330151540DC00EF635C /* 3rdParty */,
 				828072A515153DE800EF635C /* Frameworks */,
 				828072A415153DE800EF635C /* Products */,
 			);
@@ -706,24 +701,6 @@
 			path = AtomPubParser;
 			sourceTree = "<group>";
 		};
-		82807330151540DC00EF635C /* 3rdParty */ = {
-			isa = PBXGroup;
-			children = (
-				82807347151541CF00EF635C /* ISO8601Parser */,
-			);
-			name = 3rdParty;
-			sourceTree = "<group>";
-		};
-		82807347151541CF00EF635C /* ISO8601Parser */ = {
-			isa = PBXGroup;
-			children = (
-				82807348151541CF00EF635C /* CMISISO8601DateFormatter.h */,
-				82807349151541CF00EF635C /* CMISISO8601DateFormatter.m */,
-			);
-			name = ISO8601Parser;
-			path = 3rdParty/ISO8601Parser;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -812,7 +789,6 @@
 				BD5C970E16282977002DDC6E /* CMISHttpDownloadRequest.h in Headers */,
 				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
 				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
-				4EBFBF2B15A71CC6006599B1 /* CMISISO8601DateFormatter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -970,7 +946,6 @@
 				828073231515405C00EF635C /* CMISAtomPubObjectService.m in Sources */,
 				828073251515405C00EF635C /* CMISAtomPubRepositoryService.m in Sources */,
 				8280732C1515407000EF635C /* CMISObjectConverter.m in Sources */,
-				828073751515424E00EF635C /* CMISISO8601DateFormatter.m in Sources */,
 				82C1C62F153427E4009B7B3D /* CMISStandardAuthenticationProvider.m in Sources */,
 				82C1C63315344B56009B7B3D /* CMISAtomPubBaseService.m in Sources */,
 				82C1C63715348EC4009B7B3D /* CMISAtomPubNavigationService.m in Sources */,
