@@ -90,7 +90,6 @@
                                                  result.hasMoreItems = objectList.hasMoreItems;
                                                  result.numItems = objectList.numItems;
                                              
-//                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
                                                  result.resultArray = [self.session.objectConverter convertObjects:objectList.objects].items;
                                                  pageBlockCompletionBlock(result, nil);
                                              }
@@ -111,7 +110,6 @@
 
 - (void)createFolder:(NSDictionary *)properties completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
     [self.session.objectConverter convertProperties:properties
                  forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
                  completionBlock:^(CMISProperties *properties, NSError *error) {
@@ -133,7 +131,6 @@
                    completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
     [self.session.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);

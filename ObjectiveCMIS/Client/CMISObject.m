@@ -118,7 +118,6 @@
     }
 
     // Convert properties to an understandable format for the service
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
     [self.session.objectConverter convertProperties:properties forObjectTypeId:self.objectType completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (convertedProperties)
         {

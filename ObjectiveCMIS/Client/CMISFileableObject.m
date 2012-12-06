@@ -36,7 +36,6 @@
                               withIncludeRelativePathSegment:operationContext.isIncludePathSegments
                                              completionBlock:^(NSArray *parentObjectDataArray, NSError *error) {
                                                  NSMutableArray *parentFolders = [NSMutableArray array];
-//                                                 CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
                                                  for (CMISObjectData *parentObjectData in parentObjectDataArray)
                                                  {
                                                      [parentFolders addObject:[self.session.objectConverter convertObject:parentObjectData]];

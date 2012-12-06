@@ -405,7 +405,6 @@
             inFolder:(NSString *)folderObjectId
      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
     [self.objectConverter convertProperties:properties
                  forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
@@ -451,7 +450,6 @@
                    completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
     [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
@@ -477,7 +475,6 @@
                       completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-//    CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self];
     [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);

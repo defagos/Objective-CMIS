@@ -82,7 +82,6 @@
                    log(@"Error while retrieving all versions: %@", error.description);
                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
                } else {
-//                   CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
                    completionBlock([self.session.objectConverter convertObjects:objects], nil);
                }
            }];
@@ -144,7 +143,6 @@
             if (error) {
                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             } else {
-//                CMISObjectConverter *converter = [[CMISObjectConverter alloc] initWithSession:self.session];
                 completionBlock((CMISDocument *) [self.session.objectConverter convertObject:objectData], nil);
             }
         }];
