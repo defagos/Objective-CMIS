@@ -839,7 +839,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0430;
-				ORGANIZATIONNAME = Alfresco;
+				ORGANIZATIONNAME = "Apache Software Foundation";
 			};
 			buildConfigurationList = 8280729D15153DE800EF635C /* Build configuration list for PBXProject "ObjectiveCMIS" */;
 			compatibilityVersion = "Xcode 3.2";
