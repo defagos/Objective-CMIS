@@ -430,7 +430,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                                           withHttpRequestMethod:HTTP_POST
                                                                  withProperties:properties
                                                                 completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                                                                    completionBlock(objectData.identifier, nil);
+                                                                    completionBlock(objectData.identifier, error);
                                                                 }];
                                                }
                                            }];
