@@ -111,8 +111,8 @@
 - (void)createFolder:(NSDictionary *)properties completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
     [self.session.objectConverter convertProperties:properties
-                 forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
-                 completionBlock:^(CMISProperties *properties, NSError *error) {
+                                    forObjectTypeId:[properties objectForKey:kCMISPropertyObjectTypeId]
+                                    completionBlock:^(CMISProperties *properties, NSError *error) {
                      if (error) {
                          completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
                      } else {
@@ -131,7 +131,9 @@
                    completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.session.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+    [self.session.objectConverter convertProperties:properties
+                                    forObjectTypeId:[properties objectForKey:kCMISPropertyObjectTypeId]
+                                    completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
             if (completionBlock) {

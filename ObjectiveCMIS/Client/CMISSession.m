@@ -406,8 +406,8 @@
      completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
 {
     [self.objectConverter convertProperties:properties
-                 forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
-                           completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+                            forObjectTypeId:[properties objectForKey:kCMISPropertyObjectTypeId]
+                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
                                if (error) {
                                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
                                } else {
@@ -450,7 +450,9 @@
                    completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+    [self.objectConverter convertProperties:properties
+                            forObjectTypeId:[properties objectForKey:kCMISPropertyObjectTypeId]
+                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
             if (completionBlock) {
@@ -475,7 +477,9 @@
                       completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
+    [self.objectConverter convertProperties:properties
+                            forObjectTypeId:[properties objectForKey:kCMISPropertyObjectTypeId]
+                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
         if (error) {
             log(@"Could not convert properties: %@", error.description);
             if (completionBlock) {
