@@ -17,8 +17,11 @@
 
 @property NSInteger statusCode;
 @property (nonatomic, strong) NSString *statusCodeMessage;
-@property (nonatomic, strong) NSData *data;
+@property (nonatomic, strong, readonly) NSData *data;
 
 + (CMISHttpResponse *)responseUsingURLHTTPResponse:(NSHTTPURLResponse *)HTTPURLResponse andData:(NSData *)data;
+
+- (NSString*)exception;
+- (NSString*)errorMessage;
 
 @end

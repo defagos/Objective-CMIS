@@ -14,11 +14,20 @@
 
 #import "CMISHttpResponse.h"
 
+@interface CMISHttpResponse ()
+
+@property (nonatomic, strong) NSData *data;
+@property (nonatomic, strong) NSString *responseString;
+
+@end
+
+
 @implementation CMISHttpResponse
 
 @synthesize statusCode = _statusCode;
 @synthesize data = _data;
 @synthesize statusCodeMessage = _statusCodeMessage;
+@synthesize responseString = _responseString;
 
 + (CMISHttpResponse *)responseUsingURLHTTPResponse:(NSHTTPURLResponse *)httpUrlResponse andData:(NSData *)data
 {
@@ -27,6 +36,51 @@
     httpResponse.data = data;
     httpResponse.statusCodeMessage = [NSHTTPURLResponse localizedStringForStatusCode:[httpUrlResponse statusCode]];
     return httpResponse;
+}
+
+
+- (NSString*)responseString
+{
+    if (_responseString == nil) {
+        _responseString = [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
+    }
+    return _responseString;
+}
+
+
+- (NSString*)exception {
+    NSString *responseString = self.responseString;
+    if (responseString) {
+        NSRange begin = [responseString rangeOfString:@"<!--exception-->"];
+        NSRange end   = [responseString rangeOfString:@"<!--/exception-->"];
+        
+        if (begin.location != NSNotFound &&
+            end.location != NSNotFound &&
+            begin.location < end.location) {
+            
+            return [responseString substringWithRange:NSMakeRange(begin.location + begin.length,
+                                                                  end.location - begin.location - begin.length)];
+        }
+    }
+    return nil;
+}
+
+
+- (NSString*)errorMessage {
+    NSString *responseString = self.responseString;
+    if (responseString) {
+        NSRange begin = [responseString rangeOfString:@"<!--message-->"];
+        NSRange end   = [responseString rangeOfString:@"<!--/message-->"];
+        
+        if (begin.location != NSNotFound &&
+            end.location != NSNotFound &&
+            begin.location < end.location) {
+            
+            return [responseString substringWithRange:NSMakeRange(begin.location + begin.length,
+                                                                  end.location - begin.location - begin.length)];
+        }
+    }
+    return nil;
 }
 
 @end

@@ -17,6 +17,22 @@
 #import "CMISHttpResponse.h"
 #import "CMISErrors.h"
 
+//Exception names as returned in the <!--exception> tag
+NSString * const kCMISExceptionInvalidArgument         = @"invalidArgument";
+NSString * const kCMISExceptionNotSupported            = @"notSupported";
+NSString * const kCMISExceptionObjectNotFound          = @"objectNotFound";
+NSString * const kCMISExceptionPermissionDenied        = @"permissionDenied";
+NSString * const kCMISExceptionRuntime                 = @"runtime";
+NSString * const kCMISExceptionConstraint              = @"constraint";
+NSString * const kCMISExceptionContentAlreadyExists    = @"contentAlreadyExists";
+NSString * const kCMISExceptionFilterNotValid          = @"filterNotValid";
+NSString * const kCMISExceptionNameConstraintViolation = @"nameConstraintViolation";
+NSString * const kCMISExceptionStorage                 = @"storage";
+NSString * const kCMISExceptionStreamNotSupported      = @"streamNotSupported";
+NSString * const kCMISExceptionUpdateConflict          = @"updateConflict";
+NSString * const kCMISExceptionVersioning              = @"versioning";
+
+
 @implementation CMISHttpRequest
 
 @synthesize requestMethod = _requestMethod;
@@ -28,10 +44,10 @@
 @synthesize connection = _connection;
 
 + (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
-              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                 requestBody:(NSData*)requestBody
-                     headers:(NSDictionary*)additionalHeaders
-             completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
+                  withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                     requestBody:(NSData*)requestBody
+                         headers:(NSDictionary*)additionalHeaders
+                 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
     CMISHttpRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
                                                     completionBlock:completionBlock];
@@ -63,11 +79,11 @@
     if (self.requestBody) {
         [urlRequest setHTTPBody:self.requestBody];
     }
-
+    
     [self.headers enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
         [urlRequest addValue:header forHTTPHeaderField:headerName];
     }];
-
+    
     self.connection = [NSURLConnection connectionWithRequest:urlRequest delegate:self];
     if (self.connection) {
         return YES;
@@ -145,7 +161,6 @@
     self.connection = nil;
 }
 
-
 - (BOOL)checkStatusCodeForResponse:(CMISHttpResponse *)response withHttpRequestMethod:(CMISHttpRequestMethod)httpRequestMethod error:(NSError **)error
 {
     if ( (httpRequestMethod == HTTP_GET && response.statusCode != 200)
@@ -156,32 +171,74 @@
         log(@"Error content: %@", [[NSString alloc] initWithData:response.data encoding:NSUTF8StringEncoding]);
         
         if (error) {
+            NSString *exception = response.exception;
+            NSString *errorMessage = response.errorMessage;
+            if (errorMessage == nil) {
+                errorMessage = response.statusCodeMessage; // fall back to HTTP error message
+            }
+            
             switch (response.statusCode)
             {
                 case 400:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:response.statusCodeMessage];
+                    if ([exception isEqualToString:kCMISExceptionFilterNotValid]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeFilterNotValid
+                                             withDetailedDescription:errorMessage];
+                    } else {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
+                                             withDetailedDescription:errorMessage];
+                    }
                     break;
                 case 401:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:response.statusCodeMessage];
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized
+                                         withDetailedDescription:errorMessage];
                     break;
                 case 403:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodePermissionDenied withDetailedDescription:response.statusCodeMessage];
+                    if ([exception isEqualToString:kCMISExceptionStreamNotSupported]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeStreamNotSupported
+                                             withDetailedDescription:errorMessage];
+                    } else {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodePermissionDenied
+                                             withDetailedDescription:errorMessage];
+                    }
                     break;
                 case 404:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:response.statusCodeMessage];
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound
+                                         withDetailedDescription:errorMessage];
                     break;
                 case 405:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNotSupported withDetailedDescription:response.statusCodeMessage];
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNotSupported
+                                         withDetailedDescription:errorMessage];
                     break;
                 case 407:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeProxyAuthentication withDetailedDescription:response.statusCodeMessage];
+                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeProxyAuthentication
+                                         withDetailedDescription:errorMessage];
                     break;
                 case 409:
-                    // TODO: need more if-else here, see opencmis impl
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConstraint withDetailedDescription:response.statusCodeMessage];
+                    if ([exception isEqualToString:kCMISExceptionContentAlreadyExists]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeContentAlreadyExists
+                                             withDetailedDescription:errorMessage];
+                    } else if ([exception isEqualToString:kCMISExceptionVersioning]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeVersioning
+                                             withDetailedDescription:errorMessage];
+                    } else if ([exception isEqualToString:kCMISExceptionUpdateConflict]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUpdateConflict
+                                             withDetailedDescription:errorMessage];
+                    } else if ([exception isEqualToString:kCMISExceptionNameConstraintViolation]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeNameConstraintViolation
+                                             withDetailedDescription:errorMessage];
+                    } else {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeConstraint
+                                             withDetailedDescription:errorMessage];
+                    }
                     break;
                 default:
-                    *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime withDetailedDescription:response.statusCodeMessage];
+                    if ([exception isEqualToString:kCMISExceptionStorage]) {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeStorage
+                                             withDetailedDescription:errorMessage];
+                    } else {
+                        *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime
+                                             withDetailedDescription:response.errorMessage];
+                    }
             }
         }
         return NO;
