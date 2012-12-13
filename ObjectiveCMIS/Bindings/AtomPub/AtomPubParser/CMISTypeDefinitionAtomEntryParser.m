@@ -15,6 +15,7 @@
 #import "CMISTypeDefinitionAtomEntryParser.h"
 #import "CMISTypeDefinition.h"
 #import "CMISAtomPubConstants.h"
+#import "CMISConstants.h"
 
 @interface CMISTypeDefinitionAtomEntryParser ()
 
@@ -152,11 +153,11 @@
     {
         if (self.isParsingTypeDefinition)
         {
-            if ([self.currentString isEqualToString:kCMISAtomEntryBaseTypeDocument])
+            if ([self.currentString isEqualToString:kCMISPropertyObjectTypeIdValueDocument])
             {
                 self.typeDefinition.baseTypeId = CMISBaseTypeDocument;
             }
-            else if ([self.currentString isEqualToString:kCMISAtomEntryBaseTypeFolder])
+            else if ([self.currentString isEqualToString:kCMISPropertyObjectTypeIdValueFolder])
             {
                 self.typeDefinition.baseTypeId = CMISBaseTypeFolder;
             }

@@ -13,6 +13,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "CMISConstants.h"
 #import "CMISAtomPubConstants.h"
 #import "CMISObjectData.h"
 #import "CMISPropertyData.h"

@@ -33,6 +33,7 @@ extern NSString * const kCMISPropertyIsLatestVersion;
 extern NSString * const kCMISPropertyIsMajorVersion;
 extern NSString * const kCMISPropertyIsLatestMajorVersion;
 extern NSString * const kCMISPropertyChangeToken;
+extern NSString * const kCMISPropertyBaseTypeId;
 
 // Property values
 extern NSString * const kCMISPropertyObjectTypeIdValueDocument;

@@ -314,17 +314,17 @@
             self.objectData.renditions = self.currentRenditions;
 
             // set the objectData identifier
-            CMISPropertyData *objectId = [self.currentObjectProperties.propertiesDictionary objectForKey:kCMISAtomEntryObjectId];
+            CMISPropertyData *objectId = [self.currentObjectProperties.propertiesDictionary objectForKey:kCMISPropertyObjectId];
             self.objectData.identifier = [objectId firstValue];
 
             // set the objectData baseType
-            CMISPropertyData *baseTypeProperty = [self.currentObjectProperties.propertiesDictionary objectForKey:kCMISAtomEntryBaseTypeId];
+            CMISPropertyData *baseTypeProperty = [self.currentObjectProperties.propertiesDictionary objectForKey:kCMISPropertyBaseTypeId];
             NSString *baseType = [baseTypeProperty firstValue];
-            if ([baseType isEqualToString:kCMISAtomEntryBaseTypeDocument])
+            if ([baseType isEqualToString:kCMISPropertyObjectTypeIdValueDocument])
             {
                 self.objectData.baseType = CMISBaseTypeDocument;
             }
-            else if ([baseType isEqualToString:kCMISAtomEntryBaseTypeFolder])
+            else if ([baseType isEqualToString:kCMISPropertyObjectTypeIdValueFolder])
             {
                 self.objectData.baseType = CMISBaseTypeFolder;
             }
