@@ -20,6 +20,15 @@ NSString * const kCMISSessionParameterLinkCacheSize =@"session_param_cache_size_
 
 NSString * const kCMISSessionParameterMode = @"session_param_mode";
 
+NSString * const kCMISSessionParameterCustomFileIO = @"session_param_custom_file_io";
+
+NSString * const kCMISSessionParameterCustomNetworkIO = @"session_param_custom_network_io";
+NSString * const kCMISSessionParameterCustomRequest = @"session_param_custom_network";
+NSString * const kCMISSessionParameterCustomDownloadRequest = @"session_param_custom_network_download";
+NSString * const kCMISSessionParameterCustomUploadRequest = @"session_param_custom_network_upload";
+
+NSString * const kCMISSessionNetworkProvider = @"session_param_network_provider";
+
 @interface CMISSessionParameters ()
 @property (nonatomic, assign, readwrite) CMISBindingType bindingType;
 @property (nonatomic, strong, readwrite) NSMutableDictionary *sessionData;

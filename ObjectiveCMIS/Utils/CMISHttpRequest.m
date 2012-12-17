@@ -61,6 +61,28 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
     return httpRequest;
 }
 
++ (CMISHttpRequest*)startRequestWithURL:(NSURL *)url
+                             httpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                            requestBody:(NSData*)requestBody
+                                headers:(NSDictionary*)additionalHeaders
+                                session:(CMISBindingSession *)session
+                        completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
+{
+    CMISHttpRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod completionBlock:completionBlock];
+    httpRequest.requestBody = requestBody;
+    httpRequest.headers = additionalHeaders;
+    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
+                                                 withHttpMethod:httpRequestMethod
+                                                   usingSession:session];
+    
+    if ([httpRequest startRequest:urlRequest] == NO)
+    {
+        httpRequest = nil;
+    }
+    return httpRequest;
+}
+
+
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
@@ -246,5 +268,45 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
         return YES;
     }
 }
+
+#pragma helper method to get URL Request
+
++ (NSMutableURLRequest *)createRequestForUrl:(NSURL *)url
+                              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                                usingSession:(CMISBindingSession *)session
+{
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url
+                                                           cachePolicy:NSURLRequestReloadIgnoringCacheData
+                                                       timeoutInterval:60];
+    NSString *httpMethod;
+    switch (httpRequestMethod) {
+        case HTTP_GET:
+            httpMethod = @"GET";
+            break;
+        case HTTP_POST:
+            httpMethod = @"POST";
+            break;
+        case HTTP_DELETE:
+            httpMethod = @"DELETE";
+            break;
+        case HTTP_PUT:
+            httpMethod = @"PUT";
+            break;
+        default:
+            log(@"Invalid http request method: %d", httpRequestMethod);
+            return nil;
+    }
+    
+    [request setHTTPMethod:httpMethod];
+    log(@"HTTP %@: %@", httpMethod, [url absoluteString]);
+    
+    id <CMISAuthenticationProvider> authenticationProvider = session.authenticationProvider;
+    [authenticationProvider.httpHeadersToApply enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
+        [request addValue:header forHTTPHeaderField:headerName];
+    }];
+    
+    return request;
+}
+
 
 @end

@@ -50,6 +50,30 @@
     return httpRequest;
 }
 
++ (id<CMISHttpRequestDelegate>)startUploadRequestWithURL:(NSURL *)url
+                                              httpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                                             inputStream:(id)inputStream
+                                                 headers:(NSDictionary *)additionalHeaders
+                                                 session:(CMISBindingSession *)session
+                                           bytesExpected:(unsigned long long)bytesExpected
+                                         completionBlock:(void (^)(CMISHttpResponse *, NSError *))completionBlock
+                                           progressBlock:(void (^)(unsigned long long, unsigned long long))progressBlock
+{
+    CMISHttpUploadRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
+                                                          completionBlock:completionBlock
+                                                            progressBlock:progressBlock];
+    httpRequest.inputStream = inputStream;
+    httpRequest.headers = additionalHeaders;
+    httpRequest.bytesExpected = bytesExpected;
+    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
+                                                 withHttpMethod:httpRequestMethod
+                                                   usingSession:session];
+    
+    if ([httpRequest startRequest:urlRequest]) {
+        httpRequest = nil;
+    }
+    return httpRequest;
+}
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock

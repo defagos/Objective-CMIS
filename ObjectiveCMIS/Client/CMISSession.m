@@ -23,6 +23,7 @@
 #import "CMISOperationContext.h"
 #import "CMISPagedResult.h"
 #import "CMISTypeDefinition.h"
+#import "CMISNetworkProvider.h"
 
 @interface CMISSession ()
 @property (nonatomic, strong, readwrite) CMISObjectConverter *objectConverter;
@@ -100,10 +101,22 @@
             self.sessionParameters.authenticationProvider = [[CMISStandardAuthenticationProvider alloc] initWithUsername:username
                                                                                                              andPassword:password];
         }
+        
+        CMISNetworkProvider *provider = [CMISNetworkProvider providerWithParameters:sessionParameters];
+        if (nil == provider)
+        {
+            /// TODO Error: Most likely the custom network provider doesn't conform to the protocol CMISHttpRequestDelegate
+            /// in which case all subsequent calls would fail. However, to avoid that from happening we bypass this and call
+            /// the providerWithParameters:nil - this will enforce the use of the standard provider
+            provider = [CMISNetworkProvider providerWithParameters:nil];
+            log(@"we tried a custom network provider but failed. We are now switching back to the default network providers");
+        }
+        [self.sessionParameters setObject:provider forKey:kCMISSessionNetworkProvider];
+        
 
         // create the binding the session will use
         CMISBindingFactory *bindingFactory = [[CMISBindingFactory alloc] init];
-        self.binding = [bindingFactory bindingWithParameters:sessionParameters];
+        self.binding = [bindingFactory bindingWithParameters:self.sessionParameters];
 
         id objectConverterClassValue = [self.sessionParameters objectForKey:kCMISSessionParameterObjectConverterClassName];
         if (objectConverterClassValue != nil && [objectConverterClassValue isKindOfClass:[NSString class]])

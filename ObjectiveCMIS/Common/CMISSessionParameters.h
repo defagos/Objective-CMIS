@@ -19,6 +19,18 @@
 
 
 // Session param keys
+/**
+ Key for setting a range of custom classes to override the built in IO handling
+ */
+extern NSString * const kCMISSessionParameterCustomFileIO;
+/**
+ Key for setting a range of custom classes to override the built in network IO handling.
+ */
+extern NSString * const kCMISSessionParameterCustomNetworkIO;
+extern NSString * const kCMISSessionParameterCustomRequest;
+extern NSString * const kCMISSessionParameterCustomDownloadRequest;
+extern NSString * const kCMISSessionParameterCustomUploadRequest;
+extern NSString * const kCMISSessionNetworkProvider;
 
 /**
  * Key for setting the class that is responsible for converting all kinds of CMIS objects.

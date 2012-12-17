@@ -13,7 +13,6 @@
  */
 
 #import "CMISRequest.h"
-#import "CMISHttpRequest.h"
 
 @interface CMISRequest ()
 
@@ -30,16 +29,22 @@
 - (void)cancel
 {
     self.cancelled = YES;
+    if ([self.httpRequest respondsToSelector:@selector(cancel)])
+    {
+        [self.httpRequest cancel];
+    }
     
-    [self.httpRequest cancel];
 }
 
-- (void)setHttpRequest:(CMISHttpRequest *)httpRequest
+- (void)setHttpRequest:(id)httpRequest
 {
     _httpRequest = httpRequest;
     
     if (self.isCancelled) {
-        [httpRequest cancel];
+        if ([httpRequest respondsToSelector:@selector(cancel)])
+        {
+            [httpRequest cancel];
+        }
     }
 }
 

@@ -19,7 +19,9 @@
 #import "CMISHttpDownloadRequest.h"
 #import "CMISHttpUploadRequest.h"
 #import "CMISRequest.h"
-
+#import "CMISSessionParameters.h"
+#import "CMISHttpRequestDelegate.h"
+#import "CMISNetworkProvider.h"
 
 @implementation HttpUtil
 
@@ -32,15 +34,17 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
        headers:(NSDictionary *)additionalHeaders
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
-    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                 withHttpMethod:httpRequestMethod
-                                                   usingSession:session];
-    
-    [CMISHttpRequest startRequest:urlRequest
-                   withHttpMethod:httpRequestMethod
-                      requestBody:body
-                          headers:additionalHeaders
-                  completionBlock:completionBlock];
+    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
+    Class requestClass = provider.requestClass;
+    if (nil != requestClass)
+    {
+        [requestClass startRequestWithURL:url
+                               httpMethod:httpRequestMethod
+                              requestBody:body
+                                  headers:additionalHeaders
+                                  session:session
+                          completionBlock:completionBlock];
+    }
 }
 
 + (void)invoke:(NSURL *)url
@@ -50,6 +54,21 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
        headers:(NSDictionary *)additionalHeaders
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
+    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
+    Class uploadClass = provider.uploadRequestClass;
+    if (nil != uploadClass)
+    {
+        [uploadClass startUploadRequestWithURL:url
+                                    httpMethod:httpRequestMethod
+                                   inputStream:inputStream
+                                       headers:additionalHeaders
+                                       session:session
+                                 bytesExpected:0
+                               completionBlock:completionBlock
+                                 progressBlock:nil];
+        
+    }
+    /*
     NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
                                                  withHttpMethod:httpRequestMethod
                                                    usingSession:session];
@@ -61,6 +80,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                           bytesExpected:0
                         completionBlock:completionBlock
                           progressBlock:nil];
+     */
 }
 
 + (void)invoke:(NSURL *)url
@@ -73,6 +93,29 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
  requestObject:(CMISRequest *)requestObject
 {
+    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
+    Class uploadClass = provider.uploadRequestClass;
+    if (nil != uploadClass && !requestObject.isCancelled)
+    {
+        id<CMISHttpRequestDelegate> uploadRequest = [uploadClass startUploadRequestWithURL:url
+                                                                                httpMethod:httpRequestMethod
+                                                                               inputStream:inputStream
+                                                                                   headers:additionalHeaders
+                                                                                   session:session
+                                                                             bytesExpected:bytesExpected
+                                                                           completionBlock:completionBlock
+                                                                             progressBlock:progressBlock];
+        requestObject.httpRequest = uploadRequest;
+    }
+    else
+    {
+        if (completionBlock)
+        {
+            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
+                                             withDetailedDescription:@"Request was cancelled"]);
+        }
+    }
+    /*
     if (!requestObject.isCancelled) {
         NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
                                                      withHttpMethod:httpRequestMethod
@@ -92,6 +135,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                                              withDetailedDescription:@"Request was cancelled"]);
         }
     }
+     */
 }
 
 + (void)invoke:(NSURL *)url
@@ -103,6 +147,29 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
     progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
     requestObject:(CMISRequest *)requestObject
 {
+    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
+    Class downloadClass = provider.downloadRequestClass;
+    if (nil != downloadClass && !requestObject.isCancelled)
+    {
+        id<CMISHttpRequestDelegate> downloadRequest = [downloadClass startDownloadRequestWithURL:url
+                                                                                      httpMethod:httpRequestMethod
+                                                                                    outputStream:outputStream
+                                                                                         session:session
+                                                                                   bytesExpected:bytesExpected
+                                                                                 completionBlock:completionBlock
+                                                                                   progressBlock:progressBlock];
+        requestObject.httpRequest = downloadRequest;
+    }
+    else
+    {
+        if (completionBlock)
+        {
+            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
+                                             withDetailedDescription:@"Request was cancelled"]);
+        }
+        
+    }
+    /*
     if (!requestObject.isCancelled) {
         NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
                                                      withHttpMethod:HTTP_GET
@@ -122,6 +189,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
 
         }
     }
+     */
 }
 
 + (void)invokeGET:(NSURL *)url
@@ -177,7 +245,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
 }
 
 #pragma mark Helper methods
-
+/*
 + (NSMutableURLRequest *)createRequestForUrl:(NSURL *)url
                               withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
                                 usingSession:(CMISBindingSession *)session
@@ -214,7 +282,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
     
     return request;
 }
-
+*/
 @end
 
 

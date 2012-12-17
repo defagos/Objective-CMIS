@@ -13,13 +13,12 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "CMISSessionParameters.h"
+@interface CMISNetworkProvider : NSObject
+@property (nonatomic, strong, readonly) Class requestClass;
+@property (nonatomic, strong, readonly) Class downloadRequestClass;
+@property (nonatomic, strong, readonly) Class uploadRequestClass;
 
-
-@interface CMISRequest : NSObject
-
-@property (nonatomic, weak) id httpRequest;
-@property (nonatomic, readonly, getter = isCancelled) BOOL cancelled;
-
-- (void)cancel;
++ (CMISNetworkProvider *)providerWithParameters:(CMISSessionParameters *)parameters;
 
 @end
