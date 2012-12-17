@@ -20,6 +20,28 @@
 #import "CMISProperties.h"
 #import "CMISDateUtil.h"
 
+
+@implementation NSString (XMLEntities)
+
+- (NSString*)stringByAddingXMLEntities {
+    if ([self rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"&<>\"'"] options:NSLiteralSearch].location != NSNotFound) {
+        NSMutableString *mutableString = [self mutableCopy];
+
+        [mutableString replaceOccurrencesOfString:@"&" withString:@"&amp;" options:NSLiteralSearch range:NSMakeRange(0, mutableString.length)];
+        [mutableString replaceOccurrencesOfString:@"<" withString:@"&lt;" options:NSLiteralSearch range:NSMakeRange(0, mutableString.length)];
+        [mutableString replaceOccurrencesOfString:@">" withString:@"&gt;" options:NSLiteralSearch range:NSMakeRange(0, mutableString.length)];
+        [mutableString replaceOccurrencesOfString:@"\"" withString:@"&quot;" options:NSLiteralSearch range:NSMakeRange(0, mutableString.length)];
+        [mutableString replaceOccurrencesOfString:@"'" withString:@"&apos;" options:NSLiteralSearch range:NSMakeRange(0, mutableString.length)];
+    
+        return mutableString;
+        
+    } else {
+        return self;
+    }
+}
+
+@end
+
 @interface CMISAtomEntryWriter ()
 
 @property (nonatomic, strong) NSMutableString *internalXml;
@@ -114,33 +136,99 @@
         {
             case CMISPropertyTypeString:
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyString propertyDefinitionId=\"%@\"><cmis:value>%@</cmis:value></cmis:propertyString>",
-                                propertyData.identifier, propertyData.propertyStringValue]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyString propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSString *propertyStringValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", [propertyStringValue stringByAddingXMLEntities]]];
+                }
+
+                [self appendStringToReturnResult:@"</cmis:propertyString>"];
                 break;
             }
             case CMISPropertyTypeInteger:
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyInteger propertyDefinitionId=\"%@\"><cmis:value>%d</cmis:value></cmis:propertyInteger>",
-                                propertyData.identifier, propertyData.propertyIntegerValue.intValue]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyInteger propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+
+                for (NSNumber *propertyIntegerValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", propertyIntegerValue.stringValue]];
+                }
+
+                [self appendStringToReturnResult:@"</cmis:propertyInteger>"];
+                break;
+            }
+            case CMISPropertyTypeDecimal:
+            {
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyDecimal propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSNumber *propertyDecimalValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", propertyDecimalValue.stringValue]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyDecimal>"];
                 break;
             }
             case CMISPropertyTypeBoolean:
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyBoolean propertyDefinitionId=\"%@\"><cmis:value>%@</cmis:value></cmis:propertyBoolean>",
-                                propertyData.identifier,
-                                [propertyData.propertyBooleanValue isEqualToNumber:[NSNumber numberWithBool:YES]] ? @"true" : @"false"]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyBoolean propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSNumber *propertyBooleanValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>",
+                                                      propertyBooleanValue.boolValue ? @"true" : @"false"]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyBoolean>"];
                 break;
             }
             case CMISPropertyTypeId:
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyId propertyDefinitionId=\"%@\"><cmis:value>%@</cmis:value></cmis:propertyId>",
-                                propertyData.identifier, propertyData.propertyIdValue]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyId propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSString *propertyIdValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", [propertyIdValue stringByAddingXMLEntities]]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyId>"];
                 break;
             }
             case CMISPropertyTypeDateTime:
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyDateTime propertyDefinitionId=\"%@\"><cmis:value>%@</cmis:value></cmis:propertyDateTime>",
-                                propertyData.identifier, [CMISDateUtil stringFromDate:propertyData.propertyDateTimeValue]]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyDateTime propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSDate *propertyDateTimeValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", [CMISDateUtil stringFromDate:propertyDateTimeValue]]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyDateTime>"];
+                break;
+            }
+            case CMISPropertyTypeUri:
+            {
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyUri propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSURL *propertyUriValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", [[propertyUriValue path] stringByAddingXMLEntities]]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyUri>"];
+                break;
+            }
+            case CMISPropertyTypeHtml:
+            {
+                [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:propertyHtml propertyDefinitionId=\"%@\">",
+                                                  [propertyData.identifier stringByAddingXMLEntities]]];
+                
+                for (NSString *propertyHtmlValue in propertyData.values) {
+                    [self appendStringToReturnResult:[NSString stringWithFormat:@"<cmis:value>%@</cmis:value>", [propertyHtmlValue stringByAddingXMLEntities]]];
+                }
+                
+                [self appendStringToReturnResult:@"</cmis:propertyHtml>"];
                 break;
             }
             default:
@@ -172,7 +260,9 @@
         {
             for (NSString *attributeName in extensionElement.attributes)
             {
-                [self appendStringToReturnResult:[NSString stringWithFormat:@" %@=\"%@\"", attributeName, [extensionElement.attributes objectForKey:attributeName]]];
+                [self appendStringToReturnResult:[NSString stringWithFormat:@" %@=\"%@\"",
+                                                  [attributeName stringByAddingXMLEntities],
+                                                  [[extensionElement.attributes objectForKey:attributeName] stringByAddingXMLEntities]]];
             }
         }
         [self appendStringToReturnResult:@">"];
@@ -180,7 +270,7 @@
         // Value
         if (extensionElement.value != nil)
         {
-            [self appendStringToReturnResult:extensionElement.value];
+            [self appendStringToReturnResult:[extensionElement.value stringByAddingXMLEntities]];
         }
 
         // Children

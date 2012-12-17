@@ -1,15 +1,15 @@
 /*
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
  */
 
 #import "CMISAtomPubObjectService.h"
@@ -140,7 +140,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         completionBlock([[NSError alloc] init]); // TODO: properly init error (CmisInvalidArgumentException)
         return;
     }
-
+    
     // Get edit media link
     [self loadLinkForObjectId:objectIdParam.inParameter andRelation:kCMISLinkEditMedia completionBlock:^(NSString *editMediaLink, NSError *error) {
         if (editMediaLink == nil){
@@ -167,7 +167,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                    } else {
                        completionBlock(error);
                    }
-        }];
+               }];
     }];
 }
 
@@ -186,13 +186,13 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         }
         return nil;
     }
-
+    
     NSError *fileError = nil;
     unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
     if (fileError) {
         log(@"Could not determine size of file %@: %@", filePath, [fileError description]);
     }
-
+    
     return [self changeContentOfObject:objectIdParam
                 toContentOfInputStream:inputStream
                          bytesExpected:fileSize
@@ -221,7 +221,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         }
         return nil;
     }
-
+    
     if (inputStream == nil) {
         log(@"Invalid input stream");
         if (completionBlock) {
@@ -229,12 +229,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         }
         return nil;
     }
-
+    
     // Atompub DOES NOT SUPPORT returning the new object id and change token
     // See http://docs.oasis-open.org/cmis/CMIS/v1.0/cs01/cmis-spec-v1.0.html#_Toc243905498
     objectIdParam.outParameter = nil;
     changeTokenParam.outParameter = nil;
-
+    
     CMISRequest *request = [[CMISRequest alloc] init];
     // Get edit media link
     [self loadLinkForObjectId:objectIdParam.inParameter andRelation:kCMISLinkEditMedia completionBlock:^(NSString *editMediaLink, NSError *error) {
@@ -256,7 +256,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         editMediaLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterOverwriteFlag
                                                          withValue:(overwrite ? @"true" : @"false") toUrlString:editMediaLink];
         
-                // Execute HTTP call on edit media link, passing the a stream to the file
+        // Execute HTTP call on edit media link, passing the a stream to the file
         NSDictionary *additionalHeader = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"attachment; filename=%@",
                                                                              filename] forKey:@"Content-Disposition"];
         
@@ -319,7 +319,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                  progressBlock:progressBlock];
 }
 
-- (CMISRequest*)createDocumentFromInputStream:(NSInputStream *)inputStream
+- (CMISRequest*)createDocumentFromInputStream:(NSInputStream *)inputStream // may be nil if you do not want to set content
                                  withMimeType:(NSString *)mimeType
                                withProperties:(CMISProperties *)properties
                                      inFolder:(NSString *)folderObjectId
@@ -327,15 +327,6 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                               completionBlock:(void (^)(NSString *objectId, NSError *error))completionBlock
                                 progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    // Validate input stream
-    if (inputStream == nil) {
-        log(@"Invalid input stream");
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:@"Invalid input stream"]);
-        }
-        return nil;
-    }
-
     // Validate properties
     if ([properties propertyValueForId:kCMISPropertyName] == nil || [properties propertyValueForId:kCMISPropertyObjectTypeId] == nil)
     {
@@ -347,7 +338,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     }
     
     // Validate mimetype
-    if (!mimeType)
+    if (inputStream && !mimeType)
     {
         log(@"Must provide a mimetype when creating a cmis document");
         if (completionBlock) {
@@ -397,7 +388,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                        } else {
                            completionBlock(NO, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeUpdateConflict]);
                        }
-            }];
+                   }];
         }
     }];
 }
@@ -421,19 +412,19 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     
     // Get Down link
     [self loadLinkForObjectId:folderObjectId andRelation:kCMISLinkRelationDown
-                                           andType:kCMISMediaTypeChildren completionBlock:^(NSString *downLink, NSError *error) {
-                                               if (error) {
-                                                   log(@"Could not retrieve down link: %@", error.description);
-                                                   completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-                                               } else {
-                                                   [self sendAtomEntryXmlToLink:downLink
-                                                          withHttpRequestMethod:HTTP_POST
-                                                                 withProperties:properties
-                                                                completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                                                                    completionBlock(objectData.identifier, error);
-                                                                }];
-                                               }
+                      andType:kCMISMediaTypeChildren completionBlock:^(NSString *downLink, NSError *error) {
+                          if (error) {
+                              log(@"Could not retrieve down link: %@", error.description);
+                              completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+                          } else {
+                              [self sendAtomEntryXmlToLink:downLink
+                                     withHttpRequestMethod:HTTP_POST
+                                            withProperties:properties
+                                           completionBlock:^(CMISObjectData *objectData, NSError *error) {
+                                               completionBlock(objectData.identifier, error);
                                            }];
+                          }
+                      }];
 }
 
 - (void)deleteTree:(NSString *)folderObjectId
@@ -449,7 +440,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeObjectNotFound withDetailedDescription:nil]);
         return;
     }
-
+    
     [self loadLinkForObjectId:folderObjectId andRelation:kCMISLinkRelationDown andType:kCMISMediaTypeDescendants completionBlock:^(NSString *link, NSError *error) {
         if (error) {
             log(@"Error while fetching %@ link : %@", kCMISLinkRelationDown, error.description);
@@ -471,7 +462,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                        } else {
                            completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
                        }
-            }];
+                   }];
         };
         
         if (link == nil) {
@@ -504,7 +495,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         completionBlock([[NSError alloc] init]); // TODO: properly init error (CmisInvalidArgumentException)
         return;
     }
-
+    
     // Get self link
     [self loadLinkForObjectId:objectIdParam.inParameter andRelation:kCMISLinkRelationSelf completionBlock:^(NSString *selfLink, NSError *error) {
         if (selfLink == nil)
@@ -525,37 +516,37 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         [self sendAtomEntryXmlToLink:selfLink
                withHttpRequestMethod:HTTP_PUT
                       withProperties:properties
-                    completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                        // Create XML needed as body of html
-                        
-                        CMISAtomEntryWriter *xmlWriter = [[CMISAtomEntryWriter alloc] init];
-                        xmlWriter.cmisProperties = properties;
-                        xmlWriter.generateXmlInMemory = YES;
-                        
-                        [HttpUtil invokePUT:[NSURL URLWithString:selfLink]
-                                withSession:self.bindingSession
-                                       body:[xmlWriter.generateAtomEntryXml dataUsingEncoding:NSUTF8StringEncoding]
-                                    headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
-                            completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
-                                if (httpResponse) {
-                                    // Object id and changeToken might have changed because of this operation
-                                    CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
-                                    NSError *error = nil;
-                                    if ([atomEntryParser parseAndReturnError:&error])
-                                    {
-                                        objectIdParam.outParameter = [[atomEntryParser.objectData.properties propertyForId:kCMISPropertyObjectId] firstValue];
-                                        
-                                        if (changeTokenParam != nil)
-                                        {
-                                            changeTokenParam.outParameter = [[atomEntryParser.objectData.properties propertyForId:kCMISPropertyChangeToken] firstValue];
-                                        }
-                                    }
-                                    completionBlock(nil);
-                                } else {
-                                    completionBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
-                                }
-                            }];
-                    }];
+                     completionBlock:^(CMISObjectData *objectData, NSError *error) {
+                         // Create XML needed as body of html
+                         
+                         CMISAtomEntryWriter *xmlWriter = [[CMISAtomEntryWriter alloc] init];
+                         xmlWriter.cmisProperties = properties;
+                         xmlWriter.generateXmlInMemory = YES;
+                         
+                         [HttpUtil invokePUT:[NSURL URLWithString:selfLink]
+                                 withSession:self.bindingSession
+                                        body:[xmlWriter.generateAtomEntryXml dataUsingEncoding:NSUTF8StringEncoding]
+                                     headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
+                             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+                                 if (httpResponse) {
+                                     // Object id and changeToken might have changed because of this operation
+                                     CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:httpResponse.data];
+                                     NSError *error = nil;
+                                     if ([atomEntryParser parseAndReturnError:&error])
+                                     {
+                                         objectIdParam.outParameter = [[atomEntryParser.objectData.properties propertyForId:kCMISPropertyObjectId] firstValue];
+                                         
+                                         if (changeTokenParam != nil)
+                                         {
+                                             changeTokenParam.outParameter = [[atomEntryParser.objectData.properties propertyForId:kCMISPropertyChangeToken] firstValue];
+                                         }
+                                     }
+                                     completionBlock(nil);
+                                 } else {
+                                     completionBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeConnection]);
+                                 }
+                             }];
+                     }];
     }];
 }
 
@@ -606,7 +597,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                 body:[writeResult dataUsingEncoding:NSUTF8StringEncoding]
              headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
      completionBlock:^(CMISHttpResponse *response, NSError *error) {
-         if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+         if (error) {
+             log(@"HTTP error when creating/uploading content: %@", error);
+             if (completionBlock) {
+                 completionBlock(nil, error);
+             }
+         } else if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
              if (completionBlock) {
                  CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:response.data];
                  NSError *parseError = nil;
@@ -679,7 +675,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
              log(@"Could not delete temporary file %@: %@", writeResult, [fileError description]);
          }
          
-         if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+         if (error) {
+             log(@"HTTP error when creating/uploading content: %@", error);
+             if (completionBlock) {
+                 completionBlock(nil, error);
+             }
+         } else if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
              if (completionBlock) {
                  NSError *parseError = nil;
                  CMISAtomEntryParser *atomEntryParser = [[CMISAtomEntryParser alloc] initWithData:response.data];
@@ -715,7 +716,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                     contentMimeType:(NSString *)contentMimeType
                 isXmlStoredInMemory:(BOOL)isXmlStoredInMemory
 {
-
+    
     CMISAtomEntryWriter *atomEntryWriter = [[CMISAtomEntryWriter alloc] init];
     atomEntryWriter.contentFilePath = contentFilePath;
     atomEntryWriter.mimeType = contentMimeType;

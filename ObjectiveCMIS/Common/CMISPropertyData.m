@@ -108,9 +108,18 @@
 {
     CMISPropertyData *propertyData = [[CMISPropertyData alloc] init];
     propertyData.identifier = id;
-    propertyData.values = [NSArray arrayWithObject:value];
+    if ([value isKindOfClass:[NSArray class]]) {
+        propertyData.values = [value copy];
+    } else {
+        propertyData.values = [NSArray arrayWithObject:value];
+    }
     propertyData.type = type;
     return propertyData;
+}
+
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withArrayValue:(NSArray *)value type:(CMISPropertyType)type
+{
+    return [self createPropertyInternal:id value:value type:type];
 }
 
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withStringValue:(NSString *)value
@@ -121,6 +130,11 @@
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withIntegerValue:(NSInteger)value
 {
     return [self createPropertyInternal:id value:[NSNumber numberWithInteger:value] type:CMISPropertyTypeInteger];
+}
+
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withDecimalValue:(NSNumber *)value
+{
+    return [self createPropertyInternal:id value:value type:CMISPropertyTypeDecimal];
 }
 
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withIdValue:(NSString *)value
@@ -137,5 +151,16 @@
 {
     return [self createPropertyInternal:id value:[NSNumber numberWithBool:value] type:CMISPropertyTypeBoolean];
 }
+
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withUriValue:(NSURL *)value
+{
+    return [self createPropertyInternal:id value:value type:CMISPropertyTypeUri];
+}
+
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withHtmlValue:(NSString *)value
+{
+    return [self createPropertyInternal:id value:value type:CMISPropertyTypeHtml];
+}
+
 
 @end

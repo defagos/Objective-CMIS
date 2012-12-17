@@ -48,6 +48,14 @@
     {
         return CMISPropertyTypeDecimal;
     }
+    else if ([atomPubType isEqualToString:kCMISAtomEntryPropertyHtml])
+    {
+        return CMISPropertyTypeHtml;
+    }
+    else if ([atomPubType isEqualToString:kCMISAtomEntryPropertyUri])
+    {
+        return CMISPropertyTypeUri;
+    }
     else
     {
         log(@"Unknow property type %@. Go tell a developer to fix this.", atomPubType);
@@ -55,33 +63,37 @@
     }
 }
 
-+ (NSArray *)parsePropertyValue:(NSString *)stringValue withPropertyType:(NSString *)propertyType
++ (void)parsePropertyValue:(NSString *)stringValue withPropertyType:(NSString *)propertyType addToArray:(NSMutableArray*)array
 {
     if ([propertyType isEqualToString:kCMISAtomEntryPropertyString] ||
-            [propertyType isEqualToString:kCMISAtomEntryPropertyId])
+        [propertyType isEqualToString:kCMISAtomEntryPropertyId] ||
+        [propertyType isEqualToString:kCMISAtomEntryPropertyHtml])
     {
-        return [NSArray arrayWithObject:stringValue];
+        [array addObject:stringValue];
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyInteger])
     {
-        return [NSArray arrayWithObject:[NSNumber numberWithInt:[stringValue intValue]]];
+        [array addObject:[NSNumber numberWithInt:[stringValue intValue]]];
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyBoolean])
     {
-        return [NSArray arrayWithObject:[NSNumber numberWithBool:[stringValue isEqualToString:kCMISAtomEntryValueTrue]]];
+        [array addObject:[NSNumber numberWithBool:[stringValue isEqualToString:kCMISAtomEntryValueTrue]]];
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
     {
-        return [NSArray arrayWithObject:[CMISDateUtil dateFromString:stringValue]];
+        [array addObject:[CMISDateUtil dateFromString:stringValue]];
     }
     else if ([propertyType isEqualToString:kCMISAtomEntryPropertyDecimal])
     {
-        return [NSArray arrayWithObject:[NSNumber numberWithFloat:[stringValue floatValue]]];
+        [array addObject:[NSDecimalNumber decimalNumberWithString:stringValue]];
+    }
+    else if ([propertyType isEqualToString:kCMISAtomEntryPropertyUri])
+    {
+        [array addObject:[NSURL URLWithString:stringValue]];
     }
     else
     {
         log(@"Unknow property type %@. Go tell a developer to fix this.", propertyType);
-         return [NSArray array];
     }
 }
 

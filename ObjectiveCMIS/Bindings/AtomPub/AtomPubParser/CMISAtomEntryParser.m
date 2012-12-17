@@ -24,6 +24,7 @@
 @property (nonatomic, strong) NSData *atomData;
 @property (nonatomic, strong) NSString *currentPropertyType;
 @property (nonatomic, strong) CMISPropertyData *currentPropertyData;
+@property (nonatomic, strong) NSMutableArray *propertyValues;
 @property (nonatomic, strong) CMISProperties *currentObjectProperties;
 @property (nonatomic, strong) NSMutableSet *currentLinkRelations;
 @property (nonatomic, strong) CMISRenditionData *currentRendition;
@@ -47,6 +48,7 @@
 @synthesize atomData = _atomData;
 @synthesize currentPropertyType = _currentPropertyType;
 @synthesize currentPropertyData = _currentPropertyData;
+@synthesize propertyValues = _propertyValues;
 @synthesize currentObjectProperties = _currentObjectProperties;
 @synthesize currentLinkRelations = _currentLinkRelations;
 @synthesize parentDelegate = _parentDelegate;
@@ -136,8 +138,12 @@
             [elementName isEqualToString:kCMISAtomEntryPropertyString] ||
             [elementName isEqualToString:kCMISAtomEntryPropertyInteger] ||
             [elementName isEqualToString:kCMISAtomEntryPropertyDateTime] ||
-            [elementName isEqualToString:kCMISAtomEntryPropertyBoolean])
+            [elementName isEqualToString:kCMISAtomEntryPropertyBoolean] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyUri] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyHtml] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyDecimal])
         {
+            self.propertyValues = [NSMutableArray array];
             // store attribute values in CMISPropertyData object
             self.currentPropertyType = elementName;
             self.currentPropertyData = [[CMISPropertyData alloc] init];
@@ -214,28 +220,7 @@
    
     if ([elementName isEqualToString:kCMISAtomEntryValue])
     {
-        // TODO: Deal with multi-valued properties
-        self.currentPropertyData.values = [CMISAtomParserUtil parsePropertyValue:self.string withPropertyType:self.currentPropertyType];
-        /*
-         // add the value to the current property
-         if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyString] ||
-         [self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyId])
-         {
-         self.currentPropertyData.values = [NSArray arrayWithObject:string];
-         }
-         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyInteger])
-         {
-         self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithInt:[string intValue]]];
-         }
-         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyBoolean])
-         {
-         self.currentPropertyData.values = [NSArray arrayWithObject:[NSNumber numberWithBool:[string isEqualToString:kCMISAtomEntryValueTrue]]];
-         }
-         else if ([self.currentPropertyType isEqualToString:kCMISAtomEntryPropertyDateTime])
-         {
-         self.currentPropertyData.values = [NSArray arrayWithObject:[self.dateFormatter dateFromString:string]];
-         }
-         */
+        [CMISAtomParserUtil parsePropertyValue:self.string withPropertyType:self.currentPropertyType addToArray:self.propertyValues];
     }
     else if (self.currentRendition != nil)
     {
@@ -279,9 +264,14 @@
             [elementName isEqualToString:kCMISAtomEntryPropertyString] ||
             [elementName isEqualToString:kCMISAtomEntryPropertyInteger] ||
             [elementName isEqualToString:kCMISAtomEntryPropertyDateTime] ||
-            [elementName isEqualToString:kCMISAtomEntryPropertyBoolean])
+            [elementName isEqualToString:kCMISAtomEntryPropertyBoolean] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyUri] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyHtml] ||
+            [elementName isEqualToString:kCMISAtomEntryPropertyDecimal])
         {            
             // add the property to the properties dictionary
+            self.currentPropertyData.values = self.propertyValues;
+            self.propertyValues = nil;
             [self.currentObjectProperties addProperty:self.currentPropertyData];
             self.currentPropertyData = nil;
         }

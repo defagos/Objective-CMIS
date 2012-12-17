@@ -25,7 +25,7 @@
 
 // Returns the list of values of this property. 
 // For a single value property this is a list with one entry
-@property (nonatomic, strong) NSArray *values;
+@property (nonatomic, copy) NSArray *values;
 
 // Returns the first entry of the list of values.
 @property (nonatomic, assign, readonly) id firstValue;
@@ -48,11 +48,17 @@
 /** Convenience method for retrieving the decimal value. Returns nil if property is not of decimal type */
 - (NSNumber *)propertyDecimalValue;
 
+/** Creation of a multi-value property */
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withArrayValue:(NSArray *)value type:(CMISPropertyType)type;
+
 /** Creation of a string property */
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withStringValue:(NSString *)value;
 
 /** Creation of an integer property */
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withIntegerValue:(NSInteger)value;
+
+/** Creation of a decimal property */
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withDecimalValue:(NSNumber *)value;
 
 /** Creation of an id property */
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withIdValue:(NSString *)value;
@@ -62,5 +68,11 @@
 
 /** Creation of a boolean property */
 + (CMISPropertyData *)createPropertyForId:(NSString *)id withBoolValue:(BOOL)value;
+
+/** Creation of a uri property */
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withUriValue:(NSURL *)value;
+
+/** Creation of a uri property */
++ (CMISPropertyData *)createPropertyForId:(NSString *)id withHtmlValue:(NSString *)value;
 
 @end

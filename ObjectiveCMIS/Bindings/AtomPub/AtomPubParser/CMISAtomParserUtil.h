@@ -24,6 +24,6 @@
 
 + (CMISPropertyType)atomPubTypeToInternalType:(NSString *)atomPubType;
 
-+ (NSArray *)parsePropertyValue:(NSString *)stringValue withPropertyType:(NSString *)propertyType;
++ (void)parsePropertyValue:(NSString *)stringValue withPropertyType:(NSString *)propertyType addToArray:(NSMutableArray*)array;
 
 @end
