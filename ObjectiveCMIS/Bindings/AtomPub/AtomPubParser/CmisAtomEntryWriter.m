@@ -35,7 +35,7 @@
 @synthesize mimeType = _mimeType;
 @synthesize cmisProperties = _cmisProperties;
 @synthesize generateXmlInMemory = _generateXmlInMemory;
-
+@synthesize provider = _provider;
 // Internal properties
 @synthesize internalXml = _internalXml;
 @synthesize internalFilePath = _internalFilePath;
@@ -79,14 +79,16 @@
 {
     NSString *contentXMLStart = [NSString stringWithFormat:@"<cmisra:content>""<cmisra:mediatype>%@</cmisra:mediatype>""<cmisra:base64>", self.mimeType];
     [self appendStringToReturnResult:contentXMLStart];
-
+    Class encoder = self.provider.baseEncoder;
     // Generate the base64 representation of the content
     if (self.contentFilePath) {
         if (self.generateXmlInMemory) {
-            NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
+            NSString *encodedContent = [encoder encodeContentOfFile:self.contentFilePath];
+//            NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
             [self appendToInMemoryXml:encodedContent];
         } else {
-            [CMISBase64Encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
+            [encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
+//            [CMISBase64Encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
         }
     } else if (self.inputStream) {
         if (self.generateXmlInMemory)
@@ -223,11 +225,20 @@
 
 - (void)appendToFile:(NSString *)string
 {
+    Class fileManager = self.provider.fileManager;
     if (self.internalFilePath == nil)
     {
         // Store the file in the temporary folder
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateFormat:@"yyyy-MM-dd'T'HH-mm-ss-Z'"];
+        
+        NSString *internalFileName = [NSString stringWithFormat:@"%@-%@",[self.cmisProperties propertyValueForId:kCMISPropertyName],
+                                      [formatter stringFromDate:[NSDate date]]];
+        
+        self.internalFilePath = [fileManager internalFilePathFromName:internalFileName];
+        BOOL fileCreated = [fileManager createFileAtPath:self.internalFilePath data:[string dataUsingEncoding:NSUTF8StringEncoding]];
+
+        /*
         self.internalFilePath = [NSString stringWithFormat:@"%@/%@-%@",
                         NSTemporaryDirectory(),
                         [self.cmisProperties propertyValueForId:kCMISPropertyName],
@@ -236,13 +247,14 @@
         BOOL fileCreated = [[NSFileManager defaultManager] createFileAtPath:self.internalFilePath
                                                                    contents:[string dataUsingEncoding:NSUTF8StringEncoding]
                                                                  attributes:nil];
+         */
         if (!fileCreated)
         {
             log(@"Error: could not create file %@", self.internalFilePath);
         }
     }
     else {
-        [FileUtil appendToFileAtPath:self.internalFilePath data:[string dataUsingEncoding:NSUTF8StringEncoding]];
+        [fileManager appendToFileAtPath:self.internalFilePath data:[string dataUsingEncoding:NSUTF8StringEncoding]];
     }
 
 }

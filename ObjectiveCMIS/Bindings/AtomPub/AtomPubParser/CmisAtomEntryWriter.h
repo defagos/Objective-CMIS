@@ -14,7 +14,7 @@
 
 
 #import <Foundation/Foundation.h>
-
+#import "CMISFileIOProvider.h"
 @class CMISProperties;
 
 
@@ -24,7 +24,7 @@
 @property (nonatomic, strong) NSInputStream *inputStream;
 @property (nonatomic, strong) NSString *mimeType;
 @property (nonatomic, strong) CMISProperties *cmisProperties;
-
+@property (nonatomic, strong) CMISFileIOProvider *provider;
 /**
  * If YES: the xml will be created and stored fully in-memory.
  * If NO: the xml will be streamed to a file on disk.
