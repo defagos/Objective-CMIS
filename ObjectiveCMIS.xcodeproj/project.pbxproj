@@ -25,12 +25,12 @@
 		4E39DF5D163A72B400F21DE6 /* CMISDateUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E39DF5B163A72B400F21DE6 /* CMISDateUtil.m */; };
 		4E39DF60163A767B00F21DE6 /* CMISAtomParserUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E39DF5E163A767B00F21DE6 /* CMISAtomParserUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E39DF61163A767B00F21DE6 /* CMISAtomParserUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E39DF5F163A767B00F21DE6 /* CMISAtomParserUtil.m */; };
-		4E552E8116805E6E007DA568 /* CMISFileIOProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E7F16805E6E007DA568 /* CMISFileIOProvider.h */; };
+		4E552E8116805E6E007DA568 /* CMISFileIOProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E7F16805E6E007DA568 /* CMISFileIOProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E552E8216805E6E007DA568 /* CMISFileIOProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E552E8016805E6E007DA568 /* CMISFileIOProvider.m */; };
-		4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E8416807573007DA568 /* CMISBase64EncoderDelegate.h */; };
-		4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E861680762B007DA568 /* CMISFileIODelegate.h */; };
-		4E6EFB92167F2C19004EAC24 /* CMISHttpRequestDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFB91167F2C19004EAC24 /* CMISHttpRequestDelegate.h */; };
-		4E6EFBDD167F549D004EAC24 /* CMISNetworkProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFBDB167F549D004EAC24 /* CMISNetworkProvider.h */; };
+		4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E8416807573007DA568 /* CMISBase64EncoderDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E861680762B007DA568 /* CMISFileIODelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4E6EFB92167F2C19004EAC24 /* CMISHttpRequestDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFB91167F2C19004EAC24 /* CMISHttpRequestDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4E6EFBDD167F549D004EAC24 /* CMISNetworkProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFBDB167F549D004EAC24 /* CMISNetworkProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E6EFBDE167F549D004EAC24 /* CMISNetworkProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E6EFBDC167F549D004EAC24 /* CMISNetworkProvider.m */; };
 		4EA61BD71564F70C00C759E4 /* CMISStringInOutParameter.h in Headers */ = {isa = PBXBuildFile; fileRef = 4EA61BD31564F70C00C759E4 /* CMISStringInOutParameter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4EA61BD81564F70C00C759E4 /* CMISStringInOutParameter.m in Sources */ = {isa = PBXBuildFile; fileRef = 4EA61BD41564F70C00C759E4 /* CMISStringInOutParameter.m */; };
@@ -808,13 +808,13 @@
 				BD5C96FE16281A54002DDC6E /* CMISHttpRequest.h in Headers */,
 				BD5C97091628293F002DDC6E /* CMISHttpUploadRequest.h in Headers */,
 				BD5C970E16282977002DDC6E /* CMISHttpDownloadRequest.h in Headers */,
-				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
-				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
 				4E6EFB92167F2C19004EAC24 /* CMISHttpRequestDelegate.h in Headers */,
 				4E6EFBDD167F549D004EAC24 /* CMISNetworkProvider.h in Headers */,
 				4E552E8116805E6E007DA568 /* CMISFileIOProvider.h in Headers */,
 				4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */,
 				4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */,
+				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
+				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
