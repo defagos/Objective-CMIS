@@ -22,6 +22,7 @@
 #import "CMISErrors.h"
 #import "CMISRequest.h"
 #import "CMISSession.h"
+#import "CMISFileIOProvider.h"
 
 @interface CMISDocument()
 
@@ -152,7 +153,10 @@
                       completionBlock:(void (^)(NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
-    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
+    CMISFileIOProvider *provider = [self.session.sessionParameters objectForKey:kCMISSessionFileIOProvider];
+    Class output = provider.outputStreamClass;
+    
+    NSOutputStream *outputStream = [output outputStreamToFileAtPath:filePath append:NO];
     return [self.binding.objectService downloadContentOfObject:self.identifier
                                                   withStreamId:nil
                                                 toOutputStream:outputStream

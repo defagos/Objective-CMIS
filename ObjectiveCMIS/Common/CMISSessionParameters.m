@@ -21,6 +21,11 @@ NSString * const kCMISSessionParameterLinkCacheSize =@"session_param_cache_size_
 NSString * const kCMISSessionParameterMode = @"session_param_mode";
 
 NSString * const kCMISSessionParameterCustomFileIO = @"session_param_custom_file_io";
+NSString * const kCMISSessionParameterCustomFileInputStream = @"session_param_custom_file_inputstream";
+NSString * const kCMISSessionParameterCustomFileOutputStream = @"session_param_custom_file_outputstream";
+NSString * const kCMISSessionParameterCustomFileManager = @"session_param_custom_file_manager";
+NSString * const kCMISSessionParameterCustomBaseEncoder = @"session_param_custom_file_baseencoder";
+NSString * const kCMISSessionFileIOProvider = @"session_param_file_io_provider";
 
 NSString * const kCMISSessionParameterCustomNetworkIO = @"session_param_custom_network_io";
 NSString * const kCMISSessionParameterCustomRequest = @"session_param_custom_network";

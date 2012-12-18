@@ -42,4 +42,22 @@
     return 0LL;
 }
 
++ (BOOL)createFileAtPath:(NSString *)filePath data:(NSData *)data
+{
+    return [[NSFileManager defaultManager] createFileAtPath:filePath
+                                                   contents:data
+                                                 attributes:nil];
+}
+
++ (void)removeItemAtPath:(NSString *)filePath error:(NSError **)error
+{
+    [[NSFileManager defaultManager] removeItemAtPath:filePath error:error];
+}
+
++ (NSString *)internalFilePathFromName:(NSString *)fileName
+{
+    return [NSString stringWithFormat:@"%@/%@", NSTemporaryDirectory(), fileName];
+}
+
+
 @end

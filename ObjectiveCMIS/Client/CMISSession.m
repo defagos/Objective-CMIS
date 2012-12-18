@@ -24,6 +24,7 @@
 #import "CMISPagedResult.h"
 #import "CMISTypeDefinition.h"
 #import "CMISNetworkProvider.h"
+#import "CMISFileIOProvider.h"
 
 @interface CMISSession ()
 @property (nonatomic, strong, readwrite) CMISObjectConverter *objectConverter;
@@ -102,6 +103,8 @@
                                                                                                              andPassword:password];
         }
         
+        
+        
         CMISNetworkProvider *provider = [CMISNetworkProvider providerWithParameters:sessionParameters];
         if (nil == provider)
         {
@@ -113,6 +116,13 @@
         }
         [self.sessionParameters setObject:provider forKey:kCMISSessionNetworkProvider];
         
+        CMISFileIOProvider *fileProvider = [CMISFileIOProvider fileIOProviderWithParameters:sessionParameters];
+        if (nil == fileProvider)
+        {
+            fileProvider = [CMISFileIOProvider fileIOProviderWithParameters:nil];
+            log(@"we tried a custom network provider but failed. We are now switching back to the default network providers");
+        }
+        [self.sessionParameters setObject:fileProvider forKey:kCMISSessionFileIOProvider];
 
         // create the binding the session will use
         CMISBindingFactory *bindingFactory = [[CMISBindingFactory alloc] init];

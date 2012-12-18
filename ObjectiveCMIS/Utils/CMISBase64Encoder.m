@@ -59,42 +59,6 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
     return encodedData;
 }
 
-+ (NSString *)encodeContentOfFile:(NSString *)sourceFilePath
-{
-    NSMutableString *result = [[NSMutableString alloc] init];
-
-    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:sourceFilePath];
-    if (fileHandle)
-    {
-        // Get the total file length
-        [fileHandle seekToEndOfFile];
-        unsigned long long fileLength = [fileHandle offsetInFile];
-
-        // Set file offset to start of file
-        unsigned long long currentOffset = 0ULL;
-
-        // Read the data and append it to the file
-        while (currentOffset < fileLength)
-        {
-            @autoreleasepool
-            {
-                [fileHandle seekToFileOffset:currentOffset];
-                NSData *chunkOfData = [fileHandle readDataOfLength:32768];
-                [result appendString:[self stringByEncodingText:chunkOfData]];
-                currentOffset += chunkOfData.length;
-            }
-        }
-
-        // Release the file handle
-        [fileHandle closeFile];
-    }
-    else
-    {
-        log(@"Could not create a file handle for %@", sourceFilePath);
-    }
-
-    return result;
-}
 
 + (NSString *)encodeContentFromInputStream:(NSInputStream*)inputStream
 {
@@ -116,38 +80,6 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
 }
 
 
-+ (void)encodeContentOfFile:(NSString *)sourceFilePath andAppendToFile:(NSString *)destinationFilePath
-{
-    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:sourceFilePath];
-    if (fileHandle)
-    {
-        // Get the total file length
-        [fileHandle seekToEndOfFile];
-        unsigned long long fileLength = [fileHandle offsetInFile];
-
-        // Set file offset to start of file
-        unsigned long long currentOffset = 0ULL;
-
-        // Read the data and append it to the file
-        while (currentOffset < fileLength)
-        {
-            @autoreleasepool
-            {
-                [fileHandle seekToFileOffset:currentOffset];
-                NSData *chunkOfData = [fileHandle readDataOfLength:524288]; // 512 kb
-                [FileUtil appendToFileAtPath:destinationFilePath data:[self dataByEncodingText:chunkOfData]];
-                currentOffset += chunkOfData.length;
-            }
-        }
-
-        // Release the file handle
-        [fileHandle closeFile];
-    }
-    else
-    {
-        log(@"Could not create a file handle for %@", sourceFilePath);
-    }
-}
 
 + (void)encodeContentFromInputStream:(NSInputStream*)inputStream andAppendToFile:(NSString *)destinationFilePath
 {
@@ -168,6 +100,77 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
     }
     
     [inputStream close];
+}
+
+#pragma CMISBase64EncoderDelegate implementations
++ (NSString *)encodeContentOfFile:(NSString *)sourceFilePath
+{
+    NSMutableString *result = [[NSMutableString alloc] init];
+    
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:sourceFilePath];
+    if (fileHandle)
+    {
+        // Get the total file length
+        [fileHandle seekToEndOfFile];
+        unsigned long long fileLength = [fileHandle offsetInFile];
+        
+        // Set file offset to start of file
+        unsigned long long currentOffset = 0ULL;
+        
+        // Read the data and append it to the file
+        while (currentOffset < fileLength)
+        {
+            @autoreleasepool
+            {
+                [fileHandle seekToFileOffset:currentOffset];
+                NSData *chunkOfData = [fileHandle readDataOfLength:32768];
+                [result appendString:[self stringByEncodingText:chunkOfData]];
+                currentOffset += chunkOfData.length;
+            }
+        }
+        
+        // Release the file handle
+        [fileHandle closeFile];
+    }
+    else
+    {
+        log(@"Could not create a file handle for %@", sourceFilePath);
+    }
+    
+    return result;
+}
+
++ (void)encodeContentOfFile:(NSString *)sourceFilePath andAppendToFile:(NSString *)destinationFilePath
+{
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingAtPath:sourceFilePath];
+    if (fileHandle)
+    {
+        // Get the total file length
+        [fileHandle seekToEndOfFile];
+        unsigned long long fileLength = [fileHandle offsetInFile];
+        
+        // Set file offset to start of file
+        unsigned long long currentOffset = 0ULL;
+        
+        // Read the data and append it to the file
+        while (currentOffset < fileLength)
+        {
+            @autoreleasepool
+            {
+                [fileHandle seekToFileOffset:currentOffset];
+                NSData *chunkOfData = [fileHandle readDataOfLength:524288]; // 512 kb
+                [FileUtil appendToFileAtPath:destinationFilePath data:[self dataByEncodingText:chunkOfData]];
+                currentOffset += chunkOfData.length;
+            }
+        }
+        
+        // Release the file handle
+        [fileHandle closeFile];
+    }
+    else
+    {
+        log(@"Could not create a file handle for %@", sourceFilePath);
+    }
 }
 
 

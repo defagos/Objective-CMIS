@@ -24,6 +24,7 @@
 #import "CMISURLUtil.h"
 #import "CMISFileUtil.h"
 #import "CMISRequest.h"
+#import "CMISFileIOProvider.h"
 
 @implementation CMISAtomPubObjectService
 
@@ -78,7 +79,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                         completionBlock:(void (^)(NSError *error))completionBlock
                           progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 {
-    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
+    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+    Class output = provider.outputStreamClass;
+
+    NSOutputStream *outputStream = [output outputStreamToFileAtPath:filePath append:NO];
     return [self downloadContentOfObject:objectId
                             withStreamId:streamId
                           toOutputStream:outputStream
@@ -178,7 +182,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                       completionBlock:(void (^)(NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
+    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+    Class inputClass = provider.inputStreamClass;
+
+    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
         log(@"Could not find file %@", filePath);
         if (completionBlock) {
@@ -296,7 +303,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                            completionBlock:(void (^)(NSString *objectId, NSError *Error))completionBlock
                              progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
+    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+    Class inputClass = provider.inputStreamClass;
+
+    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
         log(@"Could not find file %@", filePath);
         if (completionBlock) {
@@ -655,7 +665,9 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                     isXmlStoredInMemory:NO];
     
     // Start the asynchronous POST http call
-    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:writeResult];
+    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+    Class inputClass = provider.inputStreamClass;
+    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:writeResult];
     
     NSError *fileSizeError = nil;
     unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:writeResult error:&fileSizeError];
@@ -673,7 +685,8 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
          // close stream to and delete temporary file
          [inputStream close];
          NSError *fileError = nil;
-         [[NSFileManager defaultManager] removeItemAtPath:writeResult error:&fileError];
+         [provider.fileManager removeItemAtPath:writeResult error:&fileError];
+//         [[NSFileManager defaultManager] removeItemAtPath:writeResult error:&fileError];
          if (fileError) {
              // the upload itself is not impacted by this error, so do not report it in the completion block
              log(@"Could not delete temporary file %@: %@", writeResult, [fileError description]);
@@ -721,6 +734,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     atomEntryWriter.mimeType = contentMimeType;
     atomEntryWriter.cmisProperties = properties;
     atomEntryWriter.generateXmlInMemory = isXmlStoredInMemory;
+    atomEntryWriter.provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
     NSString *writeResult = [atomEntryWriter generateAtomEntryXml];
     return writeResult;
 }
@@ -736,6 +750,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     atomEntryWriter.mimeType = contentMimeType;
     atomEntryWriter.cmisProperties = properties;
     atomEntryWriter.generateXmlInMemory = isXmlStoredInMemory;
+    atomEntryWriter.provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
     NSString *writeResult = [atomEntryWriter generateAtomEntryXml];
     return writeResult;
 }

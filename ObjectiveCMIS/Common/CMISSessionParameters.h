@@ -23,6 +23,11 @@
  Key for setting a range of custom classes to override the built in IO handling
  */
 extern NSString * const kCMISSessionParameterCustomFileIO;
+extern NSString * const kCMISSessionParameterCustomFileInputStream;
+extern NSString * const kCMISSessionParameterCustomFileOutputStream;
+extern NSString * const kCMISSessionParameterCustomFileManager;
+extern NSString * const kCMISSessionParameterCustomBaseEncoder;
+extern NSString * const kCMISSessionFileIOProvider;
 /**
  Key for setting a range of custom classes to override the built in network IO handling.
  */

@@ -13,12 +13,8 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "CMISFileIODelegate.h"
 
-
-@interface FileUtil : NSObject
-
-+ (void)appendToFileAtPath:(NSString *)filePath data:(NSData *)data;
-
-+ (unsigned long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError;
+@interface FileUtil : NSObject <CMISFileIODelegate>
 
 @end
