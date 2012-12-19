@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		4E0077661681FFC900908DE9 /* AlfrescoFileManagerDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E0077651681FFC900908DE9 /* AlfrescoFileManagerDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E39DF5C163A72B400F21DE6 /* CMISDateUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E39DF5A163A72B400F21DE6 /* CMISDateUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E39DF5D163A72B400F21DE6 /* CMISDateUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E39DF5B163A72B400F21DE6 /* CMISDateUtil.m */; };
 		4E39DF60163A767B00F21DE6 /* CMISAtomParserUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E39DF5E163A767B00F21DE6 /* CMISAtomParserUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -218,6 +219,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4E0077651681FFC900908DE9 /* AlfrescoFileManagerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AlfrescoFileManagerDelegate.h; path = Utils/AlfrescoFileManagerDelegate.h; sourceTree = "<group>"; };
 		4E39DF5A163A72B400F21DE6 /* CMISDateUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISDateUtil.h; path = Utils/CMISDateUtil.h; sourceTree = "<group>"; };
 		4E39DF5B163A72B400F21DE6 /* CMISDateUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CMISDateUtil.m; path = Utils/CMISDateUtil.m; sourceTree = "<group>"; };
 		4E39DF5E163A767B00F21DE6 /* CMISAtomParserUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CMISAtomParserUtil.h; sourceTree = "<group>"; };
@@ -629,6 +631,7 @@
 		828072D615153F1300EF635C /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				4E0077651681FFC900908DE9 /* AlfrescoFileManagerDelegate.h */,
 				4E39DF5A163A72B400F21DE6 /* CMISDateUtil.h */,
 				4E39DF5B163A72B400F21DE6 /* CMISDateUtil.m */,
 				8276E129155E355D00344A29 /* CMISBase64Encoder.h */,
@@ -814,6 +817,7 @@
 				4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */,
 				4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */,
 				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
+				4E0077661681FFC900908DE9 /* AlfrescoFileManagerDelegate.h in Headers */,
 				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

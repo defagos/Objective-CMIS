@@ -236,7 +236,8 @@
                                       [formatter stringFromDate:[NSDate date]]];
         
         self.internalFilePath = [fileManager internalFilePathFromName:internalFileName];
-        BOOL fileCreated = [fileManager createFileAtPath:self.internalFilePath data:[string dataUsingEncoding:NSUTF8StringEncoding]];
+        NSError *createError = nil;
+        BOOL fileCreated = [fileManager createFileAtPath:self.internalFilePath contents:[string dataUsingEncoding:NSUTF8StringEncoding] error:&createError];
 
         /*
         self.internalFilePath = [NSString stringWithFormat:@"%@/%@-%@",

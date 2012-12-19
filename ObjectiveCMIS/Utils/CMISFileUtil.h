@@ -13,8 +13,8 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "CMISFileIODelegate.h"
+#import "AlfrescoFileManagerDelegate.h"
 
-@interface FileUtil : NSObject <CMISFileIODelegate>
+@interface FileUtil : NSObject <AlfrescoFileManagerDelegate>
 
 @end

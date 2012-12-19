@@ -15,9 +15,9 @@
 #import <Foundation/Foundation.h>
 
 @protocol CMISFileIODelegate <NSObject>
-+ (void)appendToFileAtPath:(NSString *)filePath data:(NSData *)data;
-+ (unsigned long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError;
-+ (NSString *)internalFilePathFromName:(NSString *)fileName;
-+ (BOOL)createFileAtPath:(NSString *)filePath data:(NSData *)data;
-+ (void)removeItemAtPath:(NSString *)filePath error:(NSError **)error;
++ (void)appendToFileAtPath:(NSString *)filePath data:(NSData *)data; //OK
++ (unsigned long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError; //not ok
++ (NSString *)internalFilePathFromName:(NSString *)fileName; //ok
++ (BOOL)createFileAtPath:(NSString *)filePath data:(NSData *)data; //needs error
++ (void)removeItemAtPath:(NSString *)filePath error:(NSError **)error; //ok
 @end

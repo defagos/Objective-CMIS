@@ -13,6 +13,7 @@
  */
 
 #import "CMISFileIOProvider.h"
+#import "AlfrescoFileManagerDelegate.h"
 #import "CMISFileIODelegate.h"
 #import "CMISBase64EncoderDelegate.h"
 #import "CMISFileUtil.h"
@@ -90,7 +91,7 @@
     {
         return NO;
     }
-    if (![manager conformsToProtocol:@protocol(CMISFileIODelegate)])
+    if (![manager conformsToProtocol:@protocol(AlfrescoFileManagerDelegate)])
     {
         return NO;
     }

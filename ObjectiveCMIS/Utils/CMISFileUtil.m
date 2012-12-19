@@ -31,6 +31,7 @@
     [fileHandle closeFile];
 }
 
+/*
 + (unsigned long long)fileSizeForFileAtPath:(NSString *)filePath error:(NSError * *)outError
 {
     NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:outError];
@@ -41,22 +42,86 @@
 
     return 0LL;
 }
+*/
 
-+ (BOOL)createFileAtPath:(NSString *)filePath data:(NSData *)data
++ (NSDictionary *)attributesOfItemAtPath:(NSString *)path error:(NSError **)outError
+{
+    return [[NSFileManager defaultManager] attributesOfItemAtPath:path error:outError];
+}
+
+
+
++ (BOOL)createFileAtPath:(NSString *)filePath contents:(NSData *)data error:(NSError **)error
 {
     return [[NSFileManager defaultManager] createFileAtPath:filePath
                                                    contents:data
                                                  attributes:nil];
 }
 
-+ (void)removeItemAtPath:(NSString *)filePath error:(NSError **)error
++ (BOOL)removeItemAtPath:(NSString *)filePath error:(NSError **)error
 {
-    [[NSFileManager defaultManager] removeItemAtPath:filePath error:error];
+    return [[NSFileManager defaultManager] removeItemAtPath:filePath error:error];
 }
 
 + (NSString *)internalFilePathFromName:(NSString *)fileName
 {
     return [NSString stringWithFormat:@"%@/%@", NSTemporaryDirectory(), fileName];
+}
+
+
++ (NSString *)temporaryDirectory
+{
+    return NSTemporaryDirectory();
+}
+
+
+#pragma the following are not yet required in CMIS lib.
++ (BOOL)fileExistsAtPath:(NSString *)path
+{
+    return YES;
+}
+
++ (BOOL)fileExistsAtPath:(NSString *)path isDirectory:(BOOL *)isDirectory
+{
+    return YES;
+}
+
+
++ (BOOL)createDirectoryAtPath:(NSString *)path withIntermediateDirectories:(BOOL)createIntermediates attributes:(NSDictionary *)attributes error:(NSError **)error
+{
+    return YES;
+}
+
++ (BOOL)copyItemAtPath:(NSString *)sourcePath toPath:(NSString *)destinationPath error:(NSError **)error
+{
+    return YES;
+}
+
++ (BOOL)moveItemAtPath:(NSString *)sourcePath toPath:(NSString *)destinationPath error:(NSError **)error
+{
+    return YES;
+}
+
++ (NSArray *)contentsOfDirectoryAtPath:(NSString *)directoryPath error:(NSError **)error
+{
+    return nil;
+}
+
++ (void)enumerateThroughDirectory:(NSString *)directory includingSubDirectories:(BOOL)includeSubDirectories error:(NSError **)error withBlock:(void (^)(NSString *fullFilePath))block{}
+
++ (NSData *)dataWithContentsOfURL:(NSURL *)url
+{
+    return nil;
+}
+
++ (NSString *)homeDirectory
+{
+    return nil;
+}
+
++ (NSString *)documentsDirectory
+{
+    return nil;
 }
 
 

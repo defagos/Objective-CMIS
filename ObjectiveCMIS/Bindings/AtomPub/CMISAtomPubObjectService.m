@@ -194,8 +194,11 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         return nil;
     }
 
+    Class filemanager = provider.fileManager;
     NSError *fileError = nil;
-    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
+    NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:filePath error:&fileError];
+    unsigned long long fileSize = [fileAttributes fileSize];
+//    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
     if (fileError) {
         log(@"Could not determine size of file %@: %@", filePath, [fileError description]);
     }
@@ -315,8 +318,11 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         return nil;
     }
     
+    Class filemanager = provider.fileManager;
     NSError *fileError = nil;
-    unsigned long long bytesExpected = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
+    NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:filePath error:&fileError];
+    unsigned long long bytesExpected = [fileAttributes fileSize];
+//    unsigned long long bytesExpected = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
     if (fileError) {
         log(@"Could not determine size of file %@: %@", filePath, [fileError description]);
     }
@@ -669,10 +675,13 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     Class inputClass = provider.inputStreamClass;
     NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:writeResult];
     
-    NSError *fileSizeError = nil;
-    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:writeResult error:&fileSizeError];
-    if (fileSizeError) {
-        log(@"Could not determine file size of %@ : %@", writeResult, [fileSizeError description]);
+    Class filemanager = provider.fileManager;
+    NSError *fileError = nil;
+    NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:writeResult error:&fileError];
+    unsigned long long fileSize = [fileAttributes fileSize];
+//    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:writeResult error:&fileSizeError];
+    if (fileError) {
+        log(@"Could not determine file size of %@ : %@", writeResult, [fileError description]);
     }
     
     [HttpUtil invoke:[NSURL URLWithString:link]

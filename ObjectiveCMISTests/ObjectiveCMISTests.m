@@ -491,9 +491,13 @@
                                    
                                    // Compare file sizes
                                    NSError *fileError;
-                                   unsigned long long originalFileSize = [FileUtil fileSizeForFileAtPath:fileToUploadPath error:&fileError];
+                                   NSDictionary *fileAttributes = [FileUtil attributesOfItemAtPath:fileToUploadPath error:&fileError];
+                                   unsigned long long originalFileSize = [fileAttributes fileSize];
+//                                   unsigned long long originalFileSize = [FileUtil fileSizeForFileAtPath:fileToUploadPath error:&fileError];
                                    STAssertNil(fileError, @"Got error while getting file size for %@: %@", fileToUploadPath, [fileError description]);
-                                   unsigned long long downloadedFileSize = [FileUtil fileSizeForFileAtPath:downloadedFilePath error:&fileError];
+                                   fileAttributes = [FileUtil attributesOfItemAtPath:downloadedFilePath error:&fileError];
+                                   unsigned long long downloadedFileSize = [fileAttributes fileSize];
+//                                   unsigned long long downloadedFileSize = [FileUtil fileSizeForFileAtPath:downloadedFilePath error:&fileError];
                                    STAssertNil(fileError, @"Got error while getting file size for %@: %@", downloadedFilePath, [fileError description]);
                                    STAssertTrue(originalFileSize == downloadedFileSize, @"Original file size (%llu) is not equal to downloaded file size (%llu)", originalFileSize, downloadedFileSize);
                                    
