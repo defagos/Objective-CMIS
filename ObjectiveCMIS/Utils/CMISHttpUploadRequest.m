@@ -33,6 +33,7 @@
                            inputStream:(NSInputStream*)inputStream
                                headers:(NSDictionary*)additionalHeaders
                          bytesExpected:(unsigned long long)bytesExpected
+                authenticationProvider:(id<CMISAuthenticationProvider>) authenticationProvider
                        completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
                          progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
@@ -40,8 +41,9 @@
                                                           completionBlock:completionBlock
                                                             progressBlock:progressBlock];
     httpRequest.inputStream = inputStream;
-    httpRequest.headers = additionalHeaders;
+    httpRequest.additionalHeaders = additionalHeaders;
     httpRequest.bytesExpected = bytesExpected;
+    httpRequest.authenticationProvider = authenticationProvider;
     
     if ([httpRequest startRequest:urlRequest]) {
         httpRequest = nil;

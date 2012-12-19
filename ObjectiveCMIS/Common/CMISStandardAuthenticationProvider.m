@@ -46,4 +46,10 @@
     return [NSDictionary dictionaryWithObject:authHeader forKey:@"Authorization"];
 }
 
+- (void)updateWithHttpURLResponse:(NSHTTPURLResponse*)httpUrlResponse
+{
+    // nothing to do in the default implementation
+}
+
+
 @end

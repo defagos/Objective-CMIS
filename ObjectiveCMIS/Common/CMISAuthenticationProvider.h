@@ -26,4 +26,6 @@
 */
 @property(nonatomic, strong, readonly) NSDictionary *httpHeadersToApply;
 
+- (void)updateWithHttpURLResponse:(NSHTTPURLResponse*)httpUrlResponse;
+
 @end

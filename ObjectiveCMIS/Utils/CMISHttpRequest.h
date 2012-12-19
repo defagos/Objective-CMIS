@@ -15,20 +15,24 @@
 #import <Foundation/Foundation.h>
 #import "CMISHttpUtil.h"
 
+@class CMISAuthenticationProvider;
+
 @interface CMISHttpRequest : NSObject <NSURLConnectionDataDelegate>
 
 @property (nonatomic, assign) CMISHttpRequestMethod requestMethod;
 @property (nonatomic, strong) NSURLConnection *connection;
 @property (nonatomic, strong) NSData *requestBody;
 @property (nonatomic, strong) NSMutableData *responseBody;
-@property (nonatomic, strong) NSDictionary *headers;
+@property (nonatomic, strong) NSDictionary *additionalHeaders;
 @property (nonatomic, strong) NSHTTPURLResponse *response;
+@property (nonatomic, strong) id<CMISAuthenticationProvider> authenticationProvider;
 @property (nonatomic, copy) void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
 
 + (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
               withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
                  requestBody:(NSData*)requestBody
                      headers:(NSDictionary*)additionalHeaders
+      authenticationProvider:(id<CMISAuthenticationProvider>)authenticationProvider
              completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod

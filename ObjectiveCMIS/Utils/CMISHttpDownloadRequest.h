@@ -29,6 +29,7 @@
                           withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
                             outputStream:(NSOutputStream*)outputStream
                            bytesExpected:(unsigned long long)bytesExpected
+                  authenticationProvider:(id<CMISAuthenticationProvider>) authenticationProvider
                          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
                            progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 

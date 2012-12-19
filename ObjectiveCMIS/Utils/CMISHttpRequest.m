@@ -16,6 +16,7 @@
 #import "CMISHttpUtil.h"
 #import "CMISHttpResponse.h"
 #import "CMISErrors.h"
+#import "CMISAuthenticationProvider.h"
 
 //Exception names as returned in the <!--exception> tag
 NSString * const kCMISExceptionInvalidArgument         = @"invalidArgument";
@@ -38,8 +39,9 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
 @synthesize requestMethod = _requestMethod;
 @synthesize requestBody = _requestBody;
 @synthesize responseBody = _responseBody;
-@synthesize headers = _headers;
+@synthesize additionalHeaders = _additionalHeaders;
 @synthesize response = _response;
+@synthesize authenticationProvider = _authenticationProvider;
 @synthesize completionBlock = _completionBlock;
 @synthesize connection = _connection;
 
@@ -47,12 +49,14 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
                   withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
                      requestBody:(NSData*)requestBody
                          headers:(NSDictionary*)additionalHeaders
+          authenticationProvider:(id<CMISAuthenticationProvider>) authenticationProvider
                  completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
     CMISHttpRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
                                                     completionBlock:completionBlock];
     httpRequest.requestBody = requestBody;
-    httpRequest.headers = additionalHeaders;
+    httpRequest.additionalHeaders = additionalHeaders;
+    httpRequest.authenticationProvider = authenticationProvider;
     
     if ([httpRequest startRequest:urlRequest] == NO) {
         httpRequest = nil;
@@ -80,7 +84,11 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
         [urlRequest setHTTPBody:self.requestBody];
     }
     
-    [self.headers enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
+    [self.authenticationProvider.httpHeadersToApply enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
+        [urlRequest addValue:header forHTTPHeaderField:headerName];
+    }];
+    
+    [self.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
         [urlRequest addValue:header forHTTPHeaderField:headerName];
     }];
     
@@ -132,6 +140,8 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+    [self.authenticationProvider updateWithHttpURLResponse:self.response];
+
     if (self.completionBlock) {
         CMISErrorCodes cmisErrorCode = (error.code == NSURLErrorCancelled) ? kCMISErrorCodeCancelled : kCMISErrorCodeConnection;
         NSError *cmisError = [CMISErrors cmisError:error withCMISErrorCode:cmisErrorCode];
@@ -146,6 +156,8 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+    [self.authenticationProvider updateWithHttpURLResponse:self.response];
+    
     if (self.completionBlock) {
         NSError *cmisError = nil;
         CMISHttpResponse *httpResponse = [CMISHttpResponse responseUsingURLHTTPResponse:self.response andData:self.responseBody];

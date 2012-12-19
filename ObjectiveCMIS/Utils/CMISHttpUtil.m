@@ -40,6 +40,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                    withHttpMethod:httpRequestMethod
                       requestBody:body
                           headers:additionalHeaders
+           authenticationProvider:session.authenticationProvider
                   completionBlock:completionBlock];
 }
 
@@ -59,6 +60,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                             inputStream:inputStream
                                 headers:additionalHeaders
                           bytesExpected:0
+                 authenticationProvider:session.authenticationProvider
                         completionBlock:completionBlock
                           progressBlock:nil];
 }
@@ -83,6 +85,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                                                                        inputStream:inputStream
                                                                            headers:additionalHeaders
                                                                      bytesExpected:bytesExpected
+                                                            authenticationProvider:session.authenticationProvider
                                                                    completionBlock:completionBlock
                                                                      progressBlock:progressBlock];
         requestObject.httpRequest = uploadRequest;
@@ -112,6 +115,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                                                                           withHttpMethod:httpRequestMethod
                                                                             outputStream:outputStream
                                                                            bytesExpected:bytesExpected
+                                                                  authenticationProvider:session.authenticationProvider
                                                                          completionBlock:completionBlock
                                                                            progressBlock:progressBlock];
         requestObject.httpRequest = downloadRequest;
@@ -207,11 +211,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
     [request setHTTPMethod:httpMethod];
     log(@"HTTP %@: %@", httpMethod, [url absoluteString]);
 
-    id <CMISAuthenticationProvider> authenticationProvider = session.authenticationProvider;
-    [authenticationProvider.httpHeadersToApply enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
-        [request addValue:header forHTTPHeaderField:headerName];
-    }];
-    
     return request;
 }
 
