@@ -44,6 +44,16 @@
 }
 */
 
++ (BOOL)fileStreamIsOpen:(NSStream *)stream
+{
+    BOOL isStreamOpen = NO;
+    NSOutputStream *outputStream = (NSOutputStream *)stream;
+    isStreamOpen = outputStream.streamStatus == NSStreamStatusOpen;
+    return isStreamOpen;
+}
+
+
+
 + (NSDictionary *)attributesOfItemAtPath:(NSString *)path error:(NSError **)outError
 {
     return [[NSFileManager defaultManager] attributesOfItemAtPath:path error:outError];

@@ -65,6 +65,7 @@
     httpRequest.inputStream = inputStream;
     httpRequest.headers = additionalHeaders;
     httpRequest.bytesExpected = bytesExpected;
+    httpRequest.session = session;
     NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
                                                  withHttpMethod:httpRequestMethod
                                                    usingSession:session];

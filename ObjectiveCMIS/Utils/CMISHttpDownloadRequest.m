@@ -14,6 +14,8 @@
 
 #import "CMISHttpDownloadRequest.h"
 #import "CMISErrors.h"
+#import "CMISFileIOProvider.h"
+#import "CMISFileUtil.h"
 
 @interface CMISHttpDownloadRequest ()
 
@@ -64,6 +66,7 @@
     
     httpRequest.outputStream = outputStream;
     httpRequest.bytesExpected = bytesExpected;    
+    httpRequest.session = session;
     NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
                                                  withHttpMethod:httpRequestMethod
                                                    usingSession:session];
@@ -111,10 +114,14 @@
     // set up output stream if available
     if (self.outputStream) { // otherwise store data in memory in self.data
         // create file for downloaded content
-        BOOL isStreamReady = self.outputStream.streamStatus == NSStreamStatusOpen;
+        CMISFileIOProvider *provider = [self.session objectForKey:kCMISSessionFileIOProvider];
+        Class fileManager = provider.fileManager;
+        BOOL isStreamReady = [fileManager fileStreamIsOpen:self.outputStream];
+//        BOOL isStreamReady = self.outputStream.streamStatus == NSStreamStatusOpen;
         if (!isStreamReady) {
             [self.outputStream open];
-            isStreamReady = self.outputStream.streamStatus == NSStreamStatusOpen;
+            isStreamReady = [fileManager fileStreamIsOpen:self.outputStream];
+//            isStreamReady = self.outputStream.streamStatus == NSStreamStatusOpen;
         }
     
         if (!isStreamReady) {

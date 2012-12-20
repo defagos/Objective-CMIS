@@ -25,6 +25,7 @@
 @property (nonatomic, strong) NSMutableData *responseBody;
 @property (nonatomic, strong) NSDictionary *headers;
 @property (nonatomic, strong) NSHTTPURLResponse *response;
+@property (nonatomic, strong) CMISBindingSession * session;
 @property (nonatomic, copy) void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
 
 + (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest

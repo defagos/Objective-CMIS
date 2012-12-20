@@ -11,6 +11,11 @@
 @protocol AlfrescoFileManagerDelegate <NSObject>
 
 /**
+ some APIs don't fully implement NSStream properties, such as streamStatus. But we need that in the CMIS lib
+ */
++ (BOOL)fileStreamIsOpen:(NSStream *)stream;
+
+/**
  Call this function to get the home directory for the app
  */
 + (NSString *)homeDirectory;

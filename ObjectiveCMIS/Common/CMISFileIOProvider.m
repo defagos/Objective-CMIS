@@ -14,7 +14,6 @@
 
 #import "CMISFileIOProvider.h"
 #import "AlfrescoFileManagerDelegate.h"
-#import "CMISFileIODelegate.h"
 #import "CMISBase64EncoderDelegate.h"
 #import "CMISFileUtil.h"
 #import "CMISBase64Encoder.h"

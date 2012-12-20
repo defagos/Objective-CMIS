@@ -29,7 +29,6 @@
 		4E552E8116805E6E007DA568 /* CMISFileIOProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E7F16805E6E007DA568 /* CMISFileIOProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E552E8216805E6E007DA568 /* CMISFileIOProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E552E8016805E6E007DA568 /* CMISFileIOProvider.m */; };
 		4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E8416807573007DA568 /* CMISBase64EncoderDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E552E861680762B007DA568 /* CMISFileIODelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E6EFB92167F2C19004EAC24 /* CMISHttpRequestDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFB91167F2C19004EAC24 /* CMISHttpRequestDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E6EFBDD167F549D004EAC24 /* CMISNetworkProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 4E6EFBDB167F549D004EAC24 /* CMISNetworkProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4E6EFBDE167F549D004EAC24 /* CMISNetworkProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E6EFBDC167F549D004EAC24 /* CMISNetworkProvider.m */; };
@@ -227,7 +226,6 @@
 		4E552E7F16805E6E007DA568 /* CMISFileIOProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISFileIOProvider.h; path = Common/CMISFileIOProvider.h; sourceTree = "<group>"; };
 		4E552E8016805E6E007DA568 /* CMISFileIOProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CMISFileIOProvider.m; path = Common/CMISFileIOProvider.m; sourceTree = "<group>"; };
 		4E552E8416807573007DA568 /* CMISBase64EncoderDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISBase64EncoderDelegate.h; path = Utils/CMISBase64EncoderDelegate.h; sourceTree = "<group>"; };
-		4E552E861680762B007DA568 /* CMISFileIODelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISFileIODelegate.h; path = Utils/CMISFileIODelegate.h; sourceTree = "<group>"; };
 		4E6EFB91167F2C19004EAC24 /* CMISHttpRequestDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISHttpRequestDelegate.h; path = Utils/CMISHttpRequestDelegate.h; sourceTree = "<group>"; };
 		4E6EFBDB167F549D004EAC24 /* CMISNetworkProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CMISNetworkProvider.h; path = Common/CMISNetworkProvider.h; sourceTree = "<group>"; };
 		4E6EFBDC167F549D004EAC24 /* CMISNetworkProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CMISNetworkProvider.m; path = Common/CMISNetworkProvider.m; sourceTree = "<group>"; };
@@ -656,7 +654,6 @@
 				4EA61BD61564F70C00C759E4 /* CMISURLUtil.m */,
 				4E6EFB91167F2C19004EAC24 /* CMISHttpRequestDelegate.h */,
 				4E552E8416807573007DA568 /* CMISBase64EncoderDelegate.h */,
-				4E552E861680762B007DA568 /* CMISFileIODelegate.h */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -815,7 +812,6 @@
 				4E6EFBDD167F549D004EAC24 /* CMISNetworkProvider.h in Headers */,
 				4E552E8116805E6E007DA568 /* CMISFileIOProvider.h in Headers */,
 				4E552E8516807573007DA568 /* CMISBase64EncoderDelegate.h in Headers */,
-				4E552E871680762B007DA568 /* CMISFileIODelegate.h in Headers */,
 				BD5C9713162C11E3002DDC6E /* CMISHttpResponse.h in Headers */,
 				4E0077661681FFC900908DE9 /* AlfrescoFileManagerDelegate.h in Headers */,
 				BD30D33D162D7DD7001FFF80 /* CMISRequest.h in Headers */,
