@@ -93,10 +93,10 @@
     } else if (self.inputStream) {
         if (self.generateXmlInMemory)
         {
-            NSString *encodedContent = [CMISBase64Encoder encodeContentFromInputStream:self.inputStream];
+            NSString *encodedContent = [encoder encodeContentFromInputStream:self.inputStream];
             [self appendToInMemoryXml:encodedContent];
         } else {
-            [CMISBase64Encoder encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
+            [encoder encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
         }
     }
 

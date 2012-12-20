@@ -21,8 +21,4 @@
 
 + (NSData *)dataByEncodingText:(NSData *)plainText;
 
-+ (NSString *)encodeContentFromInputStream:(NSInputStream*)inputStream;
-
-+ (void)encodeContentFromInputStream:(NSInputStream*)inputStream andAppendToFile:(NSString *)destinationFilePath;
-
 @end

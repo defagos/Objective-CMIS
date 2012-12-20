@@ -17,4 +17,6 @@
 @protocol CMISBase64EncoderDelegate <NSObject>
 + (NSString *)encodeContentOfFile:(NSString *)sourceFilePath;
 + (void)encodeContentOfFile:(NSString *)sourceFilePath andAppendToFile:(NSString *)destinationFilePath;
++ (NSString *)encodeContentFromInputStream:(id)inputStream;
++ (void)encodeContentFromInputStream:(id)inputStream andAppendToFile:(NSString *)destinationFilePath;
 @end
