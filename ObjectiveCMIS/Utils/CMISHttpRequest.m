@@ -44,24 +44,6 @@ NSString * const kCMISExceptionVersioning              = @"versioning";
 @synthesize connection = _connection;
 @synthesize session = _session;
 
-+ (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
-                  withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                     requestBody:(NSData*)requestBody
-                         headers:(NSDictionary*)additionalHeaders
-                 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
-{
-    CMISHttpRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
-                                                    completionBlock:completionBlock];
-    httpRequest.requestBody = requestBody;
-    httpRequest.headers = additionalHeaders;
-    
-    if ([httpRequest startRequest:urlRequest] == NO) {
-        httpRequest = nil;
-    }
-    
-    return httpRequest;
-}
-
 + (CMISHttpRequest*)startRequestWithURL:(NSURL *)url
                              httpMethod:(CMISHttpRequestMethod)httpRequestMethod
                             requestBody:(NSData*)requestBody

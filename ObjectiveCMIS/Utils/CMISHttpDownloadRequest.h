@@ -25,13 +25,6 @@
 
 @property (nonatomic, readonly) unsigned long long bytesDownloaded;
 
-+ (CMISHttpDownloadRequest*)startRequest:(NSMutableURLRequest*)urlRequest
-                          withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                            outputStream:(NSOutputStream*)outputStream
-                           bytesExpected:(unsigned long long)bytesExpected
-                         completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
-                           progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
-
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
            progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;

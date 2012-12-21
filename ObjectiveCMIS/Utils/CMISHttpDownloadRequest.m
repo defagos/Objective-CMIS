@@ -32,25 +32,6 @@
 @synthesize bytesDownloaded = _bytesDownloaded;
 @synthesize bytesExpected = _bytesExpected;
 
-+ (CMISHttpDownloadRequest*)startRequest:(NSMutableURLRequest *)urlRequest
-                          withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                            outputStream:(NSOutputStream*)outputStream
-                           bytesExpected:(unsigned long long)bytesExpected
-                         completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
-                           progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
-{
-    CMISHttpDownloadRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
-                                                            completionBlock:completionBlock
-                                                              progressBlock:progressBlock];
-    httpRequest.outputStream = outputStream;
-    httpRequest.bytesExpected = bytesExpected;
-    
-    if ([httpRequest startRequest:urlRequest] == NO) {
-        httpRequest = nil;
-    };
-    
-    return httpRequest;
-}
 
 + (id<CMISHttpRequestDelegate>)startDownloadRequestWithURL:(NSURL *)url
                                                 httpMethod:(CMISHttpRequestMethod)httpRequestMethod

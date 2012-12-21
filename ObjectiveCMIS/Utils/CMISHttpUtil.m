@@ -68,19 +68,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                                  progressBlock:nil];
         
     }
-    /*
-    NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                 withHttpMethod:httpRequestMethod
-                                                   usingSession:session];
-    
-    [CMISHttpUploadRequest startRequest:urlRequest
-                         withHttpMethod:httpRequestMethod
-                            inputStream:inputStream
-                                headers:additionalHeaders
-                          bytesExpected:0
-                        completionBlock:completionBlock
-                          progressBlock:nil];
-     */
 }
 
 + (void)invoke:(NSURL *)url
@@ -115,27 +102,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                                              withDetailedDescription:@"Request was cancelled"]);
         }
     }
-    /*
-    if (!requestObject.isCancelled) {
-        NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                     withHttpMethod:httpRequestMethod
-                                                       usingSession:session];
-        
-        CMISHttpUploadRequest *uploadRequest = [CMISHttpUploadRequest startRequest:urlRequest
-                                                                    withHttpMethod:httpRequestMethod
-                                                                       inputStream:inputStream
-                                                                           headers:additionalHeaders
-                                                                     bytesExpected:bytesExpected
-                                                                   completionBlock:completionBlock
-                                                                     progressBlock:progressBlock];
-        requestObject.httpRequest = uploadRequest;
-    } else {
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
-                                             withDetailedDescription:@"Request was cancelled"]);
-        }
-    }
-     */
 }
 
 + (void)invoke:(NSURL *)url
@@ -169,27 +135,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
         }
         
     }
-    /*
-    if (!requestObject.isCancelled) {
-        NSMutableURLRequest *urlRequest = [self createRequestForUrl:url
-                                                     withHttpMethod:HTTP_GET
-                                                       usingSession:session];
-    
-        CMISHttpDownloadRequest *downloadRequest = [CMISHttpDownloadRequest startRequest:urlRequest
-                                                                          withHttpMethod:httpRequestMethod
-                                                                            outputStream:outputStream
-                                                                           bytesExpected:bytesExpected
-                                                                         completionBlock:completionBlock
-                                                                           progressBlock:progressBlock];
-        requestObject.httpRequest = downloadRequest;
-    } else {
-        if (completionBlock) {
-            completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeCancelled
-                                             withDetailedDescription:@"Request was cancelled"]);
-
-        }
-    }
-     */
 }
 
 + (void)invokeGET:(NSURL *)url
@@ -243,46 +188,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
                 headers:nil
         completionBlock:completionBlock];
 }
-
-#pragma mark Helper methods
-/*
-+ (NSMutableURLRequest *)createRequestForUrl:(NSURL *)url
-                              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                                usingSession:(CMISBindingSession *)session
-{
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url
-                                                           cachePolicy:NSURLRequestReloadIgnoringCacheData
-                                                       timeoutInterval:60];
-    NSString *httpMethod;
-    switch (httpRequestMethod) {
-        case HTTP_GET:
-            httpMethod = @"GET";
-            break;
-        case HTTP_POST:
-            httpMethod = @"POST";
-            break;
-        case HTTP_DELETE:
-            httpMethod = @"DELETE";
-            break;
-        case HTTP_PUT:
-            httpMethod = @"PUT";
-            break;
-        default:
-            log(@"Invalid http request method: %d", httpRequestMethod);
-            return nil;
-    }
-
-    [request setHTTPMethod:httpMethod];
-    log(@"HTTP %@: %@", httpMethod, [url absoluteString]);
-
-    id <CMISAuthenticationProvider> authenticationProvider = session.authenticationProvider;
-    [authenticationProvider.httpHeadersToApply enumerateKeysAndObjectsUsingBlock:^(NSString *headerName, NSString *header, BOOL *stop) {
-        [request addValue:header forHTTPHeaderField:headerName];
-    }];
-    
-    return request;
-}
-*/
 @end
 
 

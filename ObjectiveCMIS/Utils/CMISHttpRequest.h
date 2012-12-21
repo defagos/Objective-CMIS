@@ -28,12 +28,6 @@
 @property (nonatomic, strong) CMISBindingSession * session;
 @property (nonatomic, copy) void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
 
-+ (CMISHttpRequest*)startRequest:(NSMutableURLRequest *)urlRequest
-              withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                 requestBody:(NSData*)requestBody
-                     headers:(NSDictionary*)additionalHeaders
-             completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
-
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;

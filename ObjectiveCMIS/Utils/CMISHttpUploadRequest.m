@@ -28,27 +28,6 @@
 @synthesize bytesExpected = _bytesExpected;
 @synthesize bytesUploaded = _bytesUploaded;
 
-+ (CMISHttpUploadRequest*)startRequest:(NSMutableURLRequest *)urlRequest
-                        withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
-                           inputStream:(NSInputStream*)inputStream
-                               headers:(NSDictionary*)additionalHeaders
-                         bytesExpected:(unsigned long long)bytesExpected
-                       completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
-                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
-{
-    CMISHttpUploadRequest *httpRequest = [[self alloc] initWithHttpMethod:httpRequestMethod
-                                                          completionBlock:completionBlock
-                                                            progressBlock:progressBlock];
-    httpRequest.inputStream = inputStream;
-    httpRequest.headers = additionalHeaders;
-    httpRequest.bytesExpected = bytesExpected;
-    
-    if ([httpRequest startRequest:urlRequest]) {
-        httpRequest = nil;
-    }
-    
-    return httpRequest;
-}
 
 + (id<CMISHttpRequestDelegate>)startUploadRequestWithURL:(NSURL *)url
                                               httpMethod:(CMISHttpRequestMethod)httpRequestMethod

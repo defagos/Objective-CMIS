@@ -84,11 +84,9 @@
     if (self.contentFilePath) {
         if (self.generateXmlInMemory) {
             NSString *encodedContent = [encoder encodeContentOfFile:self.contentFilePath];
-//            NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
             [self appendToInMemoryXml:encodedContent];
         } else {
             [encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
-//            [CMISBase64Encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
         }
     } else if (self.inputStream) {
         if (self.generateXmlInMemory)
@@ -239,16 +237,6 @@
         NSError *createError = nil;
         BOOL fileCreated = [fileManager createFileAtPath:self.internalFilePath contents:[string dataUsingEncoding:NSUTF8StringEncoding] error:&createError];
 
-        /*
-        self.internalFilePath = [NSString stringWithFormat:@"%@/%@-%@",
-                        NSTemporaryDirectory(),
-                        [self.cmisProperties propertyValueForId:kCMISPropertyName],
-                        [formatter stringFromDate:[NSDate date]]];
-
-        BOOL fileCreated = [[NSFileManager defaultManager] createFileAtPath:self.internalFilePath
-                                                                   contents:[string dataUsingEncoding:NSUTF8StringEncoding]
-                                                                 attributes:nil];
-         */
         if (!fileCreated)
         {
             log(@"Error: could not create file %@", self.internalFilePath);
