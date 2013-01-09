@@ -33,7 +33,7 @@
 @synthesize bytesExpected = _bytesExpected;
 
 
-+ (id<CMISHttpRequestDelegate>)startDownloadRequestWithURL:(NSURL *)url
++ (CMISHttpDownloadRequest *)startDownloadRequestWithURL:(NSURL *)url
                                                 httpMethod:(CMISHttpRequestMethod)httpRequestMethod
                                               outputStream:(id)outputStream
                                                    session:(CMISBindingSession *)session
@@ -77,8 +77,8 @@
     [self.outputStream close];
     
     self.progressBlock = nil;
-    
     [super cancel];
+    
 }
 
 

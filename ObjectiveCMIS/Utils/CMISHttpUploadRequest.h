@@ -20,6 +20,15 @@
 @property (nonatomic, assign) unsigned long long bytesExpected; // optional; if not set, expected content length from HTTP header is used
 @property (nonatomic, readonly) unsigned long long bytesUploaded;
 
++ (CMISHttpUploadRequest *)startUploadRequestWithURL:(NSURL *)url
+                                          httpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                                         inputStream:(id)inputStream
+                                             headers:(NSDictionary *)additionalHeaders
+                                             session:(CMISBindingSession *)session
+                                       bytesExpected:(unsigned long long)bytesExpected
+                                     completionBlock:(void (^)(CMISHttpResponse *, NSError *))completionBlock
+                                       progressBlock:(void (^)(unsigned long long, unsigned long long))progressBlock;
+
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock

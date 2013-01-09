@@ -15,9 +15,8 @@
 #import <Foundation/Foundation.h>
 #import "CMISBindingSession.h"
 #import "CMISHttpUtil.h"
-#import "CMISHttpRequestDelegate.h"
 
-@interface CMISHttpRequest : NSObject <NSURLConnectionDataDelegate, CMISHttpRequestDelegate>
+@interface CMISHttpRequest : NSObject <NSURLConnectionDataDelegate>
 
 @property (nonatomic, assign) CMISHttpRequestMethod requestMethod;
 @property (nonatomic, strong) NSURLConnection *connection;
@@ -28,6 +27,14 @@
 @property (nonatomic, strong) CMISBindingSession * session;
 @property (nonatomic, copy) void (^completionBlock)(CMISHttpResponse *httpResponse, NSError *error);
 
+- (void)cancel;
+
++ (CMISHttpRequest*)startRequestWithURL:(NSURL *)url
+                             httpMethod:(CMISHttpRequestMethod)httpRequestMethod
+                            requestBody:(NSData*)requestBody
+                                headers:(NSDictionary*)additionalHeaders
+                                session:(CMISBindingSession *)session
+                        completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 - (id)initWithHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
          completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;

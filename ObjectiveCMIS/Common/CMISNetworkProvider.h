@@ -15,9 +15,7 @@
 #import <Foundation/Foundation.h>
 #import "CMISSessionParameters.h"
 @interface CMISNetworkProvider : NSObject
-@property (nonatomic, strong, readonly) Class requestClass;
-@property (nonatomic, strong, readonly) Class downloadRequestClass;
-@property (nonatomic, strong, readonly) Class uploadRequestClass;
+@property (nonatomic, strong, readonly) Class invokerClass;
 
 + (CMISNetworkProvider *)providerWithParameters:(CMISSessionParameters *)parameters;
 

@@ -26,6 +26,16 @@
 @synthesize httpRequest = _httpRequest;
 @synthesize cancelled = _cancelled;
 
+- (id)init
+{
+    self = [super init];
+    if (nil != self)
+    {
+        self.cancelled = NO;
+    }
+    return self;
+}
+
 - (void)cancel
 {
     self.cancelled = YES;

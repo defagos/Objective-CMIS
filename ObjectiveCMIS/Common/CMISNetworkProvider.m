@@ -13,22 +13,15 @@
  */
 
 #import "CMISNetworkProvider.h"
-#import "CMISHttpDownloadRequest.h"
-#import "CMISHttpUploadRequest.h"
-#import "CMISHttpRequestDelegate.h"
+#import "CMISHttpUtil.h"
 
 @interface CMISNetworkProvider ()
-@property (nonatomic, strong, readwrite) Class requestClass;
-@property (nonatomic, strong, readwrite) Class downloadRequestClass;
-@property (nonatomic, strong, readwrite) Class uploadRequestClass;
-- (void)standardProvider;
+@property (nonatomic, strong, readwrite) Class invokerClass;
 - (BOOL)customProvider:(CMISSessionParameters *)parameters;
 @end
 
 @implementation CMISNetworkProvider
-@synthesize requestClass = _requestClass;
-@synthesize downloadRequestClass = _downloadRequestClass;
-@synthesize uploadRequestClass = _uploadRequestClass;
+@synthesize invokerClass = _invokerClass;
 
 + (CMISNetworkProvider *)providerWithParameters:(CMISSessionParameters *)parameters
 {
@@ -36,7 +29,7 @@
     
     if (nil == parameters || nil == [parameters objectForKey:kCMISSessionParameterCustomNetworkIO])
     {
-        [provider standardProvider];
+        provider.invokerClass = [HttpUtil class];
     }
     else if (![provider customProvider:parameters])
     {
@@ -51,7 +44,7 @@
     id networkObj = [parameters objectForKey:kCMISSessionParameterCustomNetworkIO];
     if (![networkObj isKindOfClass:[NSDictionary class]])
     {
-        [self standardProvider];
+        self.invokerClass = [HttpUtil class];
         return YES;
     }
     
@@ -63,56 +56,16 @@
     }
     NSString *requestClassName = (NSString *)requestObj;
     Class requestClass = NSClassFromString(requestClassName);
-    if (![requestClass conformsToProtocol:@protocol(CMISHttpRequestDelegate)])
+    if (![requestClass conformsToProtocol:@protocol(CMISHttpInvokerDelegate)])
     {
         return NO;
     }
-    self.requestClass = requestClass;
-    self.downloadRequestClass = requestClass;
-    self.uploadRequestClass = requestClass;
-    
-    id downloadObj = [networkDict objectForKey:kCMISSessionParameterCustomDownloadRequest];
-    if (nil != downloadObj && [downloadObj isKindOfClass:[NSString class]])
-    {
-        NSString *name = (NSString *)downloadObj;
-        Class downloadClass = NSClassFromString(name);
-        if ([downloadClass conformsToProtocol:@protocol(CMISHttpRequestDelegate)])
-        {
-            self.downloadRequestClass = downloadClass;
-        }
-        else
-        {
-            self.downloadRequestClass = nil;
-            return NO;
-        }
-    }
-    
-    id uploadObj = [networkDict objectForKey:kCMISSessionParameterCustomUploadRequest];
-    if (nil != uploadObj && [uploadObj isKindOfClass:[NSString class]])
-    {
-        NSString *name = (NSString *)uploadObj;
-        Class uploadClass = NSClassFromString(name);
-        if ([uploadClass conformsToProtocol:@protocol(CMISHttpRequestDelegate)])
-        {
-            self.uploadRequestClass = uploadClass;
-        }
-        else
-        {
-            self.uploadRequestClass = nil;
-            return NO;
-        }
-    }
+    self.invokerClass = requestClass;
     
     return YES;
 }
 
 
-- (void)standardProvider
-{
-    self.requestClass = [CMISHttpRequest class];
-    self.downloadRequestClass = [CMISHttpDownloadRequest class];
-    self.uploadRequestClass = [CMISHttpUploadRequest class];
-}
 
 
 @end

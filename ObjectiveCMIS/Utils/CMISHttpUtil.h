@@ -13,8 +13,8 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "CMISBindingSession.h"
-
+#import "CMISHttpInvokerDelegate.h"
+/*
 typedef enum {
     HTTP_GET,
     HTTP_POST,
@@ -24,9 +24,9 @@ typedef enum {
 
 @class CMISHttpResponse;
 @class CMISRequest;
-
-@interface HttpUtil : NSObject
-
+*/
+@interface HttpUtil : NSObject <CMISHttpInvokerDelegate>
+/*
 // generic invokes
 
 + (void)invoke:(NSURL *)url 
@@ -85,5 +85,5 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
 + (void)invokeDELETE:(NSURL *)url
          withSession:(CMISBindingSession *)session 
      completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
-
+*/
 @end

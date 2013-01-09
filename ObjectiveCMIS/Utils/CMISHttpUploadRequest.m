@@ -29,7 +29,7 @@
 @synthesize bytesUploaded = _bytesUploaded;
 
 
-+ (id<CMISHttpRequestDelegate>)startUploadRequestWithURL:(NSURL *)url
++ (CMISHttpUploadRequest *)startUploadRequestWithURL:(NSURL *)url
                                               httpMethod:(CMISHttpRequestMethod)httpRequestMethod
                                              inputStream:(id)inputStream
                                                  headers:(NSDictionary *)additionalHeaders
@@ -81,8 +81,8 @@
 - (void)cancel
 {
     self.progressBlock = nil;
-    
     [super cancel];
+    
 }
 
 

@@ -108,7 +108,7 @@
         CMISNetworkProvider *provider = [CMISNetworkProvider providerWithParameters:sessionParameters];
         if (nil == provider)
         {
-            /// TODO Error: Most likely the custom network provider doesn't conform to the protocol CMISHttpRequestDelegate
+            /// TODO Error: Most likely the custom network provider doesn't conform to the protocol CMISHttpInvokerDelegate
             /// in which case all subsequent calls would fail. However, to avoid that from happening we bypass this and call
             /// the providerWithParameters:nil - this will enforce the use of the standard provider
             provider = [CMISNetworkProvider providerWithParameters:nil];
