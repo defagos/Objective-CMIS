@@ -81,19 +81,27 @@
     [self appendStringToReturnResult:contentXMLStart];
     Class encoder = self.provider.baseEncoder;
     // Generate the base64 representation of the content
-    if (self.contentFilePath) {
-        if (self.generateXmlInMemory) {
+    if (self.contentFilePath)
+    {
+        if (self.generateXmlInMemory)
+        {
             NSString *encodedContent = [encoder encodeContentOfFile:self.contentFilePath];
             [self appendToInMemoryXml:encodedContent];
-        } else {
+        }
+        else
+        {
             [encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
         }
-    } else if (self.inputStream) {
+    }
+    else if (self.inputStream)
+    {
         if (self.generateXmlInMemory)
         {
             NSString *encodedContent = [encoder encodeContentFromInputStream:self.inputStream];
             [self appendToInMemoryXml:encodedContent];
-        } else {
+        }
+        else
+        {
             [encoder encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
         }
     }
