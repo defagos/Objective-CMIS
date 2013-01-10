@@ -69,7 +69,7 @@
                                                               withValue:(includeAllowableActions ? @"true" : @"false") toUrlString:versionHistoryLink];
         
         // Execute call
-        [HttpUtil invokeGET:[NSURL URLWithString:versionHistoryLink]
+        self.currentHttpRequest = [self.networkInvoker invokeGET:[NSURL URLWithString:versionHistoryLink]
                 withSession:self.bindingSession
             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                 if (httpResponse) {
