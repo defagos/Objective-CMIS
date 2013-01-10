@@ -85,7 +85,7 @@
         CMISTypeByIdUriBuilder *typeByIdUriBuilder = object;
         typeByIdUriBuilder.id = typeId;
         
-        [HttpUtil invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
+        self.currentHttpRequest = [self.networkInvoker invokeGET:[typeByIdUriBuilder buildUrl] withSession:self.bindingSession completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
             if (httpResponse) {
                 if (httpResponse.data != nil) {
                     CMISTypeDefinitionAtomEntryParser *parser = [[CMISTypeDefinitionAtomEntryParser alloc] initWithData:httpResponse.data];

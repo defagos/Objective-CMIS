@@ -52,7 +52,7 @@
                           downLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterSkipCount withValue:[skipCount stringValue] toUrlString:downLink];
                           
                           // execute the request
-                          [HttpUtil invokeGET:[NSURL URLWithString:downLink]
+                          self.currentHttpRequest = [self.networkInvoker invokeGET:[NSURL URLWithString:downLink]
                                   withSession:self.bindingSession
                               completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                                   if (httpResponse) {
@@ -118,7 +118,7 @@
         
         upLink = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterRelativePathSegment withValue:(includeRelativePathSegment ? @"true" : @"false") toUrlString:upLink];
         
-        [HttpUtil invokeGET:[NSURL URLWithString:upLink]
+        self.currentHttpRequest = [self.networkInvoker invokeGET:[NSURL URLWithString:upLink]
                 withSession:self.bindingSession
             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                 if (httpResponse) {

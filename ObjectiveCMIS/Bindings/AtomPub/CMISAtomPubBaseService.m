@@ -29,13 +29,15 @@
 
 @property (nonatomic, strong, readwrite) CMISBindingSession *bindingSession;
 @property (nonatomic, strong, readwrite) NSURL *atomPubUrl;
-
+@property (nonatomic, strong, readwrite) id<CMISHttpInvokerDelegate> networkInvoker;
 @end
 
 @implementation CMISAtomPubBaseService
 
 @synthesize bindingSession = _bindingSession;
 @synthesize atomPubUrl = _atomPubUrl;
+@synthesize networkInvoker = _networkInvoker;
+@synthesize currentHttpRequest = _currentHttpRequest;
 
 - (id)initWithBindingSession:(CMISBindingSession *)session
 {
@@ -43,7 +45,8 @@
     if (self)
     {
         self.bindingSession = session;
-        
+        CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
+        self.networkInvoker = (id<CMISHttpInvokerDelegate>)[[provider.invokerClass alloc] init];
         // pull out and cache all the useful objects for this binding
         self.atomPubUrl = [session objectForKey:kCMISBindingSessionKeyAtomPubUrl];
     }
@@ -117,10 +120,13 @@
 
 - (void)retrieveCMISWorkspacesWithCompletionBlock:(void (^)(NSArray *workspaces, NSError *error))completionBlock
 {
-    if ([self.bindingSession objectForKey:kCMISSessionKeyWorkspaces]) {
+    if ([self.bindingSession objectForKey:kCMISSessionKeyWorkspaces])
+    {
         completionBlock([self.bindingSession objectForKey:kCMISSessionKeyWorkspaces], nil);
-    } else {
-        [HttpUtil invokeGET:self.atomPubUrl
+    }
+    else
+    {
+        self.currentHttpRequest = [self.networkInvoker invokeGET:self.atomPubUrl
                 withSession:self.bindingSession
             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                 if (httpResponse) {
@@ -178,7 +184,7 @@
         NSURL *objectIdUrl = [objectByIdUriBuilder buildUrl];
         
         // Execute actual call
-        [HttpUtil invokeGET:objectIdUrl
+        self.currentHttpRequest = [self.networkInvoker invokeGET:objectIdUrl
                 withSession:self.bindingSession
             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                 if (httpResponse) {
@@ -222,7 +228,7 @@
         objectByPathUriBuilder.renditionFilter = renditionFilter;
         
         // Execute actual call
-        [HttpUtil invokeGET:[objectByPathUriBuilder buildUrl]
+        self.currentHttpRequest = [self.networkInvoker invokeGET:[objectByPathUriBuilder buildUrl]
                 withSession:self.bindingSession
             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                 if (httpResponse) {

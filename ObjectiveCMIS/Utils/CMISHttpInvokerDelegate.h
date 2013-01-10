@@ -26,14 +26,14 @@ typedef enum {
 
 @protocol CMISHttpInvokerDelegate <NSObject>
 
-+ (CMISRequest *)invoke:(NSURL *)url
+- (CMISRequest *)invoke:(NSURL *)url
          withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
             withSession:(CMISBindingSession *)session
                    body:(NSData *)body
                 headers:(NSDictionary *)additionalHeaders
         completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
-+ (CMISRequest *)invoke:(NSURL *)url
+- (CMISRequest *)invoke:(NSURL *)url
          withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
             withSession:(CMISBindingSession *)session
             inputStream:(NSInputStream *)inputStream
@@ -41,7 +41,7 @@ typedef enum {
         completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 
-+ (void)invoke:(NSURL *)url
+- (void)invoke:(NSURL *)url
     withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
     withSession:(CMISBindingSession *)session
     inputStream:(NSInputStream *)inputStream
@@ -51,7 +51,7 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
  requestObject:(CMISRequest *)requestObject;
 
-+ (void)invoke:(NSURL *)url
+- (void)invoke:(NSURL *)url
 withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
    withSession:(CMISBindingSession *)session
   outputStream:(NSOutputStream *)outputStream
@@ -62,24 +62,24 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
 
 
 
-+ (CMISRequest *)invokeGET:(NSURL *)url
+- (CMISRequest *)invokeGET:(NSURL *)url
                withSession:(CMISBindingSession *)session
            completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
 
-+ (CMISRequest *)invokePOST:(NSURL *)url
+- (CMISRequest *)invokePOST:(NSURL *)url
                 withSession:(CMISBindingSession *)session
                        body:(NSData *)body
                     headers:(NSDictionary *)additionalHeaders
             completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
-+ (CMISRequest *)invokePUT:(NSURL *)url
+- (CMISRequest *)invokePUT:(NSURL *)url
                withSession:(CMISBindingSession *)session
                       body:(NSData *)body
                    headers:(NSDictionary *)additionalHeaders
            completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 
-+ (CMISRequest *)invokeDELETE:(NSURL *)url
+- (CMISRequest *)invokeDELETE:(NSURL *)url
                   withSession:(CMISBindingSession *)session
               completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock;
 

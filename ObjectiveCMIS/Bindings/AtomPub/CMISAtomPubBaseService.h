@@ -15,11 +15,16 @@
 #import <Foundation/Foundation.h>
 #import "CMISSessionParameters.h"
 #import "CMISBindingSession.h"
+#import "CMISNetworkProvider.h"
+#import "CMISHttpInvokerDelegate.h"
+#import "CMISRequest.h"
 
 @interface CMISAtomPubBaseService : NSObject
 
 @property (nonatomic, strong, readonly) CMISBindingSession *bindingSession;
 @property (nonatomic, strong, readonly) NSURL *atomPubUrl;
+@property (nonatomic, strong, readonly) id<CMISHttpInvokerDelegate> networkInvoker;
+@property (nonatomic, strong) CMISRequest *currentHttpRequest;
 
 - (id)initWithBindingSession:(CMISBindingSession *)session;
 - (void)clearCacheFromService;

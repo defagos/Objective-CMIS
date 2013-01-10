@@ -20,6 +20,7 @@
 #import "CMISAtomFeedParser.h"
 #import "CMISObjectList.h"
 #import "CMISErrors.h"
+#import "CMISNetworkProvider.h"
 
 @implementation CMISAtomPubDiscoveryService
 
@@ -61,7 +62,7 @@
     atomEntryWriter.skipCount = skipCount;
     
     // Execute HTTP call
-    [HttpUtil invokePOST:queryURL
+    self.currentHttpRequest = [self.networkInvoker invokePOST:queryURL
              withSession:self.bindingSession
                     body:[[atomEntryWriter generateAtomEntryXML] dataUsingEncoding:NSUTF8StringEncoding]
                  headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeQuery forKey:@"Content-type"]

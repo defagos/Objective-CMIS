@@ -114,7 +114,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
             
             unsigned long long streamLength = [[[objectData.properties.propertiesDictionary objectForKey:kCMISPropertyContentStreamLength] firstValue] unsignedLongLongValue];
             
-            [HttpUtil invoke:contentUrl
+            [self.networkInvoker invoke:contentUrl
               withHttpMethod:HTTP_GET
                  withSession:self.bindingSession
                 outputStream:outputStream
@@ -159,7 +159,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                                              withValue:changeTokenParam.inParameter toUrlString:editMediaLink];
         }
         
-        [HttpUtil invokeDELETE:[NSURL URLWithString:editMediaLink]
+        self.currentHttpRequest = [self.networkInvoker invokeDELETE:[NSURL URLWithString:editMediaLink]
                    withSession:self.bindingSession
                completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                    if (httpResponse) {
@@ -270,7 +270,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         NSDictionary *additionalHeader = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"attachment; filename=%@",
                                                                              filename] forKey:@"Content-Disposition"];
         
-        [HttpUtil invoke:[NSURL URLWithString:editMediaLink]
+        [self.networkInvoker invoke:[NSURL URLWithString:editMediaLink]
           withHttpMethod:HTTP_PUT
              withSession:self.bindingSession
              inputStream:inputStream
@@ -405,7 +405,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
             completionBlock(NO, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument withDetailedDescription:nil]);
         } else {
             NSURL *selfUrl = [NSURL URLWithString:selfLink];
-            [HttpUtil invokeDELETE:selfUrl
+            self.currentHttpRequest = [self.networkInvoker invokeDELETE:selfUrl
                        withSession:self.bindingSession
                    completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                        if (httpResponse) {
@@ -478,7 +478,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
             link = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterUnfileObjects withValue:[CMISEnums stringForUnfileObject:unfileObjects] toUrlString:link];
             link = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterContinueOnFailure withValue:(continueOnFailure ? @"true" : @"false") toUrlString:link];
             
-            [HttpUtil invokeDELETE:[NSURL URLWithString:link]
+            self.currentHttpRequest = [self.networkInvoker invokeDELETE:[NSURL URLWithString:link]
                        withSession:self.bindingSession
                    completionBlock:^(CMISHttpResponse *httpResponse, NSError *error) {
                        if (httpResponse) {
@@ -548,7 +548,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                         xmlWriter.cmisProperties = properties;
                         xmlWriter.generateXmlInMemory = YES;
                         
-                        [HttpUtil invokePUT:[NSURL URLWithString:selfLink]
+                        self.currentHttpRequest = [self.networkInvoker invokePUT:[NSURL URLWithString:selfLink]
                                 withSession:self.bindingSession
                                        body:[xmlWriter.generateAtomEntryXml dataUsingEncoding:NSUTF8StringEncoding]
                                     headers:[NSDictionary dictionaryWithObject:kCMISMediaTypeEntry forKey:@"Content-type"]
@@ -616,7 +616,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                                     isXmlStoredInMemory:YES];
     
     // Execute call
-    [HttpUtil invoke:[NSURL URLWithString:link]
+    self.currentHttpRequest = [self.networkInvoker invoke:[NSURL URLWithString:link]
       withHttpMethod:httpRequestMethod
          withSession:self.bindingSession
                 body:[writeResult dataUsingEncoding:NSUTF8StringEncoding]
@@ -684,7 +684,7 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         log(@"Could not determine file size of %@ : %@", writeResult, [fileError description]);
     }
     
-    [HttpUtil invoke:[NSURL URLWithString:link]
+    [self.networkInvoker invoke:[NSURL URLWithString:link]
       withHttpMethod:HTTP_POST
          withSession:self.bindingSession
          inputStream:inputStream
