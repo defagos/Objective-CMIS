@@ -102,7 +102,6 @@ static char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
     [inputStream close];
 }
 
-#pragma CMISBase64EncoderDelegate implementations
 + (NSString *)encodeContentOfFile:(NSString *)sourceFilePath
 {
     NSMutableString *result = [[NSMutableString alloc] init];

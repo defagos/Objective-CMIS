@@ -153,16 +153,24 @@
                       completionBlock:(void (^)(NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
 {
-    CMISFileIOProvider *provider = [self.session.sessionParameters objectForKey:kCMISSessionFileIOProvider];
-    Class output = provider.outputStreamClass;
+//    CMISFileIOProvider *provider = [self.session.sessionParameters objectForKey:kCMISSessionFileIOProvider];
+//    Class output = provider.outputStreamClass;
     
-    NSOutputStream *outputStream = [output outputStreamToFileAtPath:filePath append:NO];
+    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
+    return [self downloadContentToOutputStream:outputStream completionBlock:completionBlock progressBlock:progressBlock];
+}
+
+- (CMISRequest*)downloadContentToOutputStream:(NSOutputStream *)outputStream
+                              completionBlock:(void (^)(NSError *error))completionBlock
+                                progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
+{
     return [self.binding.objectService downloadContentOfObject:self.identifier
                                                   withStreamId:nil
                                                 toOutputStream:outputStream
                                                completionBlock:completionBlock
                                                  progressBlock:progressBlock];
 }
+
 
 - (void)deleteAllVersionsWithCompletionBlock:(void (^)(BOOL documentDeleted, NSError *error))completionBlock
 {

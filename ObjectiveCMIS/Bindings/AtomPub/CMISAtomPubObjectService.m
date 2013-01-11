@@ -79,10 +79,8 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                         completionBlock:(void (^)(NSError *error))completionBlock
                           progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 {
-    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
-    Class output = provider.outputStreamClass;
 
-    NSOutputStream *outputStream = [output outputStreamToFileAtPath:filePath append:NO];
+    NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:filePath append:NO];
     return [self downloadContentOfObject:objectId
                             withStreamId:streamId
                           toOutputStream:outputStream
@@ -98,17 +96,22 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
 {
     CMISRequest *request = [[CMISRequest alloc] init];
     
-    [self retrieveObjectInternal:objectId completionBlock:^(CMISObjectData *objectData, NSError *error) {
-        if (error) {
+    [self retrieveObjectInternal:objectId completionBlock:^(CMISObjectData *objectData, NSError *error){
+        if (error)
+        {
             log(@"Error while retrieving CMIS object for object id '%@' : %@", objectId, error.description);
-            if (completionBlock) {
+            if (completionBlock)
+            {
                 completionBlock([CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeObjectNotFound]);
             }
-        } else {
+        }
+        else
+        {
             NSURL *contentUrl = objectData.contentUrl;
             
             // This is not spec-compliant!! Took me half a day to find this in opencmis ...
-            if (streamId != nil) {
+            if (streamId != nil)
+            {
                 contentUrl = [CMISURLUtil urlStringByAppendingParameter:kCMISParameterStreamId withValue:streamId toUrl:contentUrl];
             }
             
@@ -119,13 +122,12 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                  withSession:self.bindingSession
                 outputStream:outputStream
                bytesExpected:streamLength
-             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error)
-             {
-                 if (completionBlock) {
+             completionBlock:^(CMISHttpResponse *httpResponse, NSError *error){
+                 if (completionBlock)
+                 {
                      completionBlock(error);
                  }
-             }
-               progressBlock:progressBlock
+             } progressBlock:progressBlock
                requestObject:request];
         }
     }];
@@ -182,10 +184,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                       completionBlock:(void (^)(NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
-    Class inputClass = provider.inputStreamClass;
+//    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+//    Class inputClass = provider.inputStreamClass;
 
-    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:filePath];
+    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
         log(@"Could not find file %@", filePath);
         if (completionBlock) {
@@ -194,9 +196,9 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         return nil;
     }
 
-    Class filemanager = provider.fileManager;
+//    Class filemanager = provider.fileManager;
     NSError *fileError = nil;
-    NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:filePath error:&fileError];
+    NSDictionary *fileAttributes = [FileUtil attributesOfItemAtPath:filePath error:&fileError];
     unsigned long long fileSize = [fileAttributes fileSize];
 //    unsigned long long fileSize = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
     if (fileError) {
@@ -306,10 +308,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
                            completionBlock:(void (^)(NSString *objectId, NSError *Error))completionBlock
                              progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
-    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
-    Class inputClass = provider.inputStreamClass;
+//    CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
+//    Class inputClass = provider.inputStreamClass;
 
-    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:filePath];
+    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:filePath];
     if (inputStream == nil) {
         log(@"Could not find file %@", filePath);
         if (completionBlock) {
@@ -318,9 +320,9 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
         return nil;
     }
     
-    Class filemanager = provider.fileManager;
+//    Class filemanager = provider.fileManager;
     NSError *fileError = nil;
-    NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:filePath error:&fileError];
+    NSDictionary *fileAttributes = [FileUtil attributesOfItemAtPath:filePath error:&fileError];
     unsigned long long bytesExpected = [fileAttributes fileSize];
 //    unsigned long long bytesExpected = [FileUtil fileSizeForFileAtPath:filePath error:&fileError];
     if (fileError) {
@@ -672,10 +674,10 @@ andIncludeAllowableActions:(BOOL)includeAllowableActions
     
     // Start the asynchronous POST http call
     CMISFileIOProvider *provider = [self.bindingSession objectForKey:kCMISSessionFileIOProvider];
-    Class inputClass = provider.inputStreamClass;
-    NSInputStream *inputStream = [inputClass inputStreamWithFileAtPath:writeResult];
-    
     Class filemanager = provider.fileManager;
+//    Class inputClass = provider.inputStreamClass;
+    NSInputStream *inputStream = [filemanager inputStreamWithFileAtPath:writeResult];
+    
     NSError *fileError = nil;
     NSDictionary *fileAttributes = [filemanager attributesOfItemAtPath:writeResult error:&fileError];
     unsigned long long fileSize = [fileAttributes fileSize];

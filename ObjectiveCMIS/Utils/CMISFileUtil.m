@@ -13,9 +13,20 @@
  */
 
 #import "CMISFileUtil.h"
-
+#import "CMISBase64Encoder.h"
 
 @implementation FileUtil
+
++ (NSInputStream *)inputStreamWithFileAtPath:(NSString *)filePath
+{
+    return [NSInputStream inputStreamWithFileAtPath:filePath];
+}
+
++ (void)encodeContentFromInputStream:(NSInputStream *)inputStream andAppendToFile:(NSString *)filePath
+{
+    [CMISBase64Encoder encodeContentFromInputStream:inputStream andAppendToFile:filePath];
+}
+
 
 + (void)appendToFileAtPath:(NSString *)filePath data:(NSData *)data
 {

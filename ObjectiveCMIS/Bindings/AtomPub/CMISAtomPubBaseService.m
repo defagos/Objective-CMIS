@@ -29,6 +29,7 @@
 
 @property (nonatomic, strong, readwrite) CMISBindingSession *bindingSession;
 @property (nonatomic, strong, readwrite) NSURL *atomPubUrl;
+@property (nonatomic, strong, readwrite) CMISNetworkProvider *provider;
 @property (nonatomic, strong, readwrite) id<CMISHttpInvokerDelegate> networkInvoker;
 @end
 
@@ -38,6 +39,7 @@
 @synthesize atomPubUrl = _atomPubUrl;
 @synthesize networkInvoker = _networkInvoker;
 @synthesize currentHttpRequest = _currentHttpRequest;
+@synthesize provider = _provider;
 
 - (id)initWithBindingSession:(CMISBindingSession *)session
 {
@@ -45,8 +47,8 @@
     if (self)
     {
         self.bindingSession = session;
-        CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
-        self.networkInvoker = (id<CMISHttpInvokerDelegate>)[[provider.invokerClass alloc] init];
+        self.provider = [session objectForKey:kCMISSessionNetworkProvider];
+        self.networkInvoker = (id<CMISHttpInvokerDelegate>)[[self.provider.invokerClass alloc] init];
         // pull out and cache all the useful objects for this binding
         self.atomPubUrl = [session objectForKey:kCMISBindingSessionKeyAtomPubUrl];
     }

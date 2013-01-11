@@ -13,12 +13,19 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "CMISBase64EncoderDelegate.h"
 
-@interface CMISBase64Encoder : NSObject <CMISBase64EncoderDelegate>
+@interface CMISBase64Encoder : NSObject 
 
 + (NSString *)stringByEncodingText:(NSData *)plainText;
 
 + (NSData *)dataByEncodingText:(NSData *)plainText;
+
++ (NSString *)encodeContentOfFile:(NSString *)sourceFilePath;
+
++ (void)encodeContentOfFile:(NSString *)sourceFilePath andAppendToFile:(NSString *)destinationFilePath;
+
++ (NSString *)encodeContentFromInputStream:(id)inputStream;
+
++ (void)encodeContentFromInputStream:(id)inputStream andAppendToFile:(NSString *)destinationFilePath;
 
 @end

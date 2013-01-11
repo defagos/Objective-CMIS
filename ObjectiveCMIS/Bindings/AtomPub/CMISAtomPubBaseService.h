@@ -23,6 +23,7 @@
 
 @property (nonatomic, strong, readonly) CMISBindingSession *bindingSession;
 @property (nonatomic, strong, readonly) NSURL *atomPubUrl;
+@property (nonatomic, strong, readonly) CMISNetworkProvider *provider;
 @property (nonatomic, strong, readonly) id<CMISHttpInvokerDelegate> networkInvoker;
 @property (nonatomic, strong) CMISRequest *currentHttpRequest;
 

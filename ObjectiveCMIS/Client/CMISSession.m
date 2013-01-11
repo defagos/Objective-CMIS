@@ -162,7 +162,8 @@
         return;
     }
     
-    if (self.sessionParameters.authenticationProvider == nil) {
+    if (self.sessionParameters.authenticationProvider == nil)
+    {
         NSError *error = [CMISErrors createCMISErrorWithCode:kCMISErrorCodeUnauthorized withDetailedDescription:@"Must provide authentication provider"];
         log(@"Error: %@", error.description);
         completionBlock(nil, error);
@@ -172,7 +173,8 @@
     // TODO: use authentication provider to make sure we have enough credentials, it may need to make another call to get a ticket or do handshake i.e. NTLM.
     
     // get repository info
-    [self.binding.repositoryService retrieveRepositoryInfoForId:self.sessionParameters.repositoryId completionBlock:^(CMISRepositoryInfo *repositoryInfo, NSError *error) {
+    [self.binding.repositoryService retrieveRepositoryInfoForId:self.sessionParameters.repositoryId
+                                                completionBlock:^(CMISRepositoryInfo *repositoryInfo, NSError *error) {
         self.repositoryInfo = repositoryInfo;
         if (self.repositoryInfo == nil)
         {
@@ -186,7 +188,9 @@
                 completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeInvalidArgument
                                                  withDetailedDescription:@"Could not fetch repository information"]);
             }
-        } else {
+        }
+        else
+        {
             // no errors have occurred so set authenticated flag and return success flag
             self.isAuthenticated = YES;
             completionBlock(self, nil);
@@ -206,9 +210,12 @@
 {
     NSString *rootFolderId = self.repositoryInfo.rootFolderId;
     [self retrieveObject:rootFolderId withOperationContext:operationContext completionBlock:^(CMISObject *rootFolder, NSError *error) {
-        if (rootFolder != nil && ![rootFolder isKindOfClass:[CMISFolder class]]) {
+        if (rootFolder != nil && ![rootFolder isKindOfClass:[CMISFolder class]])
+        {
             completionBlock(nil, [CMISErrors createCMISErrorWithCode:kCMISErrorCodeRuntime withDetailedDescription:@"Root folder object is not a folder!"]);
-        } else {
+        }
+        else
+        {
             completionBlock((CMISFolder *)rootFolder, nil);
         }
     }];
@@ -237,11 +244,15 @@
                                  andIncludeACL:operationContext.isIncluseACLs
                     andIncludeAllowableActions:operationContext.isIncludeAllowableActions
                                completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                                            if (error) {
+                                            if (error)
+                                            {
                                                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeObjectNotFound]);
-                                            } else {
+                                            }
+                                            else
+                                            {
                                                 CMISObject *object = nil;
-                                                if (objectData) {
+                                                if (objectData)
+                                                {
                                                     object = [self.objectConverter convertObject:objectData];
                                                 }
                                                 completionBlock(object, nil);
@@ -264,10 +275,14 @@
                                        andIncludeACL:operationContext.isIncluseACLs
                           andIncludeAllowableActions:operationContext.isIncludeAllowableActions
                                      completionBlock:^(CMISObjectData *objectData, NSError *error) {
-                                         if (objectData != nil && error == nil) {
+                                         if (objectData != nil && error == nil)
+                                         {
                                              completionBlock([self.objectConverter convertObject:objectData], nil);
-                                         } else {
-                                             if (error == nil) {
+                                         }
+                                         else
+                                         {
+                                             if (error == nil)
+                                             {
                                                  error = [[NSError alloc] init]; // TODO: create a proper error object
                                              }
                                              completionBlock(nil, error);
@@ -300,9 +315,12 @@
                                                   maxItems:[NSNumber numberWithInt:maxItems]
                                                   skipCount:[NSNumber numberWithInt:skipCount]
                                                   completionBlock:^(CMISObjectList *objectList, NSError *error) {
-                                                      if (error) {
+                                                      if (error)
+                                                      {
                                                           pageBlockCompletionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                                                      } else {
+                                                      }
+                                                      else
+                                                      {
                                                           // Fill up return result
                                                           CMISFetchNextPageBlockResult *result = [[CMISFetchNextPageBlockResult alloc] init];
                                                           result.hasMoreItems = objectList.hasMoreItems;
@@ -324,9 +342,12 @@
                           andStartFromSkipCount:operationContext.skipCount
                                 completionBlock:^(CMISPagedResult *result, NSError *error) {
                                     // Return nil and populate error in case something went wrong
-                                    if (error) {
+                                    if (error)
+                                    {
                                         completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         completionBlock(result, nil);
                                     }
                                 }];
@@ -371,9 +392,12 @@
                                     maxItems:[NSNumber numberWithInt:maxItems]
                                    skipCount:[NSNumber numberWithInt:skipCount]
                              completionBlock:^(CMISObjectList *objectList, NSError *error) {
-                                 if (error) {
+                                 if (error)
+                                 {
                                      pageBlockCompletionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                                 } else {
+                                 }
+                                 else
+                                 {
                                      // Fill up return result
                                      CMISFetchNextPageBlockResult *result = [[CMISFetchNextPageBlockResult alloc] init];
                                      result.hasMoreItems = objectList.hasMoreItems;
@@ -395,9 +419,12 @@
                           andStartFromSkipCount:operationContext.skipCount
                                 completionBlock:^(CMISPagedResult *result, NSError *error) {
                                     // Return nil and populate error in case something went wrong
-                                    if (error) {
+                                    if (error)
+                                    {
                                         completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         completionBlock(result, nil);
                                     }
                                 }];
@@ -411,10 +438,13 @@
 {
     [self retrieveTypeDefinition:typeId
                  completionBlock:^(CMISTypeDefinition *typeDefinition, NSError *internalError) {
-                     if (internalError != nil) {
+                     if (internalError != nil)
+                     {
                          NSError *error = [CMISErrors cmisError:internalError withCMISErrorCode:kCMISErrorCodeRuntime];
                          completionBlock(nil, error);
-                     } else {
+                     }
+                     else
+                     {
                          [self queryObjectsWithTypeDefinition:typeDefinition
                                               withWhereClause:whereClause
                                             searchAllVersions:searchAllVersion
@@ -431,9 +461,12 @@
     [self.objectConverter convertProperties:properties
                  forObjectTypeId:kCMISPropertyObjectTypeIdValueFolder
                            completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
-                               if (error) {
+                               if (error)
+                               {
                                    completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
-                               } else {
+                               }
+                               else
+                               {
                                    [self.binding.objectService createFolderInParentFolder:folderObjectId
                                                                            withProperties:convertedProperties
                                                                           completionBlock:^(NSString *objectId, NSError *error) {
@@ -474,12 +507,16 @@
                      progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
-        if (error) {
+        if (error)
+        {
             log(@"Could not convert properties: %@", error.description);
-            if (completionBlock) {
+            if (completionBlock)
+            {
                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             }
-        } else {
+        }
+        else
+        {
             [self.binding.objectService createDocumentFromFilePath:filePath
                                                       withMimeType:mimeType
                                                     withProperties:convertedProperties
@@ -499,12 +536,16 @@
                         progressBlock:(void (^)(unsigned long long bytesUploaded, unsigned long long bytesTotal))progressBlock
 {
     [self.objectConverter convertProperties:properties forObjectTypeId:kCMISPropertyObjectTypeIdValueDocument completionBlock:^(CMISProperties *convertedProperties, NSError *error) {
-        if (error) {
+        if (error)
+        {
             log(@"Could not convert properties: %@", error.description);
-            if (completionBlock) {
+            if (completionBlock)
+            {
                 completionBlock(nil, [CMISErrors cmisError:error withCMISErrorCode:kCMISErrorCodeRuntime]);
             }
-        } else {
+        }
+        else
+        {
             [self.binding.objectService createDocumentFromInputStream:inputStream
                                                          withMimeType:mimeType
                                                        withProperties:convertedProperties

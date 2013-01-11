@@ -16,9 +16,6 @@
 #import "CMISSessionParameters.h"
 
 @interface CMISFileIOProvider : NSObject
-@property (nonatomic, strong, readonly) Class inputStreamClass;
-@property (nonatomic, strong, readonly) Class outputStreamClass;
 @property (nonatomic, strong, readonly) Class fileManager;
-@property (nonatomic, strong, readonly) Class baseEncoder;
 + (CMISFileIOProvider *)fileIOProviderWithParameters:(CMISSessionParameters *)parameters;
 @end

@@ -33,8 +33,6 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
        headers:(NSDictionary *)additionalHeaders
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
-//    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
-//    Class requestClass = provider.requestClass;
     CMISRequest *cancelRequest = [[CMISRequest alloc] init];
     CMISHttpRequest *request = [CMISHttpRequest startRequestWithURL:url
                                                       httpMethod:httpRequestMethod
@@ -53,8 +51,6 @@ withHttpMethod:(CMISHttpRequestMethod)httpRequestMethod
        headers:(NSDictionary *)additionalHeaders
 completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))completionBlock
 {
-//    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
-//    Class uploadClass = provider.uploadRequestClass;
     
     CMISRequest *cancelRequest = [[CMISRequest alloc] init];
     CMISHttpUploadRequest *uploadRequest = [CMISHttpUploadRequest startUploadRequestWithURL:url
@@ -80,8 +76,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
  progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
  requestObject:(CMISRequest *)requestObject
 {
-//    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
-//    Class uploadClass = provider.uploadRequestClass;
     CMISHttpUploadRequest *uploadRequest = [CMISHttpUploadRequest startUploadRequestWithURL:url
                                                                                  httpMethod:httpRequestMethod
                                                                                 inputStream:inputStream
@@ -102,8 +96,6 @@ completionBlock:(void (^)(CMISHttpResponse *httpResponse, NSError *error))comple
     progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock
     requestObject:(CMISRequest *)requestObject
 {
-//    CMISNetworkProvider *provider = [session objectForKey:kCMISSessionNetworkProvider];
-//    Class downloadClass = provider.downloadRequestClass;
     CMISHttpDownloadRequest *downloadRequest = [CMISHttpDownloadRequest startDownloadRequestWithURL:url
                                                                                          httpMethod:httpRequestMethod
                                                                                        outputStream:outputStream

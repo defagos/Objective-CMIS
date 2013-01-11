@@ -14,24 +14,17 @@
 
 #import "CMISFileIOProvider.h"
 #import "AlfrescoFileManagerDelegate.h"
-#import "CMISBase64EncoderDelegate.h"
 #import "CMISFileUtil.h"
 #import "CMISBase64Encoder.h"
 
 @interface CMISFileIOProvider ()
-@property (nonatomic, strong, readwrite) Class inputStreamClass;
-@property (nonatomic, strong, readwrite) Class outputStreamClass;
 @property (nonatomic, strong, readwrite) Class fileManager;
-@property (nonatomic, strong, readwrite) Class baseEncoder;
 - (void)standardProvider;
 - (BOOL)isCustomProviderWithParameters:(CMISSessionParameters *)parameters;
 @end
 
 @implementation CMISFileIOProvider
-@synthesize inputStreamClass = _inputStreamClass;
-@synthesize outputStreamClass = _outputStreamClass;
 @synthesize fileManager = _fileManager;
-@synthesize baseEncoder = _baseEncoder;
 
 + (CMISFileIOProvider *)fileIOProviderWithParameters:(CMISSessionParameters *)parameters
 {
@@ -52,10 +45,7 @@
 
 - (void)standardProvider
 {
-    self.inputStreamClass = [NSInputStream class];
-    self.outputStreamClass = [NSOutputStream class];
     self.fileManager = [FileUtil class];
-    self.baseEncoder = [CMISBase64Encoder class];    
 }
 
 - (BOOL)isCustomProviderWithParameters:(CMISSessionParameters *)parameters
@@ -67,42 +57,24 @@
         return YES;
     }
     NSDictionary *fileDict = (NSDictionary *)fileIOObj;
-    id inObj = [fileDict objectForKey:kCMISSessionParameterCustomFileInputStream];
-    id outObj = [fileDict objectForKey:kCMISSessionParameterCustomFileOutputStream];
     id mgrObj = [fileDict objectForKey:kCMISSessionParameterCustomFileManager];
-    id encObj = [fileDict objectForKey:kCMISSessionParameterCustomBaseEncoder];
-    if (nil == inObj || nil == outObj || nil == mgrObj || nil == encObj)
+    if (nil == mgrObj)
     {
         return NO;
     }
-    if (![inObj isKindOfClass:[NSString class]] || ![outObj isKindOfClass:[NSString class]]
-        || ![mgrObj isKindOfClass:[NSString class]] || ![encObj isKindOfClass:[NSString class]])
+    if (![mgrObj isKindOfClass:[NSString class]])
     {
         return NO;
     }
 
-    Class input = NSClassFromString((NSString *)inObj);
-    Class output = NSClassFromString((NSString *)outObj);
     Class manager = NSClassFromString((NSString *)mgrObj);
-    Class encoder = NSClassFromString((NSString *)encObj);
     
-    if (![input isSubclassOfClass:[NSInputStream class]] || ![output isSubclassOfClass:[NSOutputStream class]])
-    {
-        return NO;
-    }
     if (![manager conformsToProtocol:@protocol(AlfrescoFileManagerDelegate)])
     {
         return NO;
     }
-    if (![encoder conformsToProtocol:@protocol(CMISBase64EncoderDelegate)])
-    {
-        return NO;
-    }
     
-    self.inputStreamClass = input;
-    self.outputStreamClass = output;
     self.fileManager = manager;
-    self.baseEncoder = encoder;
     return YES;
 }
 

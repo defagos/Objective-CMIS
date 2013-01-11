@@ -53,12 +53,19 @@
                                       completionBlock:(void (^)(CMISDocument *document, NSError *error))completionBlock;
 
 /**
-* Downloads the content to a local file and returns the filepath.
-* This is a synchronous call and will not return until the file is written to the given path.
+* Downloads the content to a local file and returns the handle to the http request in order to allow cancellation.
 */
 - (CMISRequest*)downloadContentToFile:(NSString *)filePath
                       completionBlock:(void (^)(NSError *error))completionBlock
                         progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
+
+
+/**
+ * Downloads the content to an outputstream and returns the handle to the http request in order to allow cancellation.
+ */
+- (CMISRequest*)downloadContentToOutputStream:(NSOutputStream *)outputStream
+                              completionBlock:(void (^)(NSError *error))completionBlock
+                                progressBlock:(void (^)(unsigned long long bytesDownloaded, unsigned long long bytesTotal))progressBlock;
 
 /**
  * Changes the content of this document to the content of the given file.

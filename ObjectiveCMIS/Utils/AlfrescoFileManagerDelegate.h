@@ -119,4 +119,9 @@
  */
 + (NSString *)internalFilePathFromName:(NSString *)fileName;
 
+
++ (id)inputStreamWithFileAtPath:(NSString *)filePath;
+
++ (void)encodeContentFromInputStream:(NSInputStream *)inputStream andAppendToFile:(NSString *)filePath;
+
 @end

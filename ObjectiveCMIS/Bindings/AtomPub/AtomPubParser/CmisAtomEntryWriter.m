@@ -75,34 +75,40 @@
     [self appendStringToReturnResult:atomEntryXmlStart];
 }
 
+/**
+ this method could do with some cleaning up. the path to self.contentFilePath is not reached. And for inputStream we always create a temporary file
+ to write the XML data to. 
+ If we are writing the XML data to a tmp file we need to use the file manager provided to the API. Per default this would be FileUtil, but for MDM solutions this
+ might be some other class.
+ */
 - (void)addContent
 {
     NSString *contentXMLStart = [NSString stringWithFormat:@"<cmisra:content>""<cmisra:mediatype>%@</cmisra:mediatype>""<cmisra:base64>", self.mimeType];
     [self appendStringToReturnResult:contentXMLStart];
-    Class encoder = self.provider.baseEncoder;
+    Class manager = self.provider.fileManager;
     // Generate the base64 representation of the content
     if (self.contentFilePath)
     {
         if (self.generateXmlInMemory)
         {
-            NSString *encodedContent = [encoder encodeContentOfFile:self.contentFilePath];
+            NSString *encodedContent = [CMISBase64Encoder encodeContentOfFile:self.contentFilePath];
             [self appendToInMemoryXml:encodedContent];
         }
         else
         {
-            [encoder encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
+            [manager encodeContentOfFile:self.contentFilePath andAppendToFile:self.internalFilePath];
         }
     }
     else if (self.inputStream)
     {
         if (self.generateXmlInMemory)
         {
-            NSString *encodedContent = [encoder encodeContentFromInputStream:self.inputStream];
+            NSString *encodedContent = [CMISBase64Encoder encodeContentFromInputStream:self.inputStream];
             [self appendToInMemoryXml:encodedContent];
         }
         else
         {
-            [encoder encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
+            [manager encodeContentFromInputStream:self.inputStream andAppendToFile:self.internalFilePath];
         }
     }
 
